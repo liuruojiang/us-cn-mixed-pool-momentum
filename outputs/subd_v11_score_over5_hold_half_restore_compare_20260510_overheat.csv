@@ -1,0 +1,13 @@
+﻿variant,window,score_derisk_days,score_derisk_episodes,overheat_on_days,overheat_trigger_count,overheat_recover_count
+baseline_score_lt_5_second_best_half_entry,from_2020,0,0,17,10,5
+baseline_score_lt_5_second_best_half_entry,6Y,0,0,17,9,5
+baseline_score_lt_5_second_best_half_entry,3Y,0,0,7,7,3
+baseline_score_lt_5_second_best_half_entry,1Y,0,0,3,2,1
+score_over5_hold_half_full_restore,from_2020,198,27,84,20,20
+score_over5_hold_half_full_restore,6Y,180,25,81,18,18
+score_over5_hold_half_full_restore,3Y,100,15,53,11,11
+score_over5_hold_half_full_restore,1Y,64,8,28,5,5
+score_over5_hold_half_half_reentry,from_2020,198,27,84,20,20
+score_over5_hold_half_half_reentry,6Y,180,25,81,18,18
+score_over5_hold_half_half_reentry,3Y,100,15,53,11,11
+score_over5_hold_half_half_reentry,1Y,64,8,28,5,5

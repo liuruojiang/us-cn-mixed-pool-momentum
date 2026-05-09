@@ -1,0 +1,180 @@
+{
+  "entrypoint": "mnt_bot V 7.6 plus.py: CombinedStrategyV76._fetch_data + _run_strategies + _get_subc_daily_ret",
+  "uses_us_open": true,
+  "us_open_ticker_count": 21,
+  "subb_execution": "T close signal -> T+1 open execution via V7.6 official path",
+  "fetch_log_tail": [
+    "⏳ 正在获取A股数据...\n",
+    "  中证红利: 2026-05-08 [csindex+Sina-proxy:1.000827]\n",
+    "  创业板: 2026-05-08 [Sina]\n",
+    "  上证50: 2026-05-08 [csindex+Sina-proxy:1.000016]\n",
+    "  中证1000: 2026-05-08 [csindex+Sina-proxy:1.000852]\n",
+    "  中证500: 2026-05-08 [csindex+Sina-proxy:1.000905]\n",
+    "  10Y国债: 2026-05-08 [csindex+Sina-proxy:1.000012]\n",
+    "  合并截至: 2026-05-08\n",
+    "⏳ 正在获取美股数据...\n",
+    "  美股: 21个ETF | 收盘: 2026-05-09 04:00 北京时间\n",
+    "⏳ 正在获取A-DK多空数据(5个价格指数)...\n",
+    "  中证1000: 2005-01-01~2026-05-08 [csindex]\n",
+    "  上证50: 2005-01-01~2026-05-08 [csindex]\n",
+    "  沪深300: 2005-01-01~2026-05-08 [csindex]\n",
+    "  中证500: 2005-01-01~2026-05-08 [csindex]\n",
+    "  创业板: 2010-06-01~2026-05-08 [Sina]\n",
+    "  A-DK合并截至: 2026-05-08\n"
+  ],
+  "input_ranges": {
+    "cn_close": {
+      "start": "2010-06-01",
+      "end": "2026-05-08",
+      "rows": 3868,
+      "duplicate_dates": 0,
+      "columns": [
+        "1.H20955",
+        "0.399606",
+        "1.H00016",
+        "1.H00852",
+        "1.H00905",
+        "1.H11077"
+      ]
+    },
+    "cn_dk_close": {
+      "start": "2010-06-01",
+      "end": "2026-05-08",
+      "rows": 3868,
+      "duplicate_dates": 0,
+      "columns": [
+        "DK_ZZ1000",
+        "DK_SZ50",
+        "DK_HS300",
+        "DK_ZZ500",
+        "DK_CYB"
+      ]
+    },
+    "us_rot_close": {
+      "start": "2007-05-30",
+      "end": "2026-05-08",
+      "rows": 4767,
+      "duplicate_dates": 0,
+      "columns": [
+        "QQQ",
+        "EFA",
+        "GLD",
+        "TLT",
+        "DBC",
+        "BIL",
+        "EMXC",
+        "UUP",
+        "DBMF",
+        "BTC-USD",
+        "KMLM",
+        "SPY",
+        "VGLT",
+        "VTI",
+        "PDBC",
+        "GLDM",
+        "QQQM",
+        "VEA",
+        "VGIT",
+        "IBIT"
+      ]
+    },
+    "us_prod_daily": {
+      "start": "2009-11-23",
+      "end": "2026-05-08",
+      "rows": 4139,
+      "duplicate_dates": 0,
+      "columns": [
+        "VTI",
+        "BIL",
+        "VEA",
+        "QQQ",
+        "GLD",
+        "VGIT",
+        "BTC-USD",
+        "DBMF",
+        "VGLT",
+        "EMXC",
+        "UUP",
+        "PDBC",
+        "GLDM",
+        "QQQM",
+        "KMLM",
+        "IBIT"
+      ]
+    }
+  },
+  "classification": "formal V7.6 A/B/C path plus Sub-D V1.1 and Microcap v1.8 costed NAV; proposal sum 95% treated as 5% cash",
+  "common_start": "2011-12-09",
+  "common_end": "2026-05-08",
+  "weights": {
+    "proposal_A10_B15_C10_D20_E40_cash5": {
+      "Sub-A": 0.1,
+      "Sub-B": 0.15,
+      "Sub-C": 0.1,
+      "Sub-D": 0.2,
+      "Microcap": 0.4
+    },
+    "proposal_A10_B15_C10_D20_E40_normalized": {
+      "Sub-A": 0.10526315789473684,
+      "Sub-B": 0.15789473684210525,
+      "Sub-C": 0.10526315789473684,
+      "Sub-D": 0.21052631578947367,
+      "Microcap": 0.42105263157894735
+    },
+    "baseline_A10_ADK15_B60_E15": {
+      "Sub-A": 0.1,
+      "Sub-A-DK": 0.15,
+      "Sub-B": 0.6,
+      "Microcap": 0.15
+    }
+  },
+  "sleeves": {
+    "Sub-A": {
+      "start": "2010-09-29",
+      "end": "2026-05-08",
+      "rows": 3788,
+      "duplicate_dates": 0,
+      "return_column": "return"
+    },
+    "Sub-A-DK": {
+      "start": "2010-11-22",
+      "end": "2026-05-08",
+      "rows": 3755,
+      "duplicate_dates": 0,
+      "return_column": "return"
+    },
+    "Sub-B": {
+      "start": "2008-12-15",
+      "end": "2026-05-08",
+      "rows": 4376,
+      "duplicate_dates": 0,
+      "return_column": "return"
+    },
+    "Sub-C": {
+      "start": "2009-11-24",
+      "end": "2026-05-08",
+      "rows": 4136,
+      "duplicate_dates": 0,
+      "return_column": null
+    },
+    "Sub-D": {
+      "start": "2011-12-09",
+      "end": "2026-05-08",
+      "rows": 3496,
+      "duplicate_dates": 0,
+      "return_column": "return"
+    },
+    "Microcap": {
+      "start": "2010-02-25",
+      "end": "2026-05-08",
+      "rows": 3931,
+      "duplicate_dates": 0,
+      "return_column": "return_net"
+    }
+  },
+  "source_files": {
+    "script": "C:\\Users\\Administrator.DESKTOP-95I7VVU\\Desktop\\动量策略\\美股A股混合池子动量策略\\mnt_bot V 7.6 plus.py",
+    "subd_daily": "C:\\Users\\Administrator.DESKTOP-95I7VVU\\Desktop\\动量策略\\美股A股混合池子动量策略\\outputs\\subd_six_etf_v1_1_20260509_daily.csv",
+    "microcap_v18": "C:\\Users\\Administrator.DESKTOP-95I7VVU\\Desktop\\动量策略\\微盘股对冲策略\\outputs\\microcap_top100_mom11_targetvol30_max2_v1_8_costed_nav.csv"
+  }
+}

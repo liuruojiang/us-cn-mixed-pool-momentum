@@ -1,0 +1,3 @@
+﻿variant,date,position_before,position,trade_target,holding_fraction,best_candidate,best_candidate_score,target_vol_scale,overheat_scale,final_exposure_after_overheat,overheat_on,score_decay_overlay_on,score_decay_active_score,score_decay_peak,score_decay_ratio,score_decay_waiting_for_new_peak,nav
+no_score_cap_baseline,2026-05-08,159941.SZ,159941.SZ,,0.5,159941.SZ,5.409145282796129,0.658071489898415,1.0,0.3290357449492075,False,False,,,,False,40.56786316487719
+no_score_cap_score_decay_55_90,2026-05-08,159941.SZ,159941.SZ,,0.5,159941.SZ,5.409145282796129,0.6810144920052796,1.0,0.3405072460026398,False,False,5.409145282796129,5.409145282796129,1.0,False,14.356892272125164
