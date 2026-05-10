@@ -13,7 +13,7 @@ Baseline held constant:
 - Target volatility: `25%`, max leverage `1.5x`
 - One-way cost: `0.10%`
 - Asset stop: off
-- Top1 switch buffer: `1.00`
+- Top1 switch buffer: `1.05`
 - Evaluation window: 2020-01-02 to 2026-05-08, with full warmup from 2010-01-01
 
 V1.1 additions:
@@ -36,22 +36,23 @@ Main comparison:
 | Version | Window | Annual Return | Max DD | Sharpe | Vol |
 |---|---:|---:|---:|---:|---:|
 | V1.0 | from 2020 | 54.60% | -21.36% | 1.706 | 27.78% |
-| V1.1 | from 2020 | 57.93% | -16.54% | 1.871 | 26.27% |
+| V1.1 | from 2020 | 59.21% | -18.11% | 1.906 | 26.20% |
 | V1.0 | 5Y | 54.19% | -21.36% | 1.699 | 27.72% |
-| V1.1 | 5Y | 63.47% | -16.54% | 2.040 | 25.70% |
+| V1.1 | 5Y | 64.77% | -18.11% | 2.076 | 25.64% |
 | V1.0 | 3Y | 88.57% | -19.02% | 2.317 | 29.19% |
-| V1.1 | 3Y | 99.27% | -16.54% | 2.712 | 26.75% |
+| V1.1 | 3Y | 102.26% | -16.55% | 2.769 | 26.73% |
 | V1.0 | 1Y | 83.85% | -15.20% | 2.420 | 26.66% |
-| V1.1 | 1Y | 93.53% | -13.34% | 2.793 | 24.76% |
+| V1.1 | 1Y | 96.43% | -12.75% | 2.853 | 24.75% |
 
 V1.1 event counts from 2020:
 
-- Staged initial entries: 192
-- Staged fills after first down close: 152
-- Half-position waiting days: 359
+- Staged initial entries: 187
+- Staged fills after first down close: 151
+- Half-position waiting days: 345
+- Top1 switch buffer blocks: 17
 - MA60 bias overheat triggers: 10
 - Overheat defense days: 17
-- Trades: 365
+- Trades: 359
 
 Durable outputs:
 
@@ -62,9 +63,9 @@ Durable outputs:
 
 ## Verification
 
-- `python -m py_compile .\run_subd_six_etf_v1_1.py` passed.
-- V1.1 metrics exactly matched the prior combo scan for `combo_staged_50_plus_ma60_overheat`.
-- V1.0 metrics matched the prior `switch_buffer=1.00` baseline, with only floating-point tail differences.
+- `python -m py_compile .\run_subd_six_etf_v1_1.py .\poe_subd_six_etf_v1_1_bot.py` passed.
+- V1.1 metrics use the selected `switch_buffer=1.05` setting.
+- V1.0 comparison is explicitly locked to `switch_buffer=1.00`, so the baseline remains the original full-entry reference.
 - Daily output has 6,992 rows, 2 scenarios, no duplicate `scenario/date`, and no missing `return/nav`.
 
 Data source:
@@ -101,6 +102,6 @@ Priority 4: asset-pool robustness.
 
 Lower priority or already weak:
 
-- Top1 switch buffer alone was weak; `1.01` was the most defensible, but improvements were small.
+- Top1 switch buffer was later re-scanned on recent windows; `1.05` is now the selected V1.1 default to reduce signal jitter.
 - Main log-slope score overheat was not a good overheat proxy; high score usually behaved like trend strength.
 - Rolling score-percentile filters cut too many profitable trend days.

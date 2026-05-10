@@ -14,7 +14,8 @@ EVAL_START = pd.Timestamp("2020-01-02")
 END_DATE = pd.Timestamp("2026-05-08")
 R2_THRESHOLD = 0.20
 TARGET_VOL = 0.25
-SWITCH_BUFFER = 1.00
+V10_BASELINE_SWITCH_BUFFER = 1.00
+SWITCH_BUFFER = 1.05
 INITIAL_ENTRY_FRACTION = 0.50
 OVERHEAT_ENTER = 0.20
 OVERHEAT_EXIT = 0.18
@@ -471,7 +472,7 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
             config,
             EntryCase("full_entry_baseline", "full_entry", 1.0),
             R2_THRESHOLD,
-            SWITCH_BUFFER,
+            V10_BASELINE_SWITCH_BUFFER,
         ),
         TARGET_VOL,
         config.vol_window,

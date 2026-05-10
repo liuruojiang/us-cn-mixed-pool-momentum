@@ -115,7 +115,8 @@ START_DATE = pd.Timestamp("2010-01-01")
 EVAL_START = pd.Timestamp("2020-01-02")
 R2_THRESHOLD = 0.20
 TARGET_VOL = 0.25
-SWITCH_BUFFER = 1.00
+V10_BASELINE_SWITCH_BUFFER = 1.00
+SWITCH_BUFFER = 1.05
 INITIAL_ENTRY_FRACTION = 0.50
 OVERHEAT_ENTER = 0.20
 OVERHEAT_EXIT = 0.18
@@ -891,7 +892,7 @@ def build_curves(prices: pd.DataFrame, config: RunConfig) -> list[pd.DataFrame]:
         run_staged_entry(
             prices, config,
             EntryCase("full_entry_baseline", "full_entry", 1.0),
-            R2_THRESHOLD, SWITCH_BUFFER,
+            R2_THRESHOLD, V10_BASELINE_SWITCH_BUFFER,
         ),
         TARGET_VOL, config.vol_window, config.max_lev,
     )
@@ -1020,6 +1021,7 @@ def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
         "best_candidate": str(row.get("best_candidate", "")),
         "best_candidate_score": _float(row.get("best_candidate_score"), default=math.nan),
         "current_score": _float(row.get("current_score"), default=math.nan),
+        "buffer_blocked": _bool(row.get("buffer_blocked")),
         "nav": _float(row.get("nav"), default=math.nan),
         "daily_return": _float(row.get("return"), default=math.nan),
         "target_vol_scale": weight,
@@ -1468,6 +1470,15 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
         lines.append("- 分阶段建仓: **本日首笔50%建仓**，后续等待下跌日补足。")
     else:
         lines.append("- 分阶段建仓: 当前无待补仓。")
+    if sig["buffer_blocked"]:
+        lines.append(
+            f"- 切换buffer: **{SWITCH_BUFFER:.2f}x 已生效**，最强候选未领先当前持仓超过 "
+            f"{(SWITCH_BUFFER - 1.0):.0%}，继续持有当前资产。"
+        )
+    else:
+        lines.append(
+            f"- 切换buffer: **{SWITCH_BUFFER:.2f}x**，换仓需要最强候选分数 > 当前持仓分数 × {SWITCH_BUFFER:.2f}。"
+        )
     overheat_status = _fmt_bool_status(sig["overheat_on"], "**防守中**", "**未触发**")
     if sig["overheat_triggered"]:
         overheat_status = "**本日触发**"
@@ -1561,6 +1572,7 @@ def format_live_params_snapshot(daily: pd.DataFrame, source_note: str) -> str:
     lines.append(f"| Target-vol scale | **{_fmt_num(target_vol_scale, 3)}x** | 目标波动率{TARGET_VOL:.0%}，波动窗口{DEFAULT_VOL_WINDOW}日 |")
     lines.append(f"| 过热防守scale | **{_fmt_num(overheat_scale, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
     lines.append(f"| 执行scale | **{_fmt_num(execution_scale, 3)}x** | Target-vol × 过热防守 |")
+    lines.append(f"| 切换buffer | **{SWITCH_BUFFER:.2f}x** | 换仓需最强候选分数 > 当前持仓分数 × {SWITCH_BUFFER:.2f} |")
     lines.append(f"| 最终敞口 | **{_fmt_pct(final_exposure)}** | 基础仓位 × 执行scale |")
     if not pd.isna(realized_vol):
         lines.append(f"| 已实现波动率 | **{_fmt_pct(realized_vol)}** | 当前target-vol计算输入 |")
