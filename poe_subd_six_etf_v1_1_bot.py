@@ -1546,6 +1546,10 @@ def _signal_rank_rows(daily: pd.DataFrame, limit: int = 6) -> list[dict[str, obj
     return rows[:limit]
 
 
+def _display_score(raw_score: float, eligible_score: float) -> float:
+    return raw_score if not pd.isna(raw_score) else eligible_score
+
+
 def _last_signal_date(daily: pd.DataFrame) -> str:
     ordered = daily.sort_values("date")
     if "trade_target" not in ordered.columns:
@@ -1643,12 +1647,13 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("")
     lines.append("### 动量排名")
     lines.append("")
-    lines.append("| # | ETF | Raw Score | Eligible Score | R² | 状态 |")
+    lines.append("| # | ETF | Raw Score | 显示Score | R² | 状态 |")
     lines.append("|:-:|:-|--:|--:|--:|:-|")
     for rank, item in enumerate(_signal_rank_rows(ordered), 1):
         code = str(item["code"])
         raw_score = _float(item["raw_score"], default=math.nan)
         eligible_score = _float(item["eligible_score"], default=math.nan)
+        display_score = _display_score(raw_score, eligible_score)
         r2 = _float(item["r2"], default=math.nan)
         marker = " <- 最强候选" if code == str(sig["best_candidate"]) else ""
         hold_marker = " / 当前持仓" if code == str(sig["position_before"]) else ""
@@ -1663,7 +1668,7 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
             status = f"Score≥{SCORE_MAX:.0f}"
         lines.append(
             f"| {rank} | {_asset_name(code)}{marker}{hold_marker} | "
-            f"{_fmt_num(raw_score, 4)} | {_fmt_num(eligible_score, 4)} | {_fmt_num(r2, 3)} | {status} |"
+            f"{_fmt_num(raw_score, 4)} | {_fmt_num(display_score, 4)} | {_fmt_num(r2, 3)} | {status} |"
         )
     lines.append("")
     lines.append("### 规则状态")
@@ -1771,16 +1776,17 @@ def format_live_params_snapshot(daily: pd.DataFrame, source_note: str) -> str:
         f"目标敞口: **{_fmt_pct(final_exposure)}**"
     )
     lines.append("")
-    lines.append("| # | ETF | Raw Score | Eligible Score | R² | 入选状态 | 角色 |")
+    lines.append("| # | ETF | Raw Score | 显示Score | R² | 入选状态 | 角色 |")
     lines.append("|:-:|:-|--:|--:|--:|:-|:-|")
     for rank, item in enumerate(_signal_rank_rows(ordered), 1):
         code = str(item["code"])
         raw_score = _float(item["raw_score"], default=math.nan)
         eligible_score = _float(item["eligible_score"], default=math.nan)
+        display_score = _display_score(raw_score, eligible_score)
         r2 = _float(item["r2"], default=math.nan)
         lines.append(
             f"| {rank} | {_asset_name(code)} | {_fmt_num(raw_score, 4)} | "
-            f"{_fmt_num(eligible_score, 4)} | {_fmt_num(r2, 3)} | "
+            f"{_fmt_num(display_score, 4)} | {_fmt_num(r2, 3)} | "
             f"{_momentum_status(raw_score, r2)} | {_momentum_role(code, sig)} |"
         )
     lines.append("")
