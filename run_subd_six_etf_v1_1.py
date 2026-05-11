@@ -259,21 +259,134 @@ def run_staged_entry(
     return pd.DataFrame(rows).set_index("date")
 
 
-def apply_target_vol_overlay(curve: pd.DataFrame, target_vol: float, vol_window: int, max_lev: float) -> pd.DataFrame:
-    result = curve.copy()
-    base_ret = result["return"].astype(float).fillna(0.0)
+def align_prices_to_common_valid_date(
+    prices: pd.DataFrame,
+    asset_cols: list[str] | tuple[str, ...],
+) -> tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+    asset_cols = list(asset_cols)
+    missing = [col for col in asset_cols if col not in prices.columns]
+    if missing:
+        raise ValueError(f"Missing asset columns: {missing}")
+    last_by_asset: dict[str, pd.Timestamp] = {}
+    for col in asset_cols:
+        valid_dates = prices.index[prices[col].notna()]
+        last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+    valid_all = prices[asset_cols].notna().all(axis=1)
+    if not valid_all.any():
+        raise ValueError("No date has valid close prices for all assets")
+    common_last = pd.Timestamp(prices.index[valid_all].max())
+    return prices.loc[:common_last].copy(), common_last, last_by_asset
+
+
+def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series:
+    if column in curve.columns:
+        return curve[column].astype(float).fillna(default)
+    return pd.Series(default, index=curve.index, dtype=float)
+
+
+def _compute_target_vol_scales(
+    curve: pd.DataFrame,
+    target_vol: float,
+    vol_window: int,
+    max_lev: float,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    base_ret = curve["return"].astype(float).fillna(0.0)
     realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(subd.TRADING_DAYS)
-    scale = (target_vol / realized_vol).replace([np.inf, -np.inf], np.nan)
-    scale = scale.shift(1).clip(lower=0.0, upper=max_lev).fillna(1.0)
-    result["base_return"] = base_ret
+    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], np.nan)
+    next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
+    effective_scale = next_scale.shift(1).fillna(1.0)
+    return realized_vol, effective_scale.astype(float), next_scale.astype(float)
+
+
+def _recompute_final_exposure_nav(
+    curve: pd.DataFrame,
+    target_vol_effective: pd.Series,
+    target_vol_next: pd.Series,
+    overheat_effective: pd.Series,
+    overheat_next: pd.Series,
+    one_way_cost: float,
+) -> pd.DataFrame:
+    out = curve.copy()
+    if "base_return" not in out.columns:
+        out["base_return"] = out["return"].astype(float).fillna(0.0)
+    if "base_nav" not in out.columns:
+        out["base_nav"] = out["nav"].astype(float)
+    if "base_gross_return" not in out.columns:
+        out["base_gross_return"] = out["gross_return"].astype(float).fillna(0.0)
+    if "base_turnover" not in out.columns:
+        out["base_turnover"] = _float_series(out, "turnover", 0.0)
+    if "base_cost" not in out.columns:
+        out["base_cost"] = _float_series(out, "cost", 0.0)
+
+    position_before = out["position_before"].astype(str)
+    position_next = out["position"].astype(str)
+    fraction_before = _float_series(out, "fraction_before", 0.0)
+    holding_fraction = _float_series(out, "holding_fraction", 0.0)
+
+    target_vol_effective = target_vol_effective.reindex(out.index).astype(float).fillna(1.0)
+    target_vol_next = target_vol_next.reindex(out.index).astype(float).fillna(1.0)
+    overheat_effective = overheat_effective.reindex(out.index).astype(float).fillna(1.0)
+    overheat_next = overheat_next.reindex(out.index).astype(float).fillna(1.0)
+
+    exposure_effective = fraction_before * target_vol_effective * overheat_effective
+    exposure_effective = exposure_effective.where(position_before != "CASH", 0.0)
+    final_exposure = holding_fraction * target_vol_next
+    final_exposure = final_exposure.where(position_next != "CASH", 0.0)
+    final_exposure_after_overheat = final_exposure * overheat_next
+
+    same_asset = (position_before == position_next) & (position_before != "CASH")
+    turnover = pd.Series(
+        np.where(
+            same_asset,
+            (final_exposure_after_overheat - exposure_effective).abs(),
+            exposure_effective + final_exposure_after_overheat,
+        ),
+        index=out.index,
+        dtype=float,
+    )
+    cost = turnover * float(one_way_cost)
+    gross_return = out["base_gross_return"].astype(float).fillna(0.0) * target_vol_effective * overheat_effective
+    net_return = (1.0 + gross_return) * (1.0 - cost) - 1.0
+
+    out["target_vol_scale_effective"] = target_vol_effective
+    out["target_vol_scale_next"] = target_vol_next
+    out["weight"] = target_vol_next
+    out["overheat_scale_effective"] = overheat_effective
+    out["overheat_scale_next"] = overheat_next
+    out["overheat_scale"] = overheat_next
+    out["exposure_effective"] = exposure_effective
+    out["final_exposure"] = final_exposure
+    out["final_exposure_after_overheat"] = final_exposure_after_overheat
+    out["turnover"] = turnover
+    out["cost"] = cost
+    out["gross_return"] = gross_return
+    out["return"] = net_return
+    out["nav"] = (1.0 + net_return).cumprod()
+    out["effective_trade_count"] = (turnover > 1e-12).cumsum()
+    return out
+
+
+def apply_target_vol_overlay(
+    curve: pd.DataFrame,
+    target_vol: float,
+    vol_window: int,
+    max_lev: float,
+    one_way_cost: float = ONE_WAY_COST,
+) -> pd.DataFrame:
+    result = curve.copy()
+    realized_vol, effective_scale, next_scale = _compute_target_vol_scales(
+        result, target_vol, vol_window, max_lev
+    )
+    result["base_return"] = result["return"].astype(float).fillna(0.0)
     result["base_nav"] = result["nav"]
+    result["base_gross_return"] = result["gross_return"].astype(float).fillna(0.0)
+    result["base_turnover"] = _float_series(result, "turnover", 0.0)
+    result["base_cost"] = _float_series(result, "cost", 0.0)
     result["realized_vol"] = realized_vol
-    result["weight"] = scale
-    result["final_exposure"] = result["holding_fraction"].astype(float).fillna(0.0) * scale
-    result["return"] = base_ret * scale
-    result["gross_return"] = result["gross_return"].astype(float) * scale
-    result["cost"] = result["cost"].astype(float) * scale
-    result["nav"] = (1.0 + result["return"]).cumprod()
+    ones = pd.Series(1.0, index=result.index, dtype=float)
+    result = _recompute_final_exposure_nav(
+        result, effective_scale, next_scale, ones, ones, one_way_cost
+    )
     result["target_vol"] = target_vol
     result["vol_window"] = vol_window
     result["max_lev"] = max_lev
@@ -324,90 +437,105 @@ def apply_overheat_overlay(
     features: dict[str, pd.DataFrame],
     case: OverheatCase,
     one_way_cost: float,
+    recovery_mode: Literal["same_side_or_exit", "exit_only"] = "same_side_or_exit",
 ) -> pd.DataFrame:
     if not 0 < case.exit < case.enter:
         raise ValueError(f"Bad overheat thresholds: {case}")
     if not 0 <= case.derisk_scale <= 1:
         raise ValueError(f"Bad derisk scale: {case}")
+    if recovery_mode not in {"same_side_or_exit", "exit_only"}:
+        raise ValueError(f"Bad overheat recovery mode: {recovery_mode}")
 
     out = curve.copy()
     defense_on = False
-    prev_scale = 1.0
-    prev_holding = None
-    returns = []
-    scales = []
-    on_vals = []
+    state_asset: str | None = None
+    effective_scales = []
+    next_scales = []
+    effective_on_vals = []
+    next_on_vals = []
     trigger_vals = []
     recover_vals = []
     bias_vals = []
     mom_vals = []
     same_side_vals = []
-    tc_vals = []
 
     for dt, row in out.iterrows():
-        holding = str(row["position_before"])
-        if prev_holding is not None and holding != prev_holding:
-            defense_on = False
-            prev_scale = 1.0
-        prev_holding = holding
-        eligible = holding in subd.ASSETS
+        effective_holding = str(row["position_before"])
+        target_holding = str(row["position"])
+        effective_eligible = effective_holding in subd.ASSETS
+        target_eligible = target_holding in subd.ASSETS
+
+        effective_state = bool(defense_on and state_asset == effective_holding and effective_eligible)
+        effective_scale = float(case.derisk_scale) if effective_state else 1.0
+        next_state = bool(defense_on and state_asset == target_holding and target_eligible)
 
         bias = math.nan
         mom = math.nan
         same_side = False
-        if eligible and dt in features[holding].index:
-            frow = features[holding].loc[dt]
+        if target_eligible and dt in features[target_holding].index:
+            frow = features[target_holding].loc[dt]
             bias = float(frow["bias"]) if pd.notna(frow["bias"]) else math.nan
             mom = float(frow["bias_mom"]) if pd.notna(frow["bias_mom"]) else math.nan
             same_side = bool(frow["same_side"]) if pd.notna(frow["same_side"]) else False
 
-        current_scale = float(case.derisk_scale) if defense_on and eligible else 1.0
-        tc = abs(current_scale - prev_scale) * one_way_cost if eligible else 0.0
-        ret_before = float(row["return"])
-        realized = (1.0 + ret_before * current_scale) * (1.0 - tc) - 1.0
-        returns.append(realized)
-        scales.append(current_scale)
-        on_vals.append(bool(current_scale < 0.999999 and eligible))
-        tc_vals.append(float(tc))
-
         triggered = False
         recovered = False
-        next_state = defense_on
-        if eligible and pd.notna(bias) and same_side:
+        prior_next_state = next_state
+        if target_eligible:
             if next_state:
-                if bias <= case.exit:
+                if pd.notna(bias) and bias <= case.exit:
                     next_state = False
                     recovered = True
-            elif bias >= case.enter:
+                elif recovery_mode == "same_side_or_exit" and not same_side:
+                    next_state = False
+                    recovered = True
+            elif pd.notna(bias) and same_side and bias >= case.enter:
                 next_state = True
                 triggered = True
-        elif next_state:
+        else:
             next_state = False
-            recovered = True
 
+        next_scale = float(case.derisk_scale) if next_state and target_eligible else 1.0
+        effective_scales.append(effective_scale)
+        next_scales.append(next_scale)
+        effective_on_vals.append(bool(effective_scale < 0.999999 and effective_eligible))
+        next_on_vals.append(bool(next_scale < 0.999999 and target_eligible))
         trigger_vals.append(triggered)
-        recover_vals.append(recovered)
+        recover_vals.append(bool(recovered and prior_next_state))
         bias_vals.append(bias)
         mom_vals.append(mom)
         same_side_vals.append(same_side)
         defense_on = next_state
-        prev_scale = current_scale
+        state_asset = target_holding if target_eligible else None
 
     out.insert(0, "scenario", case.label)
     out["overheat_enter"] = case.enter
     out["overheat_exit"] = case.exit
     out["overheat_derisk_scale"] = case.derisk_scale
+    out["overheat_recovery_mode"] = recovery_mode
+    out["nav_before_overheat"] = out["nav"]
     out["return_before_overheat"] = out["return"]
-    out["overheat_scale"] = pd.Series(scales, index=out.index, dtype=float)
-    out["overheat_on"] = pd.Series(on_vals, index=out.index, dtype=bool)
+    out["overheat_scale_effective"] = pd.Series(effective_scales, index=out.index, dtype=float)
+    out["overheat_scale_next"] = pd.Series(next_scales, index=out.index, dtype=float)
+    out["overheat_scale"] = out["overheat_scale_next"]
+    out["overheat_on_effective"] = pd.Series(effective_on_vals, index=out.index, dtype=bool)
+    out["overheat_on"] = pd.Series(next_on_vals, index=out.index, dtype=bool)
     out["overheat_triggered"] = pd.Series(trigger_vals, index=out.index, dtype=bool)
     out["overheat_recovered"] = pd.Series(recover_vals, index=out.index, dtype=bool)
     out["overheat_bias"] = pd.Series(bias_vals, index=out.index, dtype=float)
     out["overheat_bias_mom"] = pd.Series(mom_vals, index=out.index, dtype=float)
     out["overheat_same_side"] = pd.Series(same_side_vals, index=out.index, dtype=bool)
-    out["overheat_tc"] = pd.Series(tc_vals, index=out.index, dtype=float)
-    out["return"] = pd.Series(returns, index=out.index, dtype=float)
-    out["nav"] = (1.0 + out["return"]).cumprod()
+    out["overheat_tc"] = 0.0
+    target_vol_effective = _float_series(out, "target_vol_scale_effective", 1.0)
+    target_vol_next = _float_series(out, "target_vol_scale_next", 1.0)
+    out = _recompute_final_exposure_nav(
+        out,
+        target_vol_effective,
+        target_vol_next,
+        out["overheat_scale_effective"],
+        out["overheat_scale_next"],
+        one_way_cost,
+    )
     return out
 
 
@@ -417,9 +545,8 @@ def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str,
     ret = nav.pct_change().fillna(0.0)
     years = len(sub) / subd.TRADING_DAYS
     std = ret.std(ddof=0)
-    final_exposure = sub["final_exposure"].astype(float).fillna(0.0)
-    if "overheat_scale" in sub.columns:
-        final_exposure = final_exposure * sub["overheat_scale"].astype(float).fillna(1.0)
+    exposure_col = "final_exposure_after_overheat" if "final_exposure_after_overheat" in sub.columns else "final_exposure"
+    final_exposure = sub[exposure_col].astype(float).fillna(0.0)
     return {
         "version": curve["version"].iloc[0],
         "scenario": curve["scenario"].iloc[0],
@@ -440,8 +567,8 @@ def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str,
         "overheat_days": int(sub["overheat_on"].astype(bool).sum()) if "overheat_on" in sub.columns else 0,
         "overheat_triggers": int(sub["overheat_triggered"].astype(bool).sum()) if "overheat_triggered" in sub.columns else 0,
         "overheat_recoveries": int(sub["overheat_recovered"].astype(bool).sum()) if "overheat_recovered" in sub.columns else 0,
-        "trades": int(sub["trade_count"].iloc[-1] - sub["trade_count"].iloc[0]),
-        "cost_sum": float(sub["cost"].sum() + (sub["overheat_tc"].sum() if "overheat_tc" in sub.columns else 0.0)),
+        "trades": int((sub["turnover"].astype(float) > 1e-12).sum()),
+        "cost_sum": float(sub["cost"].sum()),
         "turnover_sum": float(sub["turnover"].sum()),
         "avg_scale": float(sub["weight"].mean()),
         "avg_final_exposure": float(final_exposure.mean()),
@@ -456,12 +583,16 @@ def tag_original(curve: pd.DataFrame) -> pd.DataFrame:
     out["overheat_enter"] = np.nan
     out["overheat_exit"] = np.nan
     out["overheat_derisk_scale"] = 1.0
+    out["overheat_recovery_mode"] = ""
+    out["overheat_scale_effective"] = 1.0
+    out["overheat_scale_next"] = 1.0
     out["overheat_scale"] = 1.0
     out["overheat_on"] = False
+    out["overheat_on_effective"] = False
     out["overheat_triggered"] = False
     out["overheat_recovered"] = False
     out["overheat_tc"] = 0.0
-    out["final_exposure_after_overheat"] = out["final_exposure"]
+    out["nav_before_overheat"] = out["nav"]
     return out
 
 
@@ -477,6 +608,7 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
         TARGET_VOL,
         config.vol_window,
         config.max_lev,
+        config.one_way_cost,
     )
     staged = apply_target_vol_overlay(
         run_staged_entry(
@@ -489,6 +621,7 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
         TARGET_VOL,
         config.vol_window,
         config.max_lev,
+        config.one_way_cost,
     )
     v11 = apply_overheat_overlay(
         staged,
@@ -498,7 +631,6 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
     )
     v11.insert(0, "version", VERSION)
     v11["scenario"] = "v1_1_staged_50_plus_ma60_overheat"
-    v11["final_exposure_after_overheat"] = v11["final_exposure"] * v11["overheat_scale"]
     return [tag_original(original), v11]
 
 
@@ -515,12 +647,13 @@ def main() -> None:
     )
     prices, sources = subd.load_close(config)
     prices = prices.loc[prices.index >= config.start_date]
+    prices, common_last, _last_by_asset = align_prices_to_common_valid_date(prices, list(subd.ASSETS))
     curves = build_curves(prices, config)
     windows = {
         "from_2020": EVAL_START,
-        "5Y": config.end_date - pd.DateOffset(years=5),
-        "3Y": config.end_date - pd.DateOffset(years=3),
-        "1Y": config.end_date - pd.DateOffset(years=1),
+        "5Y": common_last - pd.DateOffset(years=5),
+        "3Y": common_last - pd.DateOffset(years=3),
+        "1Y": common_last - pd.DateOffset(years=1),
     }
     summary = pd.DataFrame([summarize(curve, start, label) for curve in curves for label, start in windows.items()])
 

@@ -12,7 +12,14 @@ from typing import Dict, List, Literal, Optional, Tuple
 import numpy as np
 import pandas as pd
 import requests
-from fastapi_poe.types import SettingsResponse
+
+try:
+    from fastapi_poe.types import SettingsResponse
+except Exception:
+    @dataclass
+    class SettingsResponse:
+        allow_attachments: bool = True
+        introduction_message: str = ""
 
 try:
     import akshare as ak
@@ -705,27 +712,138 @@ def run_staged_entry(
     return pd.DataFrame(rows).set_index("date")
 
 
+def align_prices_to_common_valid_date(
+    prices: pd.DataFrame,
+    asset_cols: list[str] | tuple[str, ...],
+) -> tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+    asset_cols = list(asset_cols)
+    missing = [col for col in asset_cols if col not in prices.columns]
+    if missing:
+        raise ValueError(f"Missing asset columns: {missing}")
+    last_by_asset: dict[str, pd.Timestamp] = {}
+    for col in asset_cols:
+        valid_dates = prices.index[prices[col].notna()]
+        last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+    valid_all = prices[asset_cols].notna().all(axis=1)
+    if not valid_all.any():
+        raise ValueError("No date has valid close prices for all assets")
+    common_last = pd.Timestamp(prices.index[valid_all].max())
+    return prices.loc[:common_last].copy(), common_last, last_by_asset
+
+
+def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series:
+    if column in curve.columns:
+        return curve[column].astype(float).fillna(default)
+    return pd.Series(default, index=curve.index, dtype=float)
+
+
+def _compute_target_vol_scales(
+    curve: pd.DataFrame,
+    target_vol: float,
+    vol_window: int,
+    max_lev: float,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    base_ret = curve["return"].astype(float).fillna(0.0)
+    realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(TRADING_DAYS)
+    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], np.nan)
+    next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
+    effective_scale = next_scale.shift(1).fillna(1.0)
+    return realized_vol, effective_scale.astype(float), next_scale.astype(float)
+
+
+def _recompute_final_exposure_nav(
+    curve: pd.DataFrame,
+    target_vol_effective: pd.Series,
+    target_vol_next: pd.Series,
+    overheat_effective: pd.Series,
+    overheat_next: pd.Series,
+    one_way_cost: float,
+) -> pd.DataFrame:
+    out = curve.copy()
+    if "base_return" not in out.columns:
+        out["base_return"] = out["return"].astype(float).fillna(0.0)
+    if "base_nav" not in out.columns:
+        out["base_nav"] = out["nav"].astype(float)
+    if "base_gross_return" not in out.columns:
+        out["base_gross_return"] = out["gross_return"].astype(float).fillna(0.0)
+    if "base_turnover" not in out.columns:
+        out["base_turnover"] = _float_series(out, "turnover", 0.0)
+    if "base_cost" not in out.columns:
+        out["base_cost"] = _float_series(out, "cost", 0.0)
+
+    position_before = out["position_before"].astype(str)
+    position_next = out["position"].astype(str)
+    fraction_before = _float_series(out, "fraction_before", 0.0)
+    holding_fraction = _float_series(out, "holding_fraction", 0.0)
+
+    target_vol_effective = target_vol_effective.reindex(out.index).astype(float).fillna(1.0)
+    target_vol_next = target_vol_next.reindex(out.index).astype(float).fillna(1.0)
+    overheat_effective = overheat_effective.reindex(out.index).astype(float).fillna(1.0)
+    overheat_next = overheat_next.reindex(out.index).astype(float).fillna(1.0)
+
+    exposure_effective = fraction_before * target_vol_effective * overheat_effective
+    exposure_effective = exposure_effective.where(position_before != "CASH", 0.0)
+    final_exposure = holding_fraction * target_vol_next
+    final_exposure = final_exposure.where(position_next != "CASH", 0.0)
+    final_exposure_after_overheat = final_exposure * overheat_next
+
+    same_asset = (position_before == position_next) & (position_before != "CASH")
+    turnover = pd.Series(
+        np.where(
+            same_asset,
+            (final_exposure_after_overheat - exposure_effective).abs(),
+            exposure_effective + final_exposure_after_overheat,
+        ),
+        index=out.index,
+        dtype=float,
+    )
+    cost = turnover * float(one_way_cost)
+    gross_return = out["base_gross_return"].astype(float).fillna(0.0) * target_vol_effective * overheat_effective
+    net_return = (1.0 + gross_return) * (1.0 - cost) - 1.0
+
+    out["target_vol_scale_effective"] = target_vol_effective
+    out["target_vol_scale_next"] = target_vol_next
+    out["weight"] = target_vol_next
+    out["overheat_scale_effective"] = overheat_effective
+    out["overheat_scale_next"] = overheat_next
+    out["overheat_scale"] = overheat_next
+    out["exposure_effective"] = exposure_effective
+    out["final_exposure"] = final_exposure
+    out["final_exposure_after_overheat"] = final_exposure_after_overheat
+    out["turnover"] = turnover
+    out["cost"] = cost
+    out["gross_return"] = gross_return
+    out["return"] = net_return
+    out["nav"] = (1.0 + net_return).cumprod()
+    out["effective_trade_count"] = (turnover > 1e-12).cumsum()
+    return out
+
+
 # ════════════════════════════════════════════════════════════════
 #  Target-vol overlay
 # ════════════════════════════════════════════════════════════════
 
 def apply_target_vol_overlay(
-    curve: pd.DataFrame, target_vol: float, vol_window: int, max_lev: float,
+    curve: pd.DataFrame,
+    target_vol: float,
+    vol_window: int,
+    max_lev: float,
+    one_way_cost: float = ONE_WAY_COST,
 ) -> pd.DataFrame:
     result = curve.copy()
-    base_ret = result["return"].astype(float).fillna(0.0)
-    realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(TRADING_DAYS)
-    scale = (target_vol / realized_vol).replace([np.inf, -np.inf], np.nan)
-    scale = scale.shift(1).clip(lower=0.0, upper=max_lev).fillna(1.0)
-    result["base_return"] = base_ret
+    realized_vol, effective_scale, next_scale = _compute_target_vol_scales(
+        result, target_vol, vol_window, max_lev
+    )
+    result["base_return"] = result["return"].astype(float).fillna(0.0)
     result["base_nav"] = result["nav"]
+    result["base_gross_return"] = result["gross_return"].astype(float).fillna(0.0)
+    result["base_turnover"] = _float_series(result, "turnover", 0.0)
+    result["base_cost"] = _float_series(result, "cost", 0.0)
     result["realized_vol"] = realized_vol
-    result["weight"] = scale
-    result["final_exposure"] = result["holding_fraction"].astype(float).fillna(0.0) * scale
-    result["return"] = base_ret * scale
-    result["gross_return"] = result["gross_return"].astype(float) * scale
-    result["cost"] = result["cost"].astype(float) * scale
-    result["nav"] = (1.0 + result["return"]).cumprod()
+    ones = pd.Series(1.0, index=result.index, dtype=float)
+    result = _recompute_final_exposure_nav(
+        result, effective_scale, next_scale, ones, ones, one_way_cost
+    )
     result["target_vol"] = target_vol
     result["vol_window"] = vol_window
     result["max_lev"] = max_lev
@@ -780,90 +898,105 @@ def apply_overheat_overlay(
     features: dict[str, pd.DataFrame],
     case: OverheatCase,
     one_way_cost: float,
+    recovery_mode: Literal["same_side_or_exit", "exit_only"] = "same_side_or_exit",
 ) -> pd.DataFrame:
     if not 0 < case.exit < case.enter:
         raise ValueError(f"Bad overheat thresholds: {case}")
     if not 0 <= case.derisk_scale <= 1:
         raise ValueError(f"Bad derisk scale: {case}")
+    if recovery_mode not in {"same_side_or_exit", "exit_only"}:
+        raise ValueError(f"Bad overheat recovery mode: {recovery_mode}")
 
     out = curve.copy()
     defense_on = False
-    prev_scale = 1.0
-    prev_holding = None
-    returns: list[float] = []
-    scales: list[float] = []
-    on_vals: list[bool] = []
+    state_asset: str | None = None
+    effective_scales: list[float] = []
+    next_scales: list[float] = []
+    effective_on_vals: list[bool] = []
+    next_on_vals: list[bool] = []
     trigger_vals: list[bool] = []
     recover_vals: list[bool] = []
     bias_vals: list[float] = []
     mom_vals: list[float] = []
     same_side_vals: list[bool] = []
-    tc_vals: list[float] = []
 
     for dt, row in out.iterrows():
-        holding = str(row["position_before"])
-        if prev_holding is not None and holding != prev_holding:
-            defense_on = False
-            prev_scale = 1.0
-        prev_holding = holding
-        eligible = holding in ASSETS
+        effective_holding = str(row["position_before"])
+        target_holding = str(row["position"])
+        effective_eligible = effective_holding in ASSETS
+        target_eligible = target_holding in ASSETS
+
+        effective_state = bool(defense_on and state_asset == effective_holding and effective_eligible)
+        effective_scale = float(case.derisk_scale) if effective_state else 1.0
+        next_state = bool(defense_on and state_asset == target_holding and target_eligible)
 
         bias = math.nan
         mom = math.nan
         same_side = False
-        if eligible and dt in features[holding].index:
-            frow = features[holding].loc[dt]
+        if target_eligible and dt in features[target_holding].index:
+            frow = features[target_holding].loc[dt]
             bias = float(frow["bias"]) if pd.notna(frow["bias"]) else math.nan
             mom = float(frow["bias_mom"]) if pd.notna(frow["bias_mom"]) else math.nan
             same_side = bool(frow["same_side"]) if pd.notna(frow["same_side"]) else False
 
-        current_scale = float(case.derisk_scale) if defense_on and eligible else 1.0
-        tc = abs(current_scale - prev_scale) * one_way_cost if eligible else 0.0
-        ret_before = float(row["return"])
-        realized = (1.0 + ret_before * current_scale) * (1.0 - tc) - 1.0
-        returns.append(realized)
-        scales.append(current_scale)
-        on_vals.append(bool(current_scale < 0.999999 and eligible))
-        tc_vals.append(float(tc))
-
         triggered = False
         recovered = False
-        next_state = defense_on
-        if eligible and pd.notna(bias) and same_side:
+        prior_next_state = next_state
+        if target_eligible:
             if next_state:
-                if bias <= case.exit:
+                if pd.notna(bias) and bias <= case.exit:
                     next_state = False
                     recovered = True
-            elif bias >= case.enter:
+                elif recovery_mode == "same_side_or_exit" and not same_side:
+                    next_state = False
+                    recovered = True
+            elif pd.notna(bias) and same_side and bias >= case.enter:
                 next_state = True
                 triggered = True
-        elif next_state:
+        else:
             next_state = False
-            recovered = True
 
+        next_scale = float(case.derisk_scale) if next_state and target_eligible else 1.0
+        effective_scales.append(effective_scale)
+        next_scales.append(next_scale)
+        effective_on_vals.append(bool(effective_scale < 0.999999 and effective_eligible))
+        next_on_vals.append(bool(next_scale < 0.999999 and target_eligible))
         trigger_vals.append(triggered)
-        recover_vals.append(recovered)
+        recover_vals.append(bool(recovered and prior_next_state))
         bias_vals.append(bias)
         mom_vals.append(mom)
         same_side_vals.append(same_side)
         defense_on = next_state
-        prev_scale = current_scale
+        state_asset = target_holding if target_eligible else None
 
     out.insert(0, "scenario", case.label)
     out["overheat_enter"] = case.enter
     out["overheat_exit"] = case.exit
     out["overheat_derisk_scale"] = case.derisk_scale
+    out["overheat_recovery_mode"] = recovery_mode
+    out["nav_before_overheat"] = out["nav"]
     out["return_before_overheat"] = out["return"]
-    out["overheat_scale"] = pd.Series(scales, index=out.index, dtype=float)
-    out["overheat_on"] = pd.Series(on_vals, index=out.index, dtype=bool)
+    out["overheat_scale_effective"] = pd.Series(effective_scales, index=out.index, dtype=float)
+    out["overheat_scale_next"] = pd.Series(next_scales, index=out.index, dtype=float)
+    out["overheat_scale"] = out["overheat_scale_next"]
+    out["overheat_on_effective"] = pd.Series(effective_on_vals, index=out.index, dtype=bool)
+    out["overheat_on"] = pd.Series(next_on_vals, index=out.index, dtype=bool)
     out["overheat_triggered"] = pd.Series(trigger_vals, index=out.index, dtype=bool)
     out["overheat_recovered"] = pd.Series(recover_vals, index=out.index, dtype=bool)
     out["overheat_bias"] = pd.Series(bias_vals, index=out.index, dtype=float)
     out["overheat_bias_mom"] = pd.Series(mom_vals, index=out.index, dtype=float)
     out["overheat_same_side"] = pd.Series(same_side_vals, index=out.index, dtype=bool)
-    out["overheat_tc"] = pd.Series(tc_vals, index=out.index, dtype=float)
-    out["return"] = pd.Series(returns, index=out.index, dtype=float)
-    out["nav"] = (1.0 + out["return"]).cumprod()
+    out["overheat_tc"] = 0.0
+    target_vol_effective = _float_series(out, "target_vol_scale_effective", 1.0)
+    target_vol_next = _float_series(out, "target_vol_scale_next", 1.0)
+    out = _recompute_final_exposure_nav(
+        out,
+        target_vol_effective,
+        target_vol_next,
+        out["overheat_scale_effective"],
+        out["overheat_scale_next"],
+        one_way_cost,
+    )
     return out
 
 
@@ -878,12 +1011,16 @@ def _tag_original(curve: pd.DataFrame) -> pd.DataFrame:
     out["overheat_enter"] = np.nan
     out["overheat_exit"] = np.nan
     out["overheat_derisk_scale"] = 1.0
+    out["overheat_recovery_mode"] = ""
+    out["overheat_scale_effective"] = 1.0
+    out["overheat_scale_next"] = 1.0
     out["overheat_scale"] = 1.0
     out["overheat_on"] = False
+    out["overheat_on_effective"] = False
     out["overheat_triggered"] = False
     out["overheat_recovered"] = False
     out["overheat_tc"] = 0.0
-    out["final_exposure_after_overheat"] = out["final_exposure"]
+    out["nav_before_overheat"] = out["nav"]
     return out
 
 
@@ -894,7 +1031,7 @@ def build_curves(prices: pd.DataFrame, config: RunConfig) -> list[pd.DataFrame]:
             EntryCase("full_entry_baseline", "full_entry", 1.0),
             R2_THRESHOLD, V10_BASELINE_SWITCH_BUFFER,
         ),
-        TARGET_VOL, config.vol_window, config.max_lev,
+        TARGET_VOL, config.vol_window, config.max_lev, config.one_way_cost,
     )
     staged = apply_target_vol_overlay(
         run_staged_entry(
@@ -902,7 +1039,7 @@ def build_curves(prices: pd.DataFrame, config: RunConfig) -> list[pd.DataFrame]:
             EntryCase("all_new_asset_50_wait_down_no_timeout", "all_new_asset_50_wait_down", INITIAL_ENTRY_FRACTION),
             R2_THRESHOLD, SWITCH_BUFFER,
         ),
-        TARGET_VOL, config.vol_window, config.max_lev,
+        TARGET_VOL, config.vol_window, config.max_lev, config.one_way_cost,
     )
     v11 = apply_overheat_overlay(
         staged,
@@ -912,7 +1049,6 @@ def build_curves(prices: pd.DataFrame, config: RunConfig) -> list[pd.DataFrame]:
     )
     v11.insert(0, "version", VERSION)
     v11["scenario"] = V11_SCENARIO
-    v11["final_exposure_after_overheat"] = v11["final_exposure"] * v11["overheat_scale"]
     return [_tag_original(original), v11]
 
 
@@ -948,6 +1084,7 @@ def _build_v11_daily(end_date=None):
     config = _build_config(end_date=end_date)
     prices, sources = load_close(config)
     prices = prices.loc[prices.index >= config.start_date]
+    prices, common_last, last_by_asset = align_prices_to_common_valid_date(prices, list(ASSETS))
     curves = build_curves(prices, config)
     with warnings.catch_warnings():
         warnings.filterwarnings(
@@ -957,6 +1094,9 @@ def _build_v11_daily(end_date=None):
         )
         daily = pd.concat(curves, sort=False).reset_index().rename(columns={"index": "date"})
     source_name = ", ".join(dict.fromkeys(sources["source"].astype(str).tolist())) if not sources.empty else "unknown"
+    daily["common_last_date"] = common_last.date().isoformat()
+    for code, last_date in last_by_asset.items():
+        daily[f"last_date_{code}"] = "" if pd.isna(last_date) else pd.Timestamp(last_date).date().isoformat()
     return _normalize_daily(daily), source_name
 
 
@@ -1007,7 +1147,8 @@ def _asset_name(code: str) -> str:
 
 def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
     row = daily.sort_values("date").iloc[-1]
-    overheat_scale = _float(row.get("overheat_scale"), default=1.0)
+    overheat_scale_effective = _float(row.get("overheat_scale_effective"), default=1.0)
+    overheat_scale_next = _float(row.get("overheat_scale_next"), default=_float(row.get("overheat_scale"), default=1.0))
     weight = _float(row.get("weight"), default=1.0)
     final_exposure = _float(row.get("final_exposure_after_overheat"), default=math.nan)
     return {
@@ -1025,12 +1166,21 @@ def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
         "nav": _float(row.get("nav"), default=math.nan),
         "daily_return": _float(row.get("return"), default=math.nan),
         "target_vol_scale": weight,
-        "overheat_scale": overheat_scale,
-        "execution_scale": weight * overheat_scale,
+        "target_vol_scale_effective": _float(row.get("target_vol_scale_effective"), default=weight),
+        "target_vol_scale_next": _float(row.get("target_vol_scale_next"), default=weight),
+        "overheat_scale": overheat_scale_next,
+        "overheat_scale_effective": overheat_scale_effective,
+        "overheat_scale_next": overheat_scale_next,
+        "execution_scale": weight * overheat_scale_next,
         "final_exposure": final_exposure,
+        "exposure_effective": _float(row.get("exposure_effective"), default=math.nan),
+        "turnover": _float(row.get("turnover"), default=0.0),
+        "cost": _float(row.get("cost"), default=0.0),
         "overheat_on": _bool(row.get("overheat_on")),
+        "overheat_on_effective": _bool(row.get("overheat_on_effective")),
         "overheat_triggered": _bool(row.get("overheat_triggered")),
         "overheat_recovered": _bool(row.get("overheat_recovered")),
+        "common_last_date": str(row.get("common_last_date", "")),
     }
 
 
@@ -1042,8 +1192,8 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
         raise poe.BotError(f"在 {start.date()} 到 {end.date()} 期间没有 v1.1 数据。")
     nav = sub["nav"].astype(float)
     nav_norm = nav / float(nav.iloc[0])
-    ret = sub["return"].astype(float).fillna(0.0)
-    days = max((pd.Timestamp(sub["date"].iloc[-1]) - pd.Timestamp(sub["date"].iloc[0])).days, 1)
+    ret = nav_norm.pct_change().fillna(0.0)
+    years = max(len(sub) / TRADING_DAYS, 1.0 / TRADING_DAYS)
     std = ret.std(ddof=0)
     drawdown = nav_norm / nav_norm.cummax() - 1.0
     final_exposure = sub["final_exposure_after_overheat"].astype(float).fillna(0.0)
@@ -1052,14 +1202,15 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
         "end": pd.Timestamp(sub["date"].iloc[-1]).date().isoformat(),
         "rows": int(len(sub)),
         "total": float(nav_norm.iloc[-1] - 1.0),
-        "annual": float(nav_norm.iloc[-1] ** (365.25 / days) - 1.0),
+        "annual": float(nav_norm.iloc[-1] ** (1.0 / years) - 1.0),
         "maxdd": float(drawdown.min()),
         "vol": float(std * math.sqrt(TRADING_DAYS)),
         "sharpe": float(ret.mean() / std * math.sqrt(TRADING_DAYS)) if std > 0 else math.nan,
-        "trades": int(sub["trade_count"].astype(float).iloc[-1] - sub["trade_count"].astype(float).iloc[0]),
+        "trades": int((sub["turnover"].astype(float) > 1e-12).sum()),
         "avg_scale": float(sub["weight"].astype(float).mean()),
         "avg_final_exposure": float(final_exposure.mean()),
         "cash_days": int((sub["position"].astype(str) == "CASH").sum()),
+        "zero_exposure_days": int((final_exposure <= 1e-12).sum()),
         "overheat_days": int(sub["overheat_on"].astype(str).str.lower().eq("true").sum()),
     }
 
@@ -1079,12 +1230,10 @@ def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Ti
             continue
         nav = part["nav"].astype(float)
         nav_norm = nav / float(nav.iloc[0])
-        ret = part["return"].astype(float).fillna(0.0)
+        ret = nav_norm.pct_change().fillna(0.0)
         std = ret.std(ddof=0)
         dd = nav_norm / nav_norm.cummax() - 1.0
-        trades = 0
-        if "trade_count" in part.columns:
-            trades = int(part["trade_count"].astype(float).iloc[-1] - part["trade_count"].astype(float).iloc[0])
+        trades = int((part["turnover"].astype(float) > 1e-12).sum()) if "turnover" in part.columns else 0
         exposure_col = "final_exposure_after_overheat" if "final_exposure_after_overheat" in part.columns else "holding_fraction"
         avg_exposure = float(part[exposure_col].astype(float).fillna(0.0).mean()) if exposure_col in part.columns else math.nan
         rows.append(
@@ -1147,6 +1296,14 @@ def parse_date_range(text, now=None):
     now = pd.Timestamp.now().normalize() if now is None else pd.Timestamp(now).normalize()
     day_suffix = r"[日号]?"
 
+    def _build_year_to_month_day(m):
+        year = int(m.group(1))
+        start = pd.Timestamp(f"{year}-{int(m.group(2)):02d}-{int(m.group(3)):02d}")
+        end = pd.Timestamp(f"{year}-{int(m.group(4)):02d}-{int(m.group(5)):02d}")
+        if end < start:
+            end = pd.Timestamp(f"{year + 1}-{int(m.group(4)):02d}-{int(m.group(5)):02d}")
+        return start, end
+
     # YYYY-MM-DD ~ YYYY-MM-DD
     patterns = [
         (
@@ -1160,10 +1317,7 @@ def parse_date_range(text, now=None):
         (
             r"(\d{4})[-年/.](\d{1,2})[-月/.](\d{1,2})\s*"
             + day_suffix + r"\s*[到至—\-~]+\s*(\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix,
-            lambda m: (
-                pd.Timestamp(f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"),
-                pd.Timestamp(f"{m.group(1)}-{int(m.group(4)):02d}-{int(m.group(5)):02d}"),
-            ),
+            _build_year_to_month_day,
         ),
     ]
     for pattern, build in patterns:
@@ -1182,7 +1336,7 @@ def parse_date_range(text, now=None):
         end = pd.Timestamp(f"{year}-{int(match.group(3)):02d}-{int(match.group(4)):02d}")
         if start > end:
             start = pd.Timestamp(f"{year - 1}-{int(match.group(1)):02d}-{int(match.group(2)):02d}")
-            end = pd.Timestamp(f"{year - 1}-{int(match.group(3)):02d}-{int(match.group(4)):02d}")
+            end = pd.Timestamp(f"{year}-{int(match.group(3)):02d}-{int(match.group(4)):02d}")
         return start, end
 
     # YYYY-MM-DD至今
@@ -1343,11 +1497,23 @@ def _signal_action_text(sig: dict[str, object]) -> str:
     previous = _asset_name(str(sig.get("position_before", "")))
     target = _asset_name(str(sig.get("position", "")))
     trade_target = sig.get("trade_target")
+    old_exp = _float(sig.get("exposure_effective"), default=math.nan)
+    new_exp = _float(sig.get("final_exposure"), default=math.nan)
+    turnover = _float(sig.get("turnover"), default=0.0)
     if trade_target:
         if str(sig.get("position_before")) == str(sig.get("position")):
-            return f"仓位调整: 维持 {target}，目标基础仓位 {_fmt_pct(sig.get('holding_fraction'))}"
-        return f"换仓信号: {previous} -> {target}，新资产首笔 {_fmt_pct(sig.get('holding_fraction'))}"
-    return f"无换仓: 继续持有 {target}"
+            return f"同资产仓位调整: {target}，敞口 {_fmt_pct(old_exp)} -> {_fmt_pct(new_exp)}"
+        return f"换仓信号: {previous} -> {target}，目标敞口 {_fmt_pct(new_exp)}"
+    if turnover > 1e-12:
+        return f"仓位调整: 维持 {target}，敞口 {_fmt_pct(old_exp)} -> {_fmt_pct(new_exp)}"
+    return f"无调仓: 继续持有 {target}，敞口 {_fmt_pct(new_exp)}"
+
+
+def _trade_action_label(sig: dict[str, object]) -> str:
+    trade_target = sig.get("trade_target")
+    if trade_target:
+        return _asset_name(str(trade_target))
+    return "仓位调整" if _float(sig.get("turnover"), default=0.0) > 1e-12 else "不调仓"
 
 
 def _signal_rank_rows(daily: pd.DataFrame, limit: int = 6) -> list[dict[str, object]]:
@@ -1356,21 +1522,24 @@ def _signal_rank_rows(daily: pd.DataFrame, limit: int = 6) -> list[dict[str, obj
     for code in ASSETS:
         raw_score = _float(row.get(f"raw_score_{code}"), default=math.nan)
         eligible_score = _float(row.get(f"score_{code}"), default=math.nan)
-        score = raw_score if not pd.isna(raw_score) else eligible_score
         r2 = _float(row.get(f"r2_{code}"), default=math.nan)
+        eligible = not pd.isna(eligible_score)
         rows.append(
             {
                 "code": code,
                 "name": _asset_name(code),
-                "score": score,
+                "score": raw_score if not pd.isna(raw_score) else eligible_score,
+                "raw_score": raw_score,
                 "eligible_score": eligible_score,
+                "eligible": eligible,
                 "r2": r2,
             }
         )
     rows.sort(
         key=lambda item: (
-            not pd.isna(item["score"]),
-            item["score"] if not pd.isna(item["score"]) else float("-inf"),
+            bool(item["eligible"]),
+            item["eligible_score"] if not pd.isna(item["eligible_score"]) else float("-inf"),
+            item["raw_score"] if not pd.isna(item["raw_score"]) else float("-inf"),
         ),
         reverse=True,
     )
@@ -1387,20 +1556,45 @@ def _last_signal_date(daily: pd.DataFrame) -> str:
     return pd.Timestamp(changed.iloc[-1]["date"]).date().isoformat()
 
 
+def _asset_last_dates_text(row: pd.Series) -> str:
+    parts = []
+    for code in ASSETS:
+        value = str(row.get(f"last_date_{code}", "")).strip()
+        if value:
+            parts.append(f"{code}:{value}")
+    return " | ".join(parts)
+
+
+def _overheat_rule_text(row: pd.Series) -> str:
+    mode = str(row.get("overheat_recovery_mode", "same_side_or_exit"))
+    trigger = f"过热触发: bias >= {OVERHEAT_ENTER:.0%} 且 bias_mom 同向"
+    if mode == "exit_only":
+        recovery = f"过热恢复: bias <= {OVERHEAT_EXIT:.0%}"
+    else:
+        recovery = f"过热恢复: bias <= {OVERHEAT_EXIT:.0%}，或 same_side 消失"
+    return f"{trigger}；{recovery}。"
+
+
 def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     ordered = daily.sort_values("date").reset_index(drop=True)
     row = ordered.iloc[-1]
     sig = latest_signal(ordered)
-    trade_label = _asset_name(str(sig["trade_target"])) if sig["trade_target"] else "不调仓"
+    trade_label = _trade_action_label(sig)
     prev_name = _asset_name(str(sig["position_before"]))
     next_name = _asset_name(str(sig["position"]))
     final_exposure = _float(sig["final_exposure"], default=math.nan)
     holding_fraction = _float(sig["holding_fraction"], default=math.nan)
-    target_vol_scale = _float(sig["target_vol_scale"], default=math.nan)
-    overheat_scale = _float(sig["overheat_scale"], default=1.0)
+    target_vol_scale_effective = _float(sig["target_vol_scale_effective"], default=math.nan)
+    target_vol_scale_next = _float(sig["target_vol_scale_next"], default=math.nan)
+    overheat_scale_effective = _float(sig["overheat_scale_effective"], default=1.0)
+    overheat_scale_next = _float(sig["overheat_scale_next"], default=1.0)
     execution_scale = _float(sig["execution_scale"], default=math.nan)
+    exposure_effective = _float(sig["exposure_effective"], default=math.nan)
+    turnover = _float(sig["turnover"], default=0.0)
+    cost = _float(sig["cost"], default=0.0)
     realized_vol = _float(row.get("realized_vol"), default=math.nan)
     base_nav = _float(row.get("base_nav"), default=math.nan)
+    nav_before_overheat = _float(row.get("nav_before_overheat"), default=math.nan)
     overheat_bias = _float(row.get("overheat_bias"), default=math.nan)
     overheat_mom = _float(row.get("overheat_bias_mom"), default=math.nan)
     pending_target = _empty_to_none(row.get("pending_entry_target"))
@@ -1413,6 +1607,11 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("## SubD六ETF V1.1 操作信号")
     lines.append("")
     lines.append(f"数据源: **{source_note}** | 信号日: **{sig['date']}** | 版本: **V{sig['version']}**")
+    if sig.get("common_last_date"):
+        lines.append(f"最新共同有效日线: **{sig['common_last_date']}**")
+    last_dates_text = _asset_last_dates_text(row)
+    if last_dates_text:
+        lines.append(f"各资产最后数据日: {last_dates_text}")
     lines.append("")
     lines.append("### 结论")
     lines.append("")
@@ -1421,7 +1620,10 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append(f"- 当前已生效持仓: **{prev_name}**")
     lines.append(f"- 今日目标持仓: **{next_name}**")
     lines.append(f"- 本日调仓动作: **{trade_label}**")
-    lines.append(f"- 最终执行敞口: **{_fmt_pct(final_exposure)}**")
+    lines.append(f"- 当前已生效敞口: **{_fmt_pct(exposure_effective)}**")
+    lines.append(f"- 收盘后目标敞口: **{_fmt_pct(final_exposure)}**")
+    if turnover > 1e-12:
+        lines.append(f"- 本日目标turnover: **{_fmt_pct(turnover)}**，成本: **{_fmt_pct(cost, 3)}**")
     lines.append(f"- 上次出现调仓信号: **{last_signal}**")
     lines.append("")
     lines.append("### 仓位拆解")
@@ -1429,35 +1631,39 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("| 层级 | 当前值 | 说明 |")
     lines.append("|:-|--:|:-|")
     lines.append(f"| 基础仓位 | **{_fmt_pct(holding_fraction)}** | V1.1新资产先建50%，等待下跌日补足 |")
-    lines.append(f"| Target-vol scale | **{_fmt_num(target_vol_scale, 3)}x** | 目标波动率{TARGET_VOL:.0%}，{DEFAULT_VOL_WINDOW}日收益率估计 |")
-    lines.append(f"| 过热防守scale | **{_fmt_num(overheat_scale, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
+    lines.append(f"| Target-vol scale(今日已生效) | **{_fmt_num(target_vol_scale_effective, 3)}x** | 用于本日收益 |")
+    lines.append(f"| Target-vol scale(收盘后目标) | **{_fmt_num(target_vol_scale_next, 3)}x** | 目标波动率{TARGET_VOL:.0%}，{DEFAULT_VOL_WINDOW}日收益率估计 |")
+    lines.append(f"| 过热防守scale(今日已生效) | **{_fmt_num(overheat_scale_effective, 3)}x** | 用于本日收益 |")
+    lines.append(f"| 过热防守scale(收盘后目标) | **{_fmt_num(overheat_scale_next, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
     lines.append(f"| 执行scale | **{_fmt_num(execution_scale, 3)}x** | Target-vol × 过热防守 |")
-    lines.append(f"| 最终敞口 | **{_fmt_pct(final_exposure)}** | 基础仓位 × 执行scale |")
+    lines.append(f"| 当前已生效敞口 | **{_fmt_pct(exposure_effective)}** | 本日收益使用的敞口 |")
+    lines.append(f"| 收盘后目标敞口 | **{_fmt_pct(final_exposure)}** | 基础仓位 × 收盘后目标执行scale |")
     if not pd.isna(realized_vol):
         lines.append(f"| 已实现波动率 | **{_fmt_pct(realized_vol)}** | 用于下一期target-vol计算 |")
     lines.append("")
     lines.append("### 动量排名")
     lines.append("")
-    lines.append("| # | ETF | Score | R² | 状态 |")
-    lines.append("|:-:|:-|--:|--:|:-|")
+    lines.append("| # | ETF | Raw Score | Eligible Score | R² | 状态 |")
+    lines.append("|:-:|:-|--:|--:|--:|:-|")
     for rank, item in enumerate(_signal_rank_rows(ordered), 1):
         code = str(item["code"])
-        score = _float(item["score"], default=math.nan)
+        raw_score = _float(item["raw_score"], default=math.nan)
+        eligible_score = _float(item["eligible_score"], default=math.nan)
         r2 = _float(item["r2"], default=math.nan)
         marker = " <- 最强候选" if code == str(sig["best_candidate"]) else ""
         hold_marker = " / 当前持仓" if code == str(sig["position_before"]) else ""
-        status = "通过" if not pd.isna(score) else "未入选"
-        if pd.isna(score) or pd.isna(r2):
+        status = "入选" if bool(item.get("eligible")) else "未入选"
+        if pd.isna(raw_score) or pd.isna(r2):
             status = "数据不足"
         elif r2 < R2_THRESHOLD:
             status = f"R²未过{R2_THRESHOLD:.2f}"
-        elif score <= SCORE_MIN:
+        elif raw_score <= SCORE_MIN:
             status = f"Score≤{SCORE_MIN:.0f}"
-        elif score >= SCORE_MAX:
+        elif raw_score >= SCORE_MAX:
             status = f"Score≥{SCORE_MAX:.0f}"
         lines.append(
             f"| {rank} | {_asset_name(code)}{marker}{hold_marker} | "
-            f"{_fmt_num(score, 4)} | {_fmt_num(r2, 3)} | {status} |"
+            f"{_fmt_num(raw_score, 4)} | {_fmt_num(eligible_score, 4)} | {_fmt_num(r2, 3)} | {status} |"
         )
     lines.append("")
     lines.append("### 规则状态")
@@ -1490,6 +1696,7 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     if not pd.isna(overheat_mom):
         bias_text += f" | 乖离动量 {_fmt_num(overheat_mom, 2)}"
     lines.append(f"- 过热防守: {overheat_status}{bias_text}。")
+    lines.append(f"- {_overheat_rule_text(row)}")
     lines.append(f"- 成本口径: 单边交易成本 **{ONE_WAY_COST:.1%}**，日线收盘价口径。")
     lines.append("")
     lines.append("### 净值快照")
@@ -1498,10 +1705,12 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("|:-|--:|")
     lines.append(f"| 当日收益 | **{_fmt_pct(sig['daily_return'], 3)}** |")
     lines.append(f"| V1.1净值 | **{_fmt_num(sig['nav'], 4)}** |")
+    if not pd.isna(nav_before_overheat):
+        lines.append(f"| 过热前净值 | **{_fmt_num(nav_before_overheat, 4)}** |")
     if not pd.isna(base_nav):
-        lines.append(f"| 过热前基础净值 | **{_fmt_num(base_nav, 4)}** |")
+        lines.append(f"| 基础策略净值 | **{_fmt_num(base_nav, 4)}** |")
     lines.append("")
-    lines.append("> 执行提醒: 这是日线收盘确认信号；实盘执行时按你的交易流程在下一可交易时点处理。")
+    lines.append("> 执行提醒: 这是日线收盘确认信号；当前回测和信号口径按当日收盘价执行。")
     return "\n".join(lines) + "\n"
 
 
@@ -1538,8 +1747,11 @@ def format_live_params_snapshot(daily: pd.DataFrame, source_note: str) -> str:
     overheat_bias = _float(row.get("overheat_bias"), default=math.nan)
     overheat_mom = _float(row.get("overheat_bias_mom"), default=math.nan)
     final_exposure = _float(sig["final_exposure"], default=math.nan)
-    target_vol_scale = _float(sig["target_vol_scale"], default=math.nan)
-    overheat_scale = _float(sig["overheat_scale"], default=1.0)
+    exposure_effective = _float(sig["exposure_effective"], default=math.nan)
+    target_vol_scale_effective = _float(sig["target_vol_scale_effective"], default=math.nan)
+    target_vol_scale_next = _float(sig["target_vol_scale_next"], default=math.nan)
+    overheat_scale_effective = _float(sig["overheat_scale_effective"], default=1.0)
+    overheat_scale_next = _float(sig["overheat_scale_next"], default=1.0)
     execution_scale = _float(sig["execution_scale"], default=math.nan)
 
     lines: list[str] = []
@@ -1547,33 +1759,43 @@ def format_live_params_snapshot(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("### 当前六ETF动量快照")
     lines.append("")
     lines.append(f"数据源: **{source_note}** | 最新日线: **{sig['date']}**")
+    if sig.get("common_last_date"):
+        lines.append(f"最新共同有效日线: **{sig['common_last_date']}**")
+    last_dates_text = _asset_last_dates_text(row)
+    if last_dates_text:
+        lines.append(f"各资产最后数据日: {last_dates_text}")
     lines.append("")
     lines.append(
         f"当前信号: **{_asset_name(str(sig['position_before']))} -> {_asset_name(str(sig['position']))}** | "
         f"最强候选: **{_asset_name(str(sig['best_candidate']))}** | "
-        f"最终敞口: **{_fmt_pct(final_exposure)}**"
+        f"目标敞口: **{_fmt_pct(final_exposure)}**"
     )
     lines.append("")
-    lines.append("| # | ETF | Score | R² | 入选状态 | 角色 |")
-    lines.append("|:-:|:-|--:|--:|:-|:-|")
+    lines.append("| # | ETF | Raw Score | Eligible Score | R² | 入选状态 | 角色 |")
+    lines.append("|:-:|:-|--:|--:|--:|:-|:-|")
     for rank, item in enumerate(_signal_rank_rows(ordered), 1):
         code = str(item["code"])
-        score = _float(item["score"], default=math.nan)
+        raw_score = _float(item["raw_score"], default=math.nan)
+        eligible_score = _float(item["eligible_score"], default=math.nan)
         r2 = _float(item["r2"], default=math.nan)
         lines.append(
-            f"| {rank} | {_asset_name(code)} | {_fmt_num(score, 4)} | {_fmt_num(r2, 3)} | "
-            f"{_momentum_status(score, r2)} | {_momentum_role(code, sig)} |"
+            f"| {rank} | {_asset_name(code)} | {_fmt_num(raw_score, 4)} | "
+            f"{_fmt_num(eligible_score, 4)} | {_fmt_num(r2, 3)} | "
+            f"{_momentum_status(raw_score, r2)} | {_momentum_role(code, sig)} |"
         )
     lines.append("")
     lines.append("### 当前执行参数快照")
     lines.append("")
     lines.append("| 参数 | 当前值 | 说明 |")
     lines.append("|:-|--:|:-|")
-    lines.append(f"| Target-vol scale | **{_fmt_num(target_vol_scale, 3)}x** | 目标波动率{TARGET_VOL:.0%}，波动窗口{DEFAULT_VOL_WINDOW}日 |")
-    lines.append(f"| 过热防守scale | **{_fmt_num(overheat_scale, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
+    lines.append(f"| Target-vol scale(今日已生效) | **{_fmt_num(target_vol_scale_effective, 3)}x** | 用于本日收益 |")
+    lines.append(f"| Target-vol scale(收盘后目标) | **{_fmt_num(target_vol_scale_next, 3)}x** | 目标波动率{TARGET_VOL:.0%}，波动窗口{DEFAULT_VOL_WINDOW}日 |")
+    lines.append(f"| 过热防守scale(今日已生效) | **{_fmt_num(overheat_scale_effective, 3)}x** | 用于本日收益 |")
+    lines.append(f"| 过热防守scale(收盘后目标) | **{_fmt_num(overheat_scale_next, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
     lines.append(f"| 执行scale | **{_fmt_num(execution_scale, 3)}x** | Target-vol × 过热防守 |")
     lines.append(f"| 切换buffer | **{SWITCH_BUFFER:.2f}x** | 换仓需最强候选分数 > 当前持仓分数 × {SWITCH_BUFFER:.2f} |")
-    lines.append(f"| 最终敞口 | **{_fmt_pct(final_exposure)}** | 基础仓位 × 执行scale |")
+    lines.append(f"| 当前已生效敞口 | **{_fmt_pct(exposure_effective)}** | 本日收益使用的敞口 |")
+    lines.append(f"| 收盘后目标敞口 | **{_fmt_pct(final_exposure)}** | 基础仓位 × 收盘后目标执行scale |")
     if not pd.isna(realized_vol):
         lines.append(f"| 已实现波动率 | **{_fmt_pct(realized_vol)}** | 当前target-vol计算输入 |")
     if not pd.isna(overheat_bias):
@@ -1582,6 +1804,7 @@ def format_live_params_snapshot(daily: pd.DataFrame, source_note: str) -> str:
         lines.append(f"| 乖离动量 | **{_fmt_num(overheat_mom, 2)}** | 同向过热判定输入 |")
     lines.append("")
     lines.append("说明: Score 为25日加权对数斜率年化动量；只有 `0 < Score < 5` 且 R² 达标的 ETF 才进入候选池。")
+    lines.append(_overheat_rule_text(row))
     return "\n".join(lines) + "\n"
 
 
@@ -1784,8 +2007,8 @@ class SubDSixEtfV11Bot:
             msg.write("## SubD六ETF V1.1 表现\n\n")
             msg.write(f"数据: {source_note}\n")
             msg.write(f"最新日度数据: **{latest.date().isoformat()}**\n\n")
-            msg.write("| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 |\n")
-            msg.write("|:-|:-|---:|---:|---:|---:|---:|---:|---:|---:|\n")
+            msg.write("| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n")
+            msg.write("|:-|:-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
             first_chart_range = None
             for label, start, end in ranges:
                 try:
@@ -1797,10 +2020,10 @@ class SubDSixEtfV11Bot:
                         f"{_fmt_pct(m['total'])} | {_fmt_pct(m['annual'])} | "
                         f"{_fmt_pct(m['maxdd'])} | {_fmt_pct(m['vol'])} | "
                         f"{_fmt_num(m['sharpe'], 2)} | {m['trades']} | "
-                        f"{_fmt_pct(m['avg_final_exposure'])} |\n"
+                        f"{_fmt_pct(m['avg_final_exposure'])} | {m['zero_exposure_days']} | {m['cash_days']} |\n"
                     )
                 except poe.BotError:
-                    msg.write(f"| {label} | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 |\n")
+                    msg.write(f"| {label} | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 |\n")
             if first_chart_range is not None:
                 label, start, end = first_chart_range
                 msg.write("\n")
