@@ -7,6 +7,7 @@ import time
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from typing import Dict, List, Literal, Optional, Tuple
 
 import numpy as np
@@ -57,7 +58,8 @@ class _LocalMessage:
         sys.stdout.buffer.flush()
 
     def overwrite(self, value):
-        sys.stdout.buffer.write(str(value).encode("utf-8", errors="replace"))
+        prefix = "\r\x1b[F\x1b[2K" if value == "" else "\r\x1b[2K"
+        sys.stdout.buffer.write((prefix + str(value)).encode("utf-8", errors="replace"))
         sys.stdout.buffer.flush()
 
     def attach_file(self, *_args, **_kwargs):
@@ -180,6 +182,10 @@ def _eastmoney_market_id(code: str) -> str:
     return f"{'0' if suffix == 'SZ' else '1'}.{ticker}"
 
 
+def _eastmoney_symbol(code: str) -> str:
+    return code.split(".", 1)[0]
+
+
 def _tencent_symbol(code: str) -> str:
     ticker, suffix = code.split(".")
     return f"{'sz' if suffix == 'SZ' else 'sh'}{ticker}"
@@ -211,29 +217,50 @@ def _load_sina_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataF
     series: list[pd.Series] = []
     sources: list[dict] = []
     for code in codes:
-        symbol = _sina_symbol(code)
-        df = ak.fund_etf_hist_sina(symbol=symbol)
-        if df.empty:
-            raise RuntimeError(f"Sina returned no rows for {code} / {symbol}")
-        close = df[["date", "close"]].copy()
-        close["date"] = pd.to_datetime(close["date"])
-        close = close.set_index("date")["close"].astype(float).sort_index()
-        close = close.loc[:end_date]
-        close.name = code
+        close = _load_akshare_eastmoney_qfq_one_close(code, end_date)
         series.append(close)
-        sources.append(_source_record(code, "akshare.fund_etf_hist_sina raw close", "raw/unadjusted as served by Sina", close))
+        sources.append(_source_record(code, "akshare.fund_etf_hist_em daily close", "qfq/front-adjusted", close))
     return pd.concat(series, axis=1).sort_index(), pd.DataFrame(sources)
 
 
+def _load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
+    if not _HAS_AKSHARE:
+        raise RuntimeError("akshare is not installed")
+    symbol = _eastmoney_symbol(code)
+    last_error = None
+    for attempt in range(1, 4):
+        try:
+            df = ak.fund_etf_hist_em(
+                symbol=symbol,
+                period="daily",
+                start_date="20100101",
+                end_date=end_date.strftime("%Y%m%d"),
+                adjust="qfq",
+            )
+            if not df.empty:
+                break
+        except Exception as exc:
+            last_error = exc
+        time.sleep(1.5 * attempt)
+    else:
+        raise RuntimeError(f"AkShare Eastmoney qfq returned no rows for {code} / {symbol}; last_error={last_error}")
+    close = df[["日期", "收盘"]].copy()
+    close["日期"] = pd.to_datetime(close["日期"])
+    close = close.set_index("日期")["收盘"].astype(float).sort_index()
+    close = close.loc[:end_date]
+    close.name = code
+    return close
+
+
 def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
-    """Fallback: fetch historical kline from Eastmoney HTTP API (fqt=0 = unadjusted)."""
+    """Fallback: fetch historical kline from Eastmoney HTTP API (fqt=1 = qfq)."""
     url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
     params = {
         "fields1": "f1,f2,f3,f4,f5,f6",
         "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
         "ut": "7eea3edcaed734bea9cbfc24409ed989",
         "klt": "101",
-        "fqt": "0",
+        "fqt": "1",
         "beg": "20100101",
         "end": end_date.strftime("%Y%m%d"),
         "secid": _eastmoney_market_id(code),
@@ -266,6 +293,18 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close = close.loc[:end_date]
     close.name = code
     return close
+
+
+def _validate_no_partial_raw_history(source: str, code: str, close: pd.Series, errors: list[str]) -> None:
+    if errors:
+        raise RuntimeError(f"{source} returned partial history for {code}; errors={' | '.join(errors[-3:])}")
+    if len(close) < 2:
+        return
+    gaps = close.index.to_series().diff().dt.days.dropna()
+    long_gaps = gaps[gaps > 31]
+    if not long_gaps.empty:
+        first_gap_end = pd.Timestamp(long_gaps.index[0]).date().isoformat()
+        raise RuntimeError(f"{source} returned a long mid-series gap for {code}; first_gap_end={first_gap_end}")
 
 
 def _load_cnfin_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
@@ -323,6 +362,7 @@ def _load_cnfin_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
     close = df.drop_duplicates("date").set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end_date]
+    _validate_no_partial_raw_history("CNFin", code, close, errors)
     close.name = code
     return close
 
@@ -368,6 +408,7 @@ def _load_tencent_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     df["date"] = pd.to_datetime(df["date"])
     close = df.drop_duplicates("date").set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end]
+    _validate_no_partial_raw_history("Tencent", code, close, errors)
     close.name = code
     return close
 
@@ -378,7 +419,7 @@ def _load_eastmoney_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.
     for code in codes:
         close = _load_eastmoney_one_close(code, end_date)
         series.append(close)
-        sources.append(_source_record(code, "Eastmoney push2his kline", "raw/unadjusted (fqt=0)", close))
+        sources.append(_source_record(code, "Eastmoney push2his kline", "qfq/front-adjusted (fqt=1)", close))
     return pd.concat(series, axis=1).sort_index(), pd.DataFrame(sources)
 
 
@@ -408,9 +449,8 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
     errors: list[str] = []
     for code in codes:
         for source_name, adjustment, loader in (
-            ("CNFin quotedata kline", "raw/unadjusted close_px", _load_cnfin_one_close),
-            ("Tencent gu.qq kline", "raw/unadjusted day close", _load_tencent_one_close),
-            ("Eastmoney push2his kline", "raw/unadjusted (fqt=0)", _load_eastmoney_one_close),
+            ("akshare.fund_etf_hist_em daily close", "qfq/front-adjusted", _load_akshare_eastmoney_qfq_one_close),
+            ("Eastmoney push2his kline", "qfq/front-adjusted (fqt=1)", _load_eastmoney_one_close),
         ):
             try:
                 close = loader(code, end_date)
@@ -426,11 +466,6 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
 
 def load_close(config: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
     codes = list(ASSETS)
-    if _HAS_AKSHARE:
-        try:
-            return _load_sina_close(codes, config.end_date)
-        except Exception:
-            pass
     return _load_public_close_with_per_code_fallback(codes, config.end_date)
 
 
@@ -745,7 +780,7 @@ def _compute_target_vol_scales(
 ) -> tuple[pd.Series, pd.Series, pd.Series]:
     base_ret = curve["return"].astype(float).fillna(0.0)
     realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(TRADING_DAYS)
-    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], np.nan)
+    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], max_lev)
     next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
     effective_scale = next_scale.shift(1).fillna(1.0)
     return realized_vol, effective_scale.astype(float), next_scale.astype(float)
@@ -900,9 +935,13 @@ def apply_overheat_overlay(
     one_way_cost: float,
     recovery_mode: Literal["same_side_or_exit", "exit_only"] = "same_side_or_exit",
 ) -> pd.DataFrame:
-    if not 0 < case.exit < case.enter:
+    if (
+        not math.isfinite(float(case.enter))
+        or not math.isfinite(float(case.exit))
+        or not 0 < case.exit < case.enter
+    ):
         raise ValueError(f"Bad overheat thresholds: {case}")
-    if not 0 <= case.derisk_scale <= 1:
+    if not math.isfinite(float(case.derisk_scale)) or not 0 <= case.derisk_scale <= 1:
         raise ValueError(f"Bad derisk scale: {case}")
     if recovery_mode not in {"same_side_or_exit", "exit_only"}:
         raise ValueError(f"Bad overheat recovery mode: {recovery_mode}")
@@ -1093,11 +1132,30 @@ def _build_v11_daily(end_date=None):
             category=FutureWarning,
         )
         daily = pd.concat(curves, sort=False).reset_index().rename(columns={"index": "date"})
-    source_name = ", ".join(dict.fromkeys(sources["source"].astype(str).tolist())) if not sources.empty else "unknown"
+    if sources.empty:
+        source_name = "unknown"
+    else:
+        source_name = ", ".join(
+            dict.fromkeys(
+                f"{row.source} [{row.adjustment}]"
+                for row in sources[["source", "adjustment"]].itertuples(index=False)
+            )
+        )
     daily["common_last_date"] = common_last.date().isoformat()
     for code, last_date in last_by_asset.items():
         daily[f"last_date_{code}"] = "" if pd.isna(last_date) else pd.Timestamp(last_date).date().isoformat()
     return _normalize_daily(daily), source_name
+
+
+@lru_cache(maxsize=1)
+def _cached_daily(date_key: str) -> tuple[pd.DataFrame, str]:
+    return _build_v11_daily(end_date=pd.Timestamp(date_key))
+
+
+def _get_daily_for_today() -> tuple[pd.DataFrame, str]:
+    date_key = pd.Timestamp.today().normalize().date().isoformat()
+    daily, source_name = _cached_daily(date_key)
+    return daily.copy(), source_name
 
 
 # ════════════════════════════════════════════════════════════════
@@ -1452,6 +1510,7 @@ def parse_all_date_ranges(text, now=None):
 def classify_query(text: str) -> str:
     query = str(text or "").strip()
     compact = re.sub(r"\s+", "", query)
+    # Realtime signal/parameter requests intentionally take priority over chart words.
     if "实时信号" in compact or "信号实时" in compact:
         return "live_signal"
     if "实时参数" in compact or "参数实时" in compact:
@@ -1571,6 +1630,8 @@ def _asset_last_dates_text(row: pd.Series) -> str:
 
 def _overheat_rule_text(row: pd.Series) -> str:
     mode = str(row.get("overheat_recovery_mode", "same_side_or_exit"))
+    if mode.strip().lower() in {"", "none", "nan"}:
+        return "无过热防守规则。"
     trigger = f"过热触发: bias >= {OVERHEAT_ENTER:.0%} 且 bias_mom 同向"
     if mode == "exit_only":
         recovery = f"过热恢复: bias <= {OVERHEAT_EXIT:.0%}"
@@ -1883,6 +1944,8 @@ def render_nav_curve_png(
     import matplotlib
 
     matplotlib.use("Agg")
+    matplotlib.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "SimHei", "Arial Unicode MS"]
+    matplotlib.rcParams["axes.unicode_minus"] = False
     import matplotlib.dates as mdates
     import matplotlib.pyplot as plt
 
@@ -1958,7 +2021,7 @@ class SubDSixEtfV11Bot:
     def _handle_signal(self):
         with poe.start_message() as msg:
             msg.write("正在加载数据并计算回测...\n")
-            daily, source_note = _build_v11_daily()
+            daily, source_note = _get_daily_for_today()
             msg.overwrite("")
             msg.write(format_signal_report(daily, source_note))
 
@@ -1971,7 +2034,7 @@ class SubDSixEtfV11Bot:
             if live:
                 msg.write("正在加载数据...\n")
                 try:
-                    daily, source_note = _build_v11_daily()
+                    daily, source_note = _get_daily_for_today()
                 except Exception as exc:
                     source_note = f"加载失败: {str(exc)[:120]}"
                 msg.overwrite("")
@@ -1997,7 +2060,7 @@ class SubDSixEtfV11Bot:
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}只ETF** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
-            msg.write("| 数据源 | **AkShare/Sina -> CNFin -> Tencent -> Eastmoney** | 均使用raw/unadjusted日收盘价；CNFin/Tencent按8年分段拉取 |\n")
+            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Eastmoney HTTP qfq** | 历史回测统一使用前复权日收盘价，不静默混入raw源 |\n")
             if daily is not None:
                 msg.write(format_live_params_snapshot(daily, source_note))
 
@@ -2006,7 +2069,7 @@ class SubDSixEtfV11Bot:
     def _handle_performance(self, query: str):
         with poe.start_message() as msg:
             msg.write("正在加载数据并计算回测...\n")
-            daily, source_note = _build_v11_daily()
+            daily, source_note = _get_daily_for_today()
             latest = pd.Timestamp(daily["date"].iloc[-1])
             ranges = resolve_performance_ranges(query, latest_date=latest)
             msg.overwrite("")
@@ -2033,7 +2096,7 @@ class SubDSixEtfV11Bot:
             if first_chart_range is not None:
                 label, start, end = first_chart_range
                 msg.write("\n")
-                yearly = calc_yearly_performance(daily, start, end)
+                yearly = calc_yearly_performance(daily, EVAL_START, latest)
                 yearly_table = format_yearly_performance_table(yearly)
                 if yearly_table:
                     msg.write(yearly_table)

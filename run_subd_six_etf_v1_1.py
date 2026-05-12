@@ -1,3 +1,4 @@
+import argparse
 import math
 from dataclasses import dataclass
 from typing import Literal
@@ -11,7 +12,7 @@ import research_subd_six_etf_weighted_slope as subd
 VERSION = "1.1"
 START_DATE = pd.Timestamp("2010-01-01")
 EVAL_START = pd.Timestamp("2020-01-02")
-END_DATE = pd.Timestamp("2026-05-08")
+END_DATE = pd.Timestamp.today().normalize()
 R2_THRESHOLD = 0.20
 TARGET_VOL = 0.25
 V10_BASELINE_SWITCH_BUFFER = 1.00
@@ -23,6 +24,35 @@ OVERHEAT_DERISK_SCALE = 0.0
 ONE_WAY_COST = 0.001
 CN_BIAS_N = 60
 CN_MOM_DAY = 20
+
+
+def _sanity_check_subd_contract() -> None:
+    required = {
+        "ASSETS": dict,
+        "LOOKBACK": int,
+        "TRADING_DAYS": int,
+        "DEFAULT_VOL_WINDOW": int,
+        "DEFAULT_MAX_LEV": (int, float),
+        "OUTPUT_DIR": object,
+        "RunConfig": type,
+        "calc_scores": object,
+        "max_drawdown": object,
+        "load_close": object,
+        "data_quality": object,
+    }
+    for name, expected_type in required.items():
+        if not hasattr(subd, name):
+            raise RuntimeError(f"research_subd_six_etf_weighted_slope missing {name}")
+        value = getattr(subd, name)
+        if expected_type is not object and not isinstance(value, expected_type):
+            raise RuntimeError(f"Unexpected type for subd.{name}: {type(value)!r}")
+    if not subd.ASSETS:
+        raise RuntimeError("subd.ASSETS is empty")
+    if subd.LOOKBACK <= 0 or subd.TRADING_DAYS <= 0:
+        raise RuntimeError("subd.LOOKBACK and subd.TRADING_DAYS must be positive")
+
+
+_sanity_check_subd_contract()
 
 
 @dataclass(frozen=True)
@@ -292,7 +322,7 @@ def _compute_target_vol_scales(
 ) -> tuple[pd.Series, pd.Series, pd.Series]:
     base_ret = curve["return"].astype(float).fillna(0.0)
     realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(subd.TRADING_DAYS)
-    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], np.nan)
+    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], max_lev)
     next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
     effective_scale = next_scale.shift(1).fillna(1.0)
     return realized_vol, effective_scale.astype(float), next_scale.astype(float)
@@ -307,12 +337,12 @@ def _recompute_final_exposure_nav(
     one_way_cost: float,
 ) -> pd.DataFrame:
     out = curve.copy()
+    if "base_gross_return" not in out.columns:
+        out["base_gross_return"] = out["gross_return"].astype(float).fillna(0.0)
     if "base_return" not in out.columns:
         out["base_return"] = out["return"].astype(float).fillna(0.0)
     if "base_nav" not in out.columns:
         out["base_nav"] = out["nav"].astype(float)
-    if "base_gross_return" not in out.columns:
-        out["base_gross_return"] = out["gross_return"].astype(float).fillna(0.0)
     if "base_turnover" not in out.columns:
         out["base_turnover"] = _float_series(out, "turnover", 0.0)
     if "base_cost" not in out.columns:
@@ -377,9 +407,11 @@ def apply_target_vol_overlay(
     realized_vol, effective_scale, next_scale = _compute_target_vol_scales(
         result, target_vol, vol_window, max_lev
     )
-    result["base_return"] = result["return"].astype(float).fillna(0.0)
-    result["base_nav"] = result["nav"]
+    result["target_vol_input_return"] = result["return"].astype(float).fillna(0.0)
+    result["target_vol_input_nav"] = result["nav"].astype(float)
     result["base_gross_return"] = result["gross_return"].astype(float).fillna(0.0)
+    result["base_return"] = result["return"].astype(float).fillna(0.0)
+    result["base_nav"] = result["nav"].astype(float)
     result["base_turnover"] = _float_series(result, "turnover", 0.0)
     result["base_cost"] = _float_series(result, "cost", 0.0)
     result["realized_vol"] = realized_vol
@@ -399,21 +431,25 @@ def calc_bias_momentum(close_series: pd.Series) -> pd.Series:
     result = np.full(n, np.nan)
     ma = close_series.rolling(CN_BIAS_N).mean().values
     total_lookback = CN_BIAS_N + CN_MOM_DAY - 1
-    x = np.arange(CN_MOM_DAY, dtype=float)
-    for i in range(total_lookback, n):
-        bias_window = np.empty(CN_MOM_DAY)
-        valid = True
-        for j in range(CN_MOM_DAY):
-            idx = i - CN_MOM_DAY + 1 + j
-            if np.isnan(ma[idx]) or ma[idx] < 1e-10 or np.isnan(prices[idx]):
-                valid = False
-                break
-            bias_window[j] = prices[idx] / ma[idx]
-        if not valid or bias_window[0] < 1e-10:
-            continue
-        bias_norm = bias_window / bias_window[0]
-        slope = np.polyfit(x, bias_norm, 1)[0]
-        result[i] = slope * 10000
+    if n <= total_lookback:
+        return pd.Series(result, index=close_series.index)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        bias_ratio = np.where((ma >= 1e-10) & np.isfinite(prices), prices / ma, np.nan)
+
+    windows = np.lib.stride_tricks.sliding_window_view(bias_ratio, CN_MOM_DAY)
+    starts = windows[:, 0]
+    valid = np.isfinite(windows).all(axis=1) & (starts >= 1e-10)
+    end_indices = np.arange(CN_MOM_DAY - 1, n)
+    valid &= end_indices >= total_lookback
+    if valid.any():
+        x = np.arange(CN_MOM_DAY, dtype=float)
+        x_centered = x - x.mean()
+        denom = float(np.sum(x_centered * x_centered))
+        normalized = windows[valid] / starts[valid, None]
+        y_centered = normalized - normalized.mean(axis=1, keepdims=True)
+        slopes = (y_centered @ x_centered) / denom
+        result[end_indices[valid]] = slopes * 10000
     return pd.Series(result, index=close_series.index)
 
 
@@ -439,9 +475,13 @@ def apply_overheat_overlay(
     one_way_cost: float,
     recovery_mode: Literal["same_side_or_exit", "exit_only"] = "same_side_or_exit",
 ) -> pd.DataFrame:
-    if not 0 < case.exit < case.enter:
+    if (
+        not math.isfinite(float(case.enter))
+        or not math.isfinite(float(case.exit))
+        or not 0 < case.exit < case.enter
+    ):
         raise ValueError(f"Bad overheat thresholds: {case}")
-    if not 0 <= case.derisk_scale <= 1:
+    if not math.isfinite(float(case.derisk_scale)) or not 0 <= case.derisk_scale <= 1:
         raise ValueError(f"Bad derisk scale: {case}")
     if recovery_mode not in {"same_side_or_exit", "exit_only"}:
         raise ValueError(f"Bad overheat recovery mode: {recovery_mode}")
@@ -459,9 +499,20 @@ def apply_overheat_overlay(
     mom_vals = []
     same_side_vals = []
 
-    for dt, row in out.iterrows():
-        effective_holding = str(row["position_before"])
-        target_holding = str(row["position"])
+    aligned_features: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+    for code, frame in features.items():
+        aligned = frame.reindex(out.index)
+        bias_arr = aligned["bias"].to_numpy(dtype=float)
+        mom_arr = aligned["bias_mom"].to_numpy(dtype=float)
+        same_side_arr = aligned["same_side"].fillna(False).astype(bool).to_numpy()
+        aligned_features[code] = (bias_arr, mom_arr, same_side_arr)
+
+    effective_holdings = out["position_before"].astype(str).to_numpy()
+    target_holdings = out["position"].astype(str).to_numpy()
+
+    for i in range(len(out)):
+        effective_holding = effective_holdings[i]
+        target_holding = target_holdings[i]
         effective_eligible = effective_holding in subd.ASSETS
         target_eligible = target_holding in subd.ASSETS
 
@@ -472,11 +523,11 @@ def apply_overheat_overlay(
         bias = math.nan
         mom = math.nan
         same_side = False
-        if target_eligible and dt in features[target_holding].index:
-            frow = features[target_holding].loc[dt]
-            bias = float(frow["bias"]) if pd.notna(frow["bias"]) else math.nan
-            mom = float(frow["bias_mom"]) if pd.notna(frow["bias_mom"]) else math.nan
-            same_side = bool(frow["same_side"]) if pd.notna(frow["same_side"]) else False
+        if target_eligible and target_holding in aligned_features:
+            bias_arr, mom_arr, same_side_arr = aligned_features[target_holding]
+            bias = float(bias_arr[i]) if pd.notna(bias_arr[i]) else math.nan
+            mom = float(mom_arr[i]) if pd.notna(mom_arr[i]) else math.nan
+            same_side = bool(same_side_arr[i])
 
         triggered = False
         recovered = False
@@ -596,6 +647,26 @@ def tag_original(curve: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def trading_day_window_start(index: pd.Index, end: pd.Timestamp, trading_days: int) -> pd.Timestamp:
+    ordered = pd.DatetimeIndex(index).sort_values()
+    eligible = ordered[ordered <= pd.Timestamp(end)]
+    if eligible.empty:
+        raise ValueError(f"No trading dates on or before {end}")
+    pos = len(eligible) - 1
+    start_pos = max(0, pos - trading_days + 1)
+    return pd.Timestamp(eligible[start_pos])
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run Sub-D six ETF V1.1 backtest.")
+    parser.add_argument("--start-date", default=START_DATE.date().isoformat())
+    parser.add_argument("--end-date", default=END_DATE.date().isoformat())
+    parser.add_argument("--eval-start", default=EVAL_START.date().isoformat())
+    parser.add_argument("--output-tag", default=None)
+    parser.add_argument("--source", choices=["sina", "eastmoney"], default="eastmoney")
+    return parser.parse_args()
+
+
 def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFrame]:
     original = apply_target_vol_overlay(
         run_staged_entry(
@@ -635,12 +706,17 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
 
 
 def main() -> None:
+    args = parse_args()
+    start_date = pd.Timestamp(args.start_date).normalize()
+    end_date = pd.Timestamp(args.end_date).normalize()
+    eval_start = pd.Timestamp(args.eval_start).normalize()
+    output_tag = args.output_tag or f"v1_1_{end_date.strftime('%Y%m%d')}"
     config = subd.RunConfig(
-        source="sina",
+        source=args.source,
         one_way_cost=ONE_WAY_COST,
-        start_date=START_DATE,
-        end_date=END_DATE,
-        output_tag="v1_1_20260509",
+        start_date=start_date,
+        end_date=end_date,
+        output_tag=output_tag,
         target_vols=(),
         vol_window=subd.DEFAULT_VOL_WINDOW,
         max_lev=subd.DEFAULT_MAX_LEV,
@@ -650,16 +726,16 @@ def main() -> None:
     prices, common_last, _last_by_asset = align_prices_to_common_valid_date(prices, list(subd.ASSETS))
     curves = build_curves(prices, config)
     windows = {
-        "from_2020": EVAL_START,
-        "5Y": common_last - pd.DateOffset(years=5),
-        "3Y": common_last - pd.DateOffset(years=3),
-        "1Y": common_last - pd.DateOffset(years=1),
+        "from_2020": eval_start,
+        "5Y": trading_day_window_start(prices.index, common_last, 5 * subd.TRADING_DAYS),
+        "3Y": trading_day_window_start(prices.index, common_last, 3 * subd.TRADING_DAYS),
+        "1Y": trading_day_window_start(prices.index, common_last, subd.TRADING_DAYS),
     }
     summary = pd.DataFrame([summarize(curve, start, label) for curve in curves for label, start in windows.items()])
 
-    prefix = "subd_six_etf_v1_1_20260509"
-    subd.OUTPUT_DIR.mkdir(exist_ok=True)
-    pd.concat(curves).to_csv(subd.OUTPUT_DIR / f"{prefix}_daily.csv", encoding="utf-8-sig")
+    prefix = f"subd_six_etf_{config.output_tag}"
+    subd.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    pd.concat(curves).reset_index().to_csv(subd.OUTPUT_DIR / f"{prefix}_daily.csv", index=False, encoding="utf-8-sig")
     summary.to_csv(subd.OUTPUT_DIR / f"{prefix}_summary.csv", index=False, encoding="utf-8-sig")
     sources.to_csv(subd.OUTPUT_DIR / f"{prefix}_sources.csv", index=False, encoding="utf-8-sig")
     subd.data_quality(prices).to_csv(subd.OUTPUT_DIR / f"{prefix}_data_quality.csv", index=False, encoding="utf-8-sig")

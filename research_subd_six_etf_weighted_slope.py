@@ -66,6 +66,10 @@ def eastmoney_market_id(code: str) -> str:
     raise ValueError(f"Unsupported suffix: {code}")
 
 
+def eastmoney_symbol(code: str) -> str:
+    return code.split(".", 1)[0]
+
+
 def normalize_code(raw: str) -> str:
     if "." in raw:
         ticker, suffix = raw.split(".", 1)
@@ -79,27 +83,46 @@ def normalize_code(raw: str) -> str:
     return f"{raw}.SZ"
 
 
+def load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
+    symbol = eastmoney_symbol(code)
+    last_error = None
+    for attempt in range(1, 4):
+        try:
+            df = ak.fund_etf_hist_em(
+                symbol=symbol,
+                period="daily",
+                start_date="20100101",
+                end_date=end_date.strftime("%Y%m%d"),
+                adjust="qfq",
+            )
+            if not df.empty:
+                break
+        except Exception as exc:  # noqa: BLE001 - external data source can fail transiently.
+            last_error = exc
+        time.sleep(1.5 * attempt)
+    else:
+        raise RuntimeError(f"AkShare Eastmoney qfq returned no rows for {code} / {symbol}; last_error={last_error}")
+    close = df[["日期", "收盘"]].copy()
+    close["日期"] = pd.to_datetime(close["日期"])
+    close = close.set_index("日期")["收盘"].astype(float).sort_index()
+    close = close.loc[:end_date]
+    close.name = code
+    return close
+
+
 def load_sina_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFrame, pd.DataFrame]:
     series = []
     sources = []
     for code in codes:
-        symbol = sina_symbol(code)
-        df = ak.fund_etf_hist_sina(symbol=symbol)
-        if df.empty:
-            raise RuntimeError(f"Sina returned no rows for {code} / {symbol}")
-        close = df[["date", "close"]].copy()
-        close["date"] = pd.to_datetime(close["date"])
-        close = close.set_index("date")["close"].astype(float).sort_index()
-        close = close.loc[:end_date]
-        close.name = code
+        close = load_akshare_eastmoney_qfq_one_close(code, end_date)
         series.append(close)
         non_na = close.dropna()
         sources.append(
             {
                 "code": code,
                 "name": ASSETS[code],
-                "source": "akshare.fund_etf_hist_sina raw close",
-                "adjustment": "raw/unadjusted as served by Sina",
+                "source": "akshare.fund_etf_hist_em daily close",
+                "adjustment": "qfq/front-adjusted",
                 "first": non_na.index.min().date().isoformat(),
                 "last": non_na.index.max().date().isoformat(),
                 "rows": int(non_na.shape[0]),
@@ -108,56 +131,101 @@ def load_sina_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFr
     return pd.concat(series, axis=1).sort_index(), pd.DataFrame(sources)
 
 
-def load_eastmoney_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_qfq_close_with_per_code_fallback(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFrame, pd.DataFrame]:
+    series = []
+    sources = []
+    errors: list[str] = []
+    for code in codes:
+        for source_name, loader in (
+            ("akshare.fund_etf_hist_em daily close", load_akshare_eastmoney_qfq_one_close),
+            ("Eastmoney push2his kline", load_eastmoney_one_close),
+        ):
+            try:
+                close = loader(code, end_date)
+                series.append(close)
+                non_na = close.dropna()
+                sources.append(
+                    {
+                        "code": code,
+                        "name": ASSETS[code],
+                        "source": source_name,
+                        "adjustment": "qfq/front-adjusted",
+                        "first": non_na.index.min().date().isoformat(),
+                        "last": non_na.index.max().date().isoformat(),
+                        "rows": int(non_na.shape[0]),
+                    }
+                )
+                break
+            except Exception as exc:  # noqa: BLE001 - record provider failure details.
+                errors.append(f"{code} {source_name}: {str(exc)[:160]}")
+        else:
+            raise RuntimeError("All qfq data sources failed. " + " | ".join(errors[-6:]))
+    return pd.concat(series, axis=1).sort_index(), pd.DataFrame(sources)
+
+
+def load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+    params = {
+        "fields1": "f1,f2,f3,f4,f5,f6",
+        "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f116",
+        "ut": "7eea3edcaed734bea9cbfc24409ed989",
+        "klt": "101",
+        "fqt": "1",
+        "beg": "20100101",
+        "end": end_date.strftime("%Y%m%d"),
+        "secid": eastmoney_market_id(code),
+    }
+    last_error = None
+    data = None
+    for attempt in range(1, 4):
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                timeout=20,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Accept": "application/json,text/plain,*/*",
+                },
+            )
+            response.raise_for_status()
+            payload = response.json()
+            data = (payload.get("data") or {}).get("klines") or []
+            if data:
+                break
+        except Exception as exc:  # noqa: BLE001 - record provider failure details.
+            last_error = exc
+        time.sleep(1.5 * attempt)
+    if not data:
+        raise RuntimeError(f"Eastmoney returned no rows for {code}; last_error={last_error}")
+    rows = [item.split(",") for item in data]
+    df = pd.DataFrame(rows)
+    df.columns = [
+        "date",
+        "open",
+        "close",
+        "high",
+        "low",
+        "volume",
+        "amount",
+        "amplitude",
+        "pct_change",
+        "px_change",
+        "turnover_rate",
+    ]
+    close = df[["date", "close"]].copy()
+    close["date"] = pd.to_datetime(close["date"])
+    close = close.set_index("date")["close"].astype(float).sort_index()
+    close = close.loc[:end_date]
+    close.name = code
+    return close
+
+
+def load_eastmoney_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFrame, pd.DataFrame]:
     series = []
     sources = []
     for code in codes:
-        params = {
-            "fields1": "f1,f2,f3,f4,f5,f6",
-            "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f116",
-            "ut": "7eea3edcaed734bea9cbfc24409ed989",
-            "klt": "101",
-            "fqt": "1",
-            "beg": "20100101",
-            "end": end_date.strftime("%Y%m%d"),
-            "secid": eastmoney_market_id(code),
-        }
-        last_error = None
-        data = None
-        for attempt in range(1, 4):
-            try:
-                response = requests.get(url, params=params, timeout=20)
-                response.raise_for_status()
-                payload = response.json()
-                data = (payload.get("data") or {}).get("klines") or []
-                if data:
-                    break
-            except Exception as exc:  # noqa: BLE001 - record provider failure details.
-                last_error = exc
-            time.sleep(1.5 * attempt)
-        if not data:
-            raise RuntimeError(f"Eastmoney returned no rows for {code}; last_error={last_error}")
-        rows = [item.split(",") for item in data]
-        df = pd.DataFrame(rows)
-        df.columns = [
-            "date",
-            "open",
-            "close",
-            "high",
-            "low",
-            "volume",
-            "amount",
-            "amplitude",
-            "pct_change",
-            "px_change",
-            "turnover_rate",
-        ]
-        close = df[["date", "close"]].copy()
-        close["date"] = pd.to_datetime(close["date"])
-        close = close.set_index("date")["close"].astype(float).sort_index()
-        close = close.loc[:end_date]
-        close.name = code
+        close = load_eastmoney_one_close(code, end_date)
         series.append(close)
         non_na = close.dropna()
         sources.append(
@@ -179,7 +247,7 @@ def load_close(config: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
     if config.source == "sina":
         return load_sina_close(codes, config.end_date)
     if config.source == "eastmoney":
-        return load_eastmoney_close(codes, config.end_date)
+        return load_qfq_close_with_per_code_fallback(codes, config.end_date)
     raise ValueError(f"Unsupported source: {config.source}")
 
 
@@ -627,7 +695,7 @@ def write_outputs(prices: pd.DataFrame, sources: pd.DataFrame, curve: pd.DataFra
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sub-D six ETF weighted slope baseline research.")
-    parser.add_argument("--source", choices=["sina", "eastmoney"], default="sina")
+    parser.add_argument("--source", choices=["sina", "eastmoney"], default="eastmoney")
     parser.add_argument("--one-way-cost", type=float, default=DEFAULT_ONE_WAY_COST)
     parser.add_argument("--start-date", default="20100101")
     parser.add_argument("--end-date", default=END_DATE.strftime("%Y%m%d"))
