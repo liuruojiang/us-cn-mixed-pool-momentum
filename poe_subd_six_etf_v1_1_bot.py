@@ -451,6 +451,8 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
         for source_name, adjustment, loader in (
             ("akshare.fund_etf_hist_em daily close", "qfq/front-adjusted", _load_akshare_eastmoney_qfq_one_close),
             ("Eastmoney push2his kline", "qfq/front-adjusted (fqt=1)", _load_eastmoney_one_close),
+            ("CNFin quotedata kline", "raw/unadjusted close_px emergency fallback", _load_cnfin_one_close),
+            ("Tencent gu.qq kline", "raw/unadjusted day close emergency fallback", _load_tencent_one_close),
         ):
             try:
                 close = loader(code, end_date)

@@ -123,7 +123,7 @@ Confirmed or still relevant:
 Already changed or not matching the reviewed version:
 
 - Bug 12: current `load_close()` uses per-code fallback, not Sina all-or-nothing fallback.
-- Bug 13: current primary public loaders use qfq/front-adjusted AkShare Eastmoney and Eastmoney HTTP, and `_source_record` records adjustment status. Raw CNFin/Tencent helpers still exist but are not currently in the per-code fallback chain.
+- Bug 13: current primary public loaders use qfq/front-adjusted AkShare Eastmoney and Eastmoney HTTP, and `_source_record` records adjustment status. Poe runtime also has CNFin/Tencent raw emergency fallbacks for environments where AkShare is unavailable and Eastmoney disconnects; these are explicitly labeled as raw/unadjusted emergency sources.
 - Bug 21: current `_signal_rank_rows()` already includes `raw_score` as the third sort key, so ineligible rows are not purely original-order sorted when raw scores exist.
 - Bug 24: local `SettingsResponse` no-op is acceptable.
 
@@ -135,7 +135,7 @@ Bot patch status:
 - Bug 18: query-classification priority is documented in code.
 - Bug 19: local `_LocalMessage.overwrite()` now clears the previous terminal line before writing.
 - Bug 22: `_overheat_rule_text()` now returns a no-overheat-rule message for blank/none/nan recovery modes.
-- Bug 23: CNFin/Tencent raw helpers now reject partial chunk loads and long mid-series gaps instead of silently returning stitched partial history.
+- Bug 23: CNFin/Tencent raw helpers now reject partial chunk loads and long mid-series gaps instead of silently returning stitched partial history. They are included only after qfq providers fail.
 - The file still displays mojibake in PowerShell output, so broader user-facing text edits should remain a separate encoding-safe pass.
 
 Bot verification:
