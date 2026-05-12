@@ -1154,6 +1154,9 @@ def _cached_daily(date_key: str) -> tuple[pd.DataFrame, str]:
     return _build_v11_daily(end_date=pd.Timestamp(date_key))
 
 
+_PERFORMANCE_RESPONSE_RENDERED = False
+
+
 def _get_daily_for_today() -> tuple[pd.DataFrame, str]:
     date_key = pd.Timestamp.today().normalize().date().isoformat()
     daily, source_name = _cached_daily(date_key)
@@ -2014,7 +2017,14 @@ class SubDSixEtfV11Bot:
             elif kind == "params":
                 self._handle_params(live=False)
             elif kind == "performance":
-                self._handle_performance(query)
+                global _PERFORMANCE_RESPONSE_RENDERED
+                _PERFORMANCE_RESPONSE_RENDERED = False
+                try:
+                    self._handle_performance(query)
+                except Exception:
+                    if _PERFORMANCE_RESPONSE_RENDERED:
+                        return
+                    raise
             else:
                 self._handle_signal()
         except poe.BotError:
@@ -2079,7 +2089,12 @@ class SubDSixEtfV11Bot:
             daily, source_note = _get_daily_for_today()
             latest = pd.Timestamp(daily["date"].iloc[-1])
             ranges = resolve_performance_ranges(query, latest_date=latest)
+            chart_range = ranges[0] if ranges else None
             msg.overwrite("")
+            if chart_range is not None:
+                label, start, end = chart_range
+                _write_nav_curve(msg, daily, label, start, end)
+                msg.write("\n")
             msg.write("## SubD六ETF V1.1 表现\n\n")
             msg.write(f"数据: {source_note}\n")
             msg.write(f"最新日度数据: **{latest.date().isoformat()}**\n\n")
@@ -2108,7 +2123,9 @@ class SubDSixEtfV11Bot:
                 if yearly_table:
                     msg.write(yearly_table)
                     msg.write("\n")
-                chart_args = (daily, label, start, end)
+                chart_args = None
+            global _PERFORMANCE_RESPONSE_RENDERED
+            _PERFORMANCE_RESPONSE_RENDERED = True
         if chart_args is not None:
             daily, label, start, end = chart_args
             try:
