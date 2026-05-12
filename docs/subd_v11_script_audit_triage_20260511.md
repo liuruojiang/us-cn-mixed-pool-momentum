@@ -136,7 +136,7 @@ Bot patch status:
 - Bug 19: local `_LocalMessage.overwrite()` now clears the previous terminal line before writing.
 - Bug 22: `_overheat_rule_text()` now returns a no-overheat-rule message for blank/none/nan recovery modes.
 - Bug 23: CNFin/Tencent raw helpers now reject partial chunk loads and long mid-series gaps instead of silently returning stitched partial history. They are included only after qfq providers fail.
-- Poe performance output keeps the PNG NAV curve but emits it before the long performance/yearly tables in the same Poe message. This avoids the pure-attachment second-message path that rendered the image but still produced a Poe server error.
+- Poe performance output keeps the PNG NAV curve as a regular image attachment (`is_inline=False`) and opens the message only after data/calculation is complete. This avoids the `overwrite()` + inline attachment path that rendered content but still produced a Poe server error.
 - The file still displays mojibake in PowerShell output, so broader user-facing text edits should remain a separate encoding-safe pass.
 
 Bot verification:

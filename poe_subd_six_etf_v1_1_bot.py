@@ -1995,7 +1995,7 @@ def _write_nav_curve(msg, daily: pd.DataFrame, label: str, start: pd.Timestamp, 
             name=f"subd_v11_nav_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
             contents=chart_bytes,
             content_type="image/png",
-            is_inline=True,
+            is_inline=False,
         )
     except Exception as exc:
         msg.write(f"> 净值曲线图片生成失败: {str(exc)[:120]}\n")
@@ -2084,13 +2084,11 @@ class SubDSixEtfV11Bot:
 
     def _handle_performance(self, query: str):
         chart_args = None
+        daily, source_note = _get_daily_for_today()
+        latest = pd.Timestamp(daily["date"].iloc[-1])
+        ranges = resolve_performance_ranges(query, latest_date=latest)
+        chart_range = ranges[0] if ranges else None
         with poe.start_message() as msg:
-            msg.write("正在加载数据并计算回测...\n")
-            daily, source_note = _get_daily_for_today()
-            latest = pd.Timestamp(daily["date"].iloc[-1])
-            ranges = resolve_performance_ranges(query, latest_date=latest)
-            chart_range = ranges[0] if ranges else None
-            msg.overwrite("")
             if chart_range is not None:
                 label, start, end = chart_range
                 _write_nav_curve(msg, daily, label, start, end)
