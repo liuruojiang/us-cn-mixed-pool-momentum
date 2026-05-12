@@ -2101,8 +2101,7 @@ class SubDSixEtfV11Bot:
                 if yearly_table:
                     msg.write(yearly_table)
                     msg.write("\n")
-                if _query_wants_nav_curve(query):
-                    _write_nav_curve(msg, daily, label, start, end)
+                _write_nav_curve(msg, daily, label, start, end)
 
 
 # ════════════════════════════════════════════════════════════════
