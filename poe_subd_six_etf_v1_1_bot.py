@@ -1987,15 +1987,13 @@ def render_nav_curve_png(
 
 def _write_nav_curve(msg, daily: pd.DataFrame, label: str, start: pd.Timestamp, end: pd.Timestamp):
     try:
-        chart_bytes = render_nav_curve_png(daily, label, start, end)
-        msg.attach_file(
-            name=f"subd_v11_nav_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-            contents=chart_bytes,
-            content_type="image/png",
-            is_inline=True,
-        )
+        msg.write(format_nav_curve_text(daily, label, start, end))
     except Exception as exc:
-        msg.write(f"> 净值曲线图片生成失败: {str(exc)[:120]}\n")
+        msg.write(f"> 净值曲线生成失败: {str(exc)[:120]}\n")
+
+
+def _query_wants_nav_curve(query: str) -> bool:
+    return bool(re.search(r"净值曲线|收益曲线|走势|曲线|图", str(query or "")))
 
 
 class SubDSixEtfV11Bot:
@@ -2103,7 +2101,8 @@ class SubDSixEtfV11Bot:
                 if yearly_table:
                     msg.write(yearly_table)
                     msg.write("\n")
-                _write_nav_curve(msg, daily, label, start, end)
+                if _query_wants_nav_curve(query):
+                    _write_nav_curve(msg, daily, label, start, end)
 
 
 # ════════════════════════════════════════════════════════════════
