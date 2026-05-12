@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import warnings
+warnings.filterwarnings("ignore")
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
@@ -1946,8 +1947,11 @@ def render_nav_curve_png(
     end: pd.Timestamp,
 ) -> bytes:
     import io
+    import logging
     import matplotlib
 
+    logging.getLogger("matplotlib").setLevel(logging.CRITICAL)
+    logging.getLogger("matplotlib.font_manager").setLevel(logging.CRITICAL)
     matplotlib.use("Agg")
     matplotlib.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "SimHei", "Arial Unicode MS"]
     matplotlib.rcParams["axes.unicode_minus"] = False
@@ -2098,6 +2102,8 @@ class SubDSixEtfV11Bot:
             msg.write(f"最新日度数据: **{latest.date().isoformat()}**\n\n")
             msg.write("| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n")
             msg.write("|:-|:-|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n")
+            global _PERFORMANCE_RESPONSE_RENDERED
+            _PERFORMANCE_RESPONSE_RENDERED = True
             first_chart_range = None
             for label, start, end in ranges:
                 try:
@@ -2111,19 +2117,20 @@ class SubDSixEtfV11Bot:
                         f"{_fmt_num(m['sharpe'], 2)} | {m['trades']} | "
                         f"{_fmt_pct(m['avg_final_exposure'])} | {m['zero_exposure_days']} | {m['cash_days']} |\n"
                     )
-                except poe.BotError:
+                except Exception:
                     msg.write(f"| {label} | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 |\n")
             if first_chart_range is not None:
-                label, start, end = first_chart_range
-                msg.write("\n")
-                yearly = calc_yearly_performance(daily, EVAL_START, latest)
-                yearly_table = format_yearly_performance_table(yearly)
-                if yearly_table:
-                    msg.write(yearly_table)
+                try:
+                    label, start, end = first_chart_range
                     msg.write("\n")
+                    yearly = calc_yearly_performance(daily, EVAL_START, latest)
+                    yearly_table = format_yearly_performance_table(yearly)
+                    if yearly_table:
+                        msg.write(yearly_table)
+                        msg.write("\n")
+                except Exception:
+                    pass
                 chart_args = None
-            global _PERFORMANCE_RESPONSE_RENDERED
-            _PERFORMANCE_RESPONSE_RENDERED = True
         if chart_args is not None:
             daily, label, start, end = chart_args
             try:
@@ -2151,4 +2158,10 @@ poe.update_settings(SettingsResponse(
 ))
 
 if __name__ == "__main__":
-    SubDSixEtfV11Bot().run()
+    import io as _io
+    _orig_stderr = sys.stderr
+    sys.stderr = _io.StringIO()
+    try:
+        SubDSixEtfV11Bot().run()
+    finally:
+        sys.stderr = _orig_stderr
