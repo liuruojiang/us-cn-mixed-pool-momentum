@@ -1987,9 +1987,15 @@ def render_nav_curve_png(
 
 def _write_nav_curve(msg, daily: pd.DataFrame, label: str, start: pd.Timestamp, end: pd.Timestamp):
     try:
-        msg.write(format_nav_curve_text(daily, label, start, end))
+        chart_bytes = render_nav_curve_png(daily, label, start, end)
+        msg.attach_file(
+            name=f"subd_v11_nav_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+            contents=chart_bytes,
+            content_type="image/png",
+            is_inline=True,
+        )
     except Exception as exc:
-        msg.write(f"> 净值曲线生成失败: {str(exc)[:120]}\n")
+        msg.write(f"> 净值曲线图片生成失败: {str(exc)[:120]}\n")
 
 
 def _query_wants_nav_curve(query: str) -> bool:
@@ -2067,6 +2073,7 @@ class SubDSixEtfV11Bot:
     # ---- performance ---------------------------------------------------
 
     def _handle_performance(self, query: str):
+        chart_args = None
         with poe.start_message() as msg:
             msg.write("正在加载数据并计算回测...\n")
             daily, source_note = _get_daily_for_today()
@@ -2101,7 +2108,15 @@ class SubDSixEtfV11Bot:
                 if yearly_table:
                     msg.write(yearly_table)
                     msg.write("\n")
-                _write_nav_curve(msg, daily, label, start, end)
+                chart_args = (daily, label, start, end)
+        if chart_args is not None:
+            daily, label, start, end = chart_args
+            try:
+                with poe.start_message() as msg:
+                    _write_nav_curve(msg, daily, label, start, end)
+            except Exception as exc:
+                with poe.start_message() as msg:
+                    msg.write(f"> 净值曲线图片发送失败: {str(exc)[:120]}\n")
 
 
 # ════════════════════════════════════════════════════════════════
