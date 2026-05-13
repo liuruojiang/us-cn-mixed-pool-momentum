@@ -1,25 +1,24 @@
 # Agent Notes
 
-## QVeris Data Source Defaults
+## Market Data Source Defaults
 
-When QVeris is available in this workspace, treat it as a paid fallback data source for market-data probes and research inputs that it supports.
+QVeris is no longer an available data source for future work in this workspace. Do not use QVeris discovery, REST endpoints, tool execution, or `QVERIS_API_KEY` for new research, live market checks, pool checks, or realtime signal work.
 
-Prefer free sources first for live market data and research inputs: Xinhua Finance / CNFin, Sina, Eastmoney, Tencent, or fresh local cache when coverage is sufficient. Use QVeris only when free sources are stale, incomplete, unavailable, or inconsistent enough to block a reliable answer.
+Prefer free sources first for live market data and research inputs: Xinhua Finance / CNFin, Sina, Eastmoney, Tencent, or fresh local cache when coverage is sufficient.
 
-Use QVeris fallback for:
+Do not use QVeris fallback for:
 
-- Live or near-realtime A-share market data when free-source coverage is insufficient.
-- A-share breadth, constituent, industry, and historical-quotation probes where free sources disagree or are stale.
-- Cross-checking public/free sources only when the free-source response cannot be trusted for the task.
-- Any workflow where paid-source reliability is needed to unblock a live signal, latest pool, or market-state answer.
+- Live or near-realtime A-share market data.
+- A-share breadth, constituent, industry, and historical-quotation probes.
+- Cross-checking public/free sources.
+- Any workflow that needs to unblock a live signal, latest pool, or market-state answer.
 
 Operational rules:
 
-- Read credentials only from environment variables such as `QVERIS_API_KEY`; never print, store, or write API keys into reports.
-- For a new QVeris endpoint or schema, run a small probe first and record tool id, parameters, date range, row counts, and freshness.
 - Prefer free public sources when they cover the required field with fresh, complete, and consistent data.
 - Still cross-check against an independent source when making a new data-source decision or when freshness is uncertain.
-- For live microcap or realtime signal work, use free sources first and keep QVeris as the paid fallback when free coverage is not reliable enough.
+- If free sources and local cache cannot provide the required field, freshness, or coverage, report the task as data-source blocked with the exact missing field/symbol/date.
+- Historical documents, old outputs, and `qveris_cps3` script names may mention QVeris as provenance. Treat them as archived evidence only, not as approved sources for new runs.
 
 ## CNFin Data Source Defaults
 
@@ -83,7 +82,7 @@ Kline periods observed:
 Source-selection rule:
 
 - For live microcap or realtime signal work, use free sources first, including CNFin, Sina, Eastmoney, Tencent, or fresh local cache when coverage is sufficient.
-- Use QVeris as a paid fallback only when free sources are stale, incomplete, unavailable, or inconsistent enough to block a reliable answer.
+- Do not fall back to QVeris when free sources are stale, incomplete, unavailable, or inconsistent.
 - Use CNFin as a primary free candidate or cross-check source, especially when Eastmoney is unstable.
 - Use Eastmoney only after checking freshness and response stability for the concrete query.
 - For any new data source decision, run or adapt `python .\probe_cnfin_data_source.py` and compare prices, dates, and row counts against at least one independent source before trusting the result.
