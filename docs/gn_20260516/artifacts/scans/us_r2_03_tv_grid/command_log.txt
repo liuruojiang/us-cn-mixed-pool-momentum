@@ -1,0 +1,1 @@
+inline python scan: fixed R2=0.30; vol_window 20,40,60,80,120,160,252 x target_vol none,15%,20%,25%,30%; max leverage 1.5; cost 0; outputs scan_summary/window_metrics/selection/daily_curves

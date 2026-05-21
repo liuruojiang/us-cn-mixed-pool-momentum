@@ -1,0 +1,24 @@
+{
+  "entrypoint": "run_subd_six_etf_v1_1.py V1.1 functions with calc_scores lower-bound patch",
+  "change": "removed score > 0 lower bound only; kept R2 threshold, score max cap, staged entry, target vol, MA60 overheat, costs",
+  "sources": [
+    {
+      "code": "GLD",
+      "name": "Gold_ETF",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    },
+    {
+      "code": "QQQ",
+      "name": "Nasdaq100_ETF",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    }
+  ]
+}

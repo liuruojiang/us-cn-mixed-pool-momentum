@@ -1,95 +1,16 @@
 # Agent Notes
 
-## Market Data Source Defaults
+Common rules live in `C:\Users\Administrator.DESKTOP-95I7VVU\AGENTS.md`. This file only adds local rules for the mixed US/A-share momentum workspace.
 
-QVeris is no longer an available data source for future work in this workspace. Do not use QVeris discovery, REST endpoints, tool execution, or `QVERIS_API_KEY` for new research, live market checks, pool checks, or realtime signal work.
+## CNFin Notes
 
-Prefer free sources first for live market data and research inputs: Xinhua Finance / CNFin, Sina, Eastmoney, Tencent, or fresh local cache when coverage is sufficient.
+- Treat CNFin (`cnfin.com`, API host `quotedata.cnfin.com`) as a usable realtime or near-realtime candidate for A-share quotes, major China indices, ETFs, market-cap sorting, and raw daily/intraday kline probes.
+- CNFin raw kline data should be treated as unadjusted unless separately validated.
+- ETF `market_value` and `total_shares` may be missing or zero; validate fund-size fields through another source before use.
+- CNFin code format is suffix-based, such as `600519.SS`, `000001.SZ`, `000300.SS`, and `510300.SS`; convert explicitly from Eastmoney-style codes.
+- For any new data-source decision, compare prices, dates, and row counts against at least one independent source before trusting the result.
 
-Do not use QVeris fallback for:
+## Local Scan Notes
 
-- Live or near-realtime A-share market data.
-- A-share breadth, constituent, industry, and historical-quotation probes.
-- Cross-checking public/free sources.
-- Any workflow that needs to unblock a live signal, latest pool, or market-state answer.
-
-Operational rules:
-
-- Prefer free public sources when they cover the required field with fresh, complete, and consistent data.
-- Still cross-check against an independent source when making a new data-source decision or when freshness is uncertain.
-- If free sources and local cache cannot provide the required field, freshness, or coverage, report the task as data-source blocked with the exact missing field/symbol/date.
-- Historical documents, old outputs, and `qveris_cps3` script names may mention QVeris as provenance. Treat them as archived evidence only, not as approved sources for new runs.
-
-## CNFin Data Source Defaults
-
-When choosing A-share market data sources in this workspace, treat Xinhua Finance / CNFin (`cnfin.com`) as a usable realtime and near-realtime candidate source.
-
-Observed source:
-
-- Web page: `https://www.cnfin.com/quote/stock/index.html`
-- API host: `https://quotedata.cnfin.com`
-- Frontend config source: `https://www.cnfin.com/static/js/hs/config.js`
-- Local probe script: `probe_cnfin_data_source.py`
-- Latest probe output at time of writing: `outputs/cnfin_probe_20260501_142151.md`
-
-Use CNFin for:
-
-- A-share realtime or last-trading-day quotes.
-- Major China indices such as `000300.SS` and `000852.SS`.
-- Exchange-traded funds such as `510300.SS` and `159915.SZ`, for price fields.
-- Whole-market or board-level sorting, including market-cap ranking pools.
-- Daily, weekly, monthly, yearly, and intraday raw kline probes.
-- Cross-checking Eastmoney when Eastmoney is flaky.
-
-Do not assume CNFin is enough for:
-
-- Backtest-grade adjusted historical data.
-- Dividend-adjusted or split-adjusted series.
-- Delisting-complete historical universes.
-- ETF size or shares-outstanding factors without separate validation.
-- Any production signal where corporate actions or point-in-time constituents are central.
-
-Important observed limitations:
-
-- CNFin raw kline data appeared unadjusted in the probe; do not use it as a replacement for a validated adjusted-history source without a separate adjustment check.
-- ETF `market_value` and `total_shares` can be `0`; price fields were valid in the sample, but fund-size fields need another source or explicit validation.
-- Search endpoints tested as `/quote/v1/search?...` returned unsupported-function errors; use known code mappings or sort results instead.
-- Code format is suffix-based: `600519.SS`, `000001.SZ`, `000300.SS`, `510300.SS`. Convert explicitly from Eastmoney-style `1.600519` / `0.000001`.
-
-Useful endpoints:
-
-- Market summary:
-  `GET /quote/v1/market/summary?en_finance_mic=SS,SZ`
-- Realtime batch:
-  `GET /quote/v1/real?en_prod_code=600519.SS,000001.SZ&fields=prod_name,last_px,px_change,px_change_rate,preclose_px,open_px,high_px,low_px,business_amount,business_balance,market_date,trade_status,data_timestamp,market_value,circulation_value,total_shares`
-- Market-cap sorting:
-  `GET /quote/v1/sort?sort_field_name=market_value&sort_type=0&start_pos=0&data_count=100&en_hq_type_code=SS.ESA.M,SZ.ESA.M,SZ.ESA.SMSE,SZ.ESA.GEM,SS.KSH&fields=prod_name,last_px,market_value,preclose_px,market_date,trade_status,data_timestamp`
-- Daily kline:
-  `GET /quote/v1/kline?prod_code=600519.SS&candle_period=6&get_type=range&start_date=YYYYMMDD&end_date=YYYYMMDD&fields=open_px,high_px,low_px,close_px,business_amount,business_balance`
-
-Kline periods observed:
-
-- `1`: 1-minute
-- `2`: 5-minute
-- `3`: 15-minute
-- `4`: 30-minute
-- `5`: 60-minute
-- `6`: daily
-- `7`: weekly
-- `8`: monthly
-- `9`: yearly
-
-Source-selection rule:
-
-- For live microcap or realtime signal work, use free sources first, including CNFin, Sina, Eastmoney, Tencent, or fresh local cache when coverage is sufficient.
-- Do not fall back to QVeris when free sources are stale, incomplete, unavailable, or inconsistent.
-- Use CNFin as a primary free candidate or cross-check source, especially when Eastmoney is unstable.
-- Use Eastmoney only after checking freshness and response stability for the concrete query.
-- For any new data source decision, run or adapt `python .\probe_cnfin_data_source.py` and compare prices, dates, and row counts against at least one independent source before trusting the result.
-
-Evidence from the 2026-05-01 probe:
-
-- CNFin returned `market_date=20260430`, `delay_mins=0` for Shanghai and Shenzhen summaries.
-- Batch realtime quotes for `600519.SS`, `000001.SZ`, `000300.SS`, `000852.SS`, `510300.SS`, and `159915.SZ` matched Eastmoney on latest price and percentage change.
-- Market-cap sort returned 100 rows in the default probe and 5201 rows when manually tested with `data_count=6000`.
-- `600519.SS` daily kline from `20240101` to `20260430` returned 562 rows.
+- For Sub-D / weighted-slope / ETF-pool experiments, keep same data slices, cost assumptions, and execution timing when comparing against Strategy A, ADK, or other sleeves.
+- Preserve docs records for accepted conclusions; old `outputs/` files are diagnostic unless rebuilt or cited as preserved evidence.

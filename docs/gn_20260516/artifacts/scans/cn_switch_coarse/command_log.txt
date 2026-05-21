@@ -1,0 +1,18 @@
+init_quant_param_scan_run.py
+run_id=20260516_subd_cn_gold_nasdaq_v11_defaults_nohalf_nooverheat_rawscore_cn_159941_518880_switch_buffer_coarse
+project=subd-cn-gold-nasdaq
+strategy=v11-defaults-nohalf-nooverheat-rawscore
+subsystem=CN 159941 518880
+parameter_group=switch_buffer_coarse
+repo=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+[2026-05-16T02:03:54.629487] Ran CN switch buffer coarse scan.
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-05-16T02:04:18+08:00
+decision=coarse_scan_prefers_1p00_or_1p00_to_1p05_not_high_buffer
+stability_label=coarse_stable_against_high_buffer
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-05-16T02:04:36+08:00
+decision=coarse_scan_prefers_1p00_or_1p00_to_1p05_not_high_buffer
+stability_label=coarse_stable_against_high_buffer

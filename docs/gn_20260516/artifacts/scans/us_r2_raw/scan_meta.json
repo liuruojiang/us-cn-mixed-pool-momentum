@@ -1,0 +1,185 @@
+{
+  "generated_at": "2026-05-16T00:13:33.536848",
+  "project": "subd-us-nasdaq-gold",
+  "strategy": "raw momentum plus R2 threshold",
+  "assets": [
+    "QQQ",
+    "GLD"
+  ],
+  "data_source": "Yahoo Finance chart API adjusted close via fetch_yahoo_adjusted_close",
+  "date_range": {
+    "load_start": "2010-01-01",
+    "eval_start": "2015-07-13",
+    "end": "2026-05-15"
+  },
+  "rule": "25-day weighted log-slope Top1; scores may be negative; R2 threshold filters eligible assets; cash if neither asset passes; close-confirmed signal applies to next close-to-close return",
+  "disabled_conditions": [
+    "positive score bound",
+    "score max cap",
+    "switch buffer",
+    "staged entry",
+    "target volatility",
+    "overheat",
+    "transaction cost"
+  ],
+  "thresholds": [
+    "no_r2",
+    0.0,
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.8,
+    0.85,
+    0.9,
+    0.95
+  ],
+  "windows": {
+    "full": "2015-07-13",
+    "last_10y": "2016-05-09",
+    "last_5y": "2021-05-11",
+    "last_3y": "2023-05-11",
+    "last_1y": "2025-05-15"
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\command_log.txt",
+    "selection": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\selection.csv",
+    "daily_curves": "quant_param_scan_runs\\20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold\\daily_curves.csv"
+  },
+  "dirty_worktree_note": "Existing untracked research scripts/outputs were present before this scan; this run only writes under its quant_param_scan_runs folder.",
+  "run_id": "20260516_subd_us_nasdaq_gold_raw_momentum_us_qqq_gld_r2_threshold",
+  "created_at": "2026-05-16T00:13:33.536848",
+  "phase": "complete",
+  "repo_root": "C:\\Users\\Administrator.DESKTOP-95I7VVU\\Desktop\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "inline harness using analyze_subd_v11_us_etf_pool_20260515.fetch_yahoo_adjusted_close and research_subd_six_etf_weighted_slope weighted slope formula",
+  "git_branch": "main",
+  "git_commit": "d7c3790bd3a4f1b5715f4583b995542f5ad076c2",
+  "git_status_before": "dirty before scan; see command output in conversation and git_status_after for current state",
+  "git_status_after": "?? analyze_lookback_half_life_grid_20260511.py\n?? analyze_r2_threshold_scan_20260511.py\n?? analyze_score_cap_alternatives_20260511.py\n?? analyze_score_max_veto_robustness_20260511.py\n?? analyze_score_transform_variants_20260511.py\n?? analyze_soymeal_etf_futures_correlation_20260510.py\n?? analyze_subd_v11_1_2_switch_entry_20260511.py\n?? analyze_subd_v11_1_3_overheat_20260511.py\n?? analyze_subd_v11_1_4_target_vol_20260511.py\n?? analyze_subd_v11_30y_bond_expansion_20260510.py\n?? analyze_subd_v11_csi2000_expansion_20260510.py\n?? analyze_subd_v11_pool_expansion_20260510.py\n?? analyze_subd_v11_remove_soymeal_20260510.py\n?? analyze_subd_v11_signal_jitter_20260510.py\n?? analyze_subd_v11_switch_buffer_fine_scan_20260510.py\n?? analyze_subd_v11_us_etf_pool_20260515.py\n?? analyze_weighted_log_slope_diagnostics_20260511.py\n?? analyze_weighting_half_life_platform_20260511.py\n?? analyze_weighting_half_life_scan_20260511.py\n?? outputs/soymeal_etf_futures_correlation_20260510_close.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_etf_source.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_returns.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_single_contracts.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_summary.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_audit.json\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_daily.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_selection.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_summary.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_daily.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_selection.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_sources.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_summary.csv\n?? outputs/subd_v11_before_after_execution_fix_compare_20260511.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_daily.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_selection.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_sources.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_summary.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_audit.json\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_daily.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_drop_ashr.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_held_contribution.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_selection.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_summary.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_audit.json\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_daily.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_selection.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_summary.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_audit.json\n?? outputs/subd_v11_ewj_vs_vea_20260515_daily.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_selection.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_summary.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_audit.json\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_daily.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_selection.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_summary.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_audit.json\n?? outputs/subd_v11_gld_qqq_only_20260515_daily.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_selection.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_summary.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_audit.json\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_daily.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_selection.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_summary.csv\n?? outputs/subd_v11_overheat_recovery_ab_20260511_daily.csv\n?? outputs/subd_v11_overheat_recovery_ab_20260511_summary.csv\n?? outputs/subd_v11_pool_expansion_20260510_daily.csv\n?? outputs/subd_v11_pool_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_pool_expansion_20260510_selection.csv\n?? outputs/subd_v11_pool_expansion_20260510_sources.csv\n?? outputs/subd_v11_pool_expansion_20260510_summary.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_daily.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_deltas_vs_r2_0p20.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_sources.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_summary.csv\n?? outputs/subd_v11_remove_soymeal_20260510_daily.csv\n?? outputs/subd_v11_remove_soymeal_20260510_data_quality.csv\n?? outputs/subd_v11_remove_soymeal_20260510_selection.csv\n?? outputs/subd_v11_remove_soymeal_20260510_sources.csv\n?? outputs/subd_v11_remove_soymeal_20260510_summary.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_daily.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_deltas.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_sources.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_summary.csv\n?? outputs/subd_v11_signal_jitter_20260510_daily.csv\n?? outputs/subd_v11_signal_jitter_20260510_segments.csv\n?? outputs/subd_v11_signal_jitter_20260510_sources.csv\n?? outputs/subd_v11_signal_jitter_20260510_summary.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_audit.json\n?? outputs/subd_v11_single_gld_qqq_20260515_daily.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_selection.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_summary.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_daily.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_segments.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_sources.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_summary.csv\n?? outputs/subd_v11_switch_buffer_from_20250101_compare_20260510.csv\n?? outputs/subd_v11_us_etf_pool_20260515_audit.json\n?? outputs/subd_v11_us_etf_pool_20260515_daily.csv\n?? outputs/subd_v11_us_etf_pool_20260515_held_contribution.csv\n?? outputs/subd_v11_us_etf_pool_20260515_leave_one_out.csv\n?? outputs/subd_v11_us_etf_pool_20260515_selection.csv\n?? outputs/subd_v11_us_etf_pool_20260515_summary.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_daily.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_deltas_vs_linear.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_sources.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_summary.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_forward_return_buckets.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_lookback_matrix.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_lookback_sharpe.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_forward_buckets.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_hist.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_panel.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_score_r2_distribution.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_score_rule_ablation.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_sources.csv\n?? quant_param_scan_runs/",
+  "scan_type": "parameter_grid",
+  "parameter_group": "R2_THRESHOLD",
+  "baseline": {
+    "candidate": "no_r2",
+    "R2_THRESHOLD": null
+  },
+  "candidate_grid": [
+    {
+      "candidate": "no_r2",
+      "R2_THRESHOLD": null
+    },
+    {
+      "candidate": "r2_ge_0.00",
+      "R2_THRESHOLD": 0.0
+    },
+    {
+      "candidate": "r2_ge_0.05",
+      "R2_THRESHOLD": 0.05
+    },
+    {
+      "candidate": "r2_ge_0.10",
+      "R2_THRESHOLD": 0.1
+    },
+    {
+      "candidate": "r2_ge_0.15",
+      "R2_THRESHOLD": 0.15
+    },
+    {
+      "candidate": "r2_ge_0.20",
+      "R2_THRESHOLD": 0.2
+    },
+    {
+      "candidate": "r2_ge_0.25",
+      "R2_THRESHOLD": 0.25
+    },
+    {
+      "candidate": "r2_ge_0.30",
+      "R2_THRESHOLD": 0.3
+    },
+    {
+      "candidate": "r2_ge_0.35",
+      "R2_THRESHOLD": 0.35
+    },
+    {
+      "candidate": "r2_ge_0.40",
+      "R2_THRESHOLD": 0.4
+    },
+    {
+      "candidate": "r2_ge_0.45",
+      "R2_THRESHOLD": 0.45
+    },
+    {
+      "candidate": "r2_ge_0.50",
+      "R2_THRESHOLD": 0.5
+    },
+    {
+      "candidate": "r2_ge_0.55",
+      "R2_THRESHOLD": 0.55
+    },
+    {
+      "candidate": "r2_ge_0.60",
+      "R2_THRESHOLD": 0.6
+    },
+    {
+      "candidate": "r2_ge_0.65",
+      "R2_THRESHOLD": 0.65
+    },
+    {
+      "candidate": "r2_ge_0.70",
+      "R2_THRESHOLD": 0.7
+    },
+    {
+      "candidate": "r2_ge_0.75",
+      "R2_THRESHOLD": 0.75
+    },
+    {
+      "candidate": "r2_ge_0.80",
+      "R2_THRESHOLD": 0.8
+    },
+    {
+      "candidate": "r2_ge_0.85",
+      "R2_THRESHOLD": 0.85
+    },
+    {
+      "candidate": "r2_ge_0.90",
+      "R2_THRESHOLD": 0.9
+    },
+    {
+      "candidate": "r2_ge_0.95",
+      "R2_THRESHOLD": 0.95
+    }
+  ],
+  "data_snapshot": {
+    "assets": [
+      "QQQ",
+      "GLD"
+    ],
+    "source": "Yahoo Finance chart API adjusted close",
+    "load_start": "2010-01-01",
+    "eval_start": "2015-07-13",
+    "end": "2026-05-15",
+    "rows": 4117
+  },
+  "cost_model": {
+    "transaction_cost": 0.0,
+    "slippage": 0.0,
+    "execution": "close-confirmed signal applies to next close-to-close return",
+    "note": "Costs intentionally disabled for raw momentum plus R2-only scan."
+  },
+  "decision": "exploratory_no_change",
+  "stability_label": "pending_review"
+}

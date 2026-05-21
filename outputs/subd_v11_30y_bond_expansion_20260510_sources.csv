@@ -1,0 +1,10 @@
+﻿code,name,symbol,source,adjustment,first,last,rows
+159915.SZ,创业板100ETF,159915.SZ,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2011-12-09,2026-05-08,3496
+159941.SZ,纳指ETF,159941.SZ,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2015-07-13,2026-05-08,2627
+513030.SH,德国ETF,513030.SH,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2014-09-05,2026-05-08,2832
+513520.SH,日经ETF,513520.SH,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2019-06-25,2026-05-08,1665
+159985.SZ,豆粕ETF,159985.SZ,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2019-12-05,2026-05-08,1554
+518880.SH,黄金ETF,518880.SH,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2013-07-29,2026-05-08,3104
+512100.SH,CSI1000_ETF,512100.SH,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2016-11-04,2026-05-08,2307
+511130.SH,CN30Y_BOND_ETF_BOSHI,511130.SH,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2024-03-28,2026-05-08,509
+511090.SH,CN30Y_BOND_ETF_PENGYANG,511090.SH,QVeris cn_financial_pro.history_quotation.v1,"cps=3, stock_common close",2023-06-13,2026-05-08,701

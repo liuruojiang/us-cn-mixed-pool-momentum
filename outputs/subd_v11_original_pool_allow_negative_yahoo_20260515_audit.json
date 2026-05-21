@@ -1,0 +1,76 @@
+{
+  "entrypoint": "run_subd_six_etf_v1_1.py V1.1 functions with original pool and calc_scores lower-bound patch",
+  "change": "removed score > 0 lower bound only in allow_negative variant; kept R2 threshold, score max cap, staged entry, target vol, MA60 overheat, costs",
+  "common_start": "2011-09-20",
+  "common_end": "2026-05-15",
+  "last_by_asset": {
+    "159915.SZ": "2026-05-15",
+    "159941.SZ": "2026-05-15",
+    "513030.SH": "2026-05-15",
+    "513520.SH": "2026-05-15",
+    "159985.SZ": "2026-05-15",
+    "518880.SH": "2026-05-15"
+  },
+  "sources": [
+    {
+      "code": "159915.SZ",
+      "name": "CYB100_ETF",
+      "yahoo_symbol": "159915.SZ",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2011-09-20",
+      "last": "2026-05-15",
+      "rows": 3513
+    },
+    {
+      "code": "159941.SZ",
+      "name": "NASDAQ_ETF",
+      "yahoo_symbol": "159941.SZ",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2015-06-10",
+      "last": "2026-05-15",
+      "rows": 2639
+    },
+    {
+      "code": "513030.SH",
+      "name": "GERMANY_ETF",
+      "yahoo_symbol": "513030.SS",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2014-08-08",
+      "last": "2026-05-15",
+      "rows": 2840
+    },
+    {
+      "code": "513520.SH",
+      "name": "NIKKEI_ETF",
+      "yahoo_symbol": "513520.SS",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2019-06-12",
+      "last": "2026-05-15",
+      "rows": 1673
+    },
+    {
+      "code": "159985.SZ",
+      "name": "SOYMEAL_ETF",
+      "yahoo_symbol": "159985.SZ",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2019-09-24",
+      "last": "2026-05-15",
+      "rows": 1570
+    },
+    {
+      "code": "518880.SH",
+      "name": "GOLD_ETF",
+      "yahoo_symbol": "518880.SS",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2013-07-18",
+      "last": "2026-05-15",
+      "rows": 3110
+    }
+  ]
+}

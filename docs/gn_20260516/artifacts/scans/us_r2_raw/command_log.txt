@@ -1,0 +1,3 @@
+inline python scan: US QQQ/GLD raw 25-day weighted log-slope Top1 + R2 threshold grid no_r2,0.00..0.95 step 0.05; no costs/target-vol/staged/buffer/overheat
+normalize artifacts to quant-param-scan schema; add scan_meta required fields; rewrite record.md with required sections
+filled undefined sharpe_repo values with 0.0 for all-cash/no-volatility windows to satisfy strict finite numeric checks

@@ -1,0 +1,1 @@
+inline python scan: R2 thresholds 0.20 and 0.30 x target_vol none,10%,15%,20%,25%,30%,35%,40%; max leverage 1.5; vol window 80; cost 0; outputs scan_summary/window_metrics/selection/daily_curves

@@ -1,0 +1,7 @@
+﻿candidate,segment,start,end,rows,ann_return,ann_vol,max_dd,sharpe_repo,total,trades,cost_sum,turnover_sum,cash_days,half_position_days,overheat_days,avg_final_exposure,max_final_exposure,score_min,cap_family
+official_caps_min_5,full,2011-12-09,2026-05-15,3501,0.0,0.0,0.0,,0.0,0,0.0,0.0,3501,0,0,0.0,0.0,5.0,official_caps
+official_caps_min_5,from_2020,2020-01-02,2026-05-15,1540,0.0,0.0,0.0,,0.0,0,0.0,0.0,1540,0,0,0.0,0.0,5.0,official_caps
+official_caps_min_5,last_10y,2016-05-16,2026-05-15,2427,0.0,0.0,0.0,,0.0,0,0.0,0.0,2427,0,0,0.0,0.0,5.0,official_caps
+official_caps_min_5,last_5y,2021-05-17,2026-05-15,1211,0.0,0.0,0.0,,0.0,0,0.0,0.0,1211,0,0,0.0,0.0,5.0,official_caps
+official_caps_min_5,last_3y,2023-05-15,2026-05-15,727,0.0,0.0,0.0,,0.0,0,0.0,0.0,727,0,0,0.0,0.0,5.0,official_caps
+official_caps_min_5,last_1y,2025-05-15,2026-05-15,243,0.0,0.0,0.0,,0.0,0,0.0,0.0,243,0,0,0.0,0.0,5.0,official_caps

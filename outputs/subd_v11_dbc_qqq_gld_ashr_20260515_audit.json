@@ -1,0 +1,62 @@
+{
+  "scenario": "us_etf_dbc_qqq_gld_ashr_caf",
+  "entrypoint": "run_subd_six_etf_v1_1.py V1.1 functions",
+  "rules": {
+    "lookback": 25,
+    "r2_threshold": 0.2,
+    "target_vol": 0.25,
+    "max_lev": 1.5,
+    "one_way_cost": 0.001,
+    "entry_fraction": 0.5,
+    "switch_buffer": 1.05,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18
+  },
+  "common_start": "2010-01-04",
+  "common_end": "2026-05-15",
+  "rows": 4117,
+  "last_by_asset": {
+    "DBC": "2026-05-15",
+    "QQQ": "2026-05-15",
+    "GLD": "2026-05-15",
+    "ASHR": "2026-05-15"
+  },
+  "sources": [
+    {
+      "code": "DBC",
+      "name": "Commodity_ETF",
+      "source": "Yahoo Finance chart API adjusted close",
+      "adjustment": "adjusted close; proxy-scaled where noted",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    },
+    {
+      "code": "QQQ",
+      "name": "Nasdaq100_ETF",
+      "source": "Yahoo Finance chart API adjusted close",
+      "adjustment": "adjusted close; proxy-scaled where noted",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    },
+    {
+      "code": "GLD",
+      "name": "Gold_ETF",
+      "source": "Yahoo Finance chart API adjusted close",
+      "adjustment": "adjusted close; proxy-scaled where noted",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    },
+    {
+      "code": "ASHR",
+      "name": "CSI300_A_Shares_ETF",
+      "source": "Yahoo adjusted close splice; proxy=CAF scaled at proxy_anchor=2013-11-06 to live_first=2013-11-06 scale=2.18181421",
+      "adjustment": "adjusted close; proxy-scaled where noted",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    }
+  ]
+}

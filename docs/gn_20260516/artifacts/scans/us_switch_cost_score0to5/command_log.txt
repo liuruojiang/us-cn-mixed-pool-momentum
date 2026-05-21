@@ -1,0 +1,9 @@
+init_quant_param_scan_run.py
+run_id=20260516_subd_us_nasdaq_gold_raw_momentum_r2_0p30_tv25_vw20_cost001_score0to5_us_qqq_gld_switch_buffer
+project=subd-us-nasdaq-gold
+strategy=raw-momentum-r2-0p30-tv25-vw20-cost001-score0to5
+subsystem=US QQQ GLD
+parameter_group=switch_buffer
+repo=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+
+[2026-05-16T01:30:36.625739] Ran optimized inline costed score0to5 switch-buffer scan.

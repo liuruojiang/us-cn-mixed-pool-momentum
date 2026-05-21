@@ -1,0 +1,26 @@
+{
+  "created_at": "2026-05-16T01:50:35.239922",
+  "assets": [
+    "QQQ",
+    "GLD"
+  ],
+  "source": "Yahoo Finance chart API adjusted close",
+  "start_fetch": "2010-01-01",
+  "eval_start": "2015-07-13",
+  "end": "2026-05-15",
+  "r2_threshold": 0.3,
+  "switch_buffer": 2.5,
+  "target_vol": 0.25,
+  "vol_window": 20,
+  "max_lev": 1.5,
+  "one_way_cost": 0.001,
+  "score_filter": "none; raw scores allowed",
+  "variants": [
+    "full_entry",
+    "staged_50_wait_down"
+  ],
+  "outputs": {
+    "summary": "outputs\\us_qqq_gld_raw_score_r2p30_tv25_vw20_sw2p5_entry_staging_20260516_summary.csv",
+    "daily": "outputs\\us_qqq_gld_raw_score_r2p30_tv25_vw20_sw2p5_entry_staging_20260516_daily.csv"
+  }
+}

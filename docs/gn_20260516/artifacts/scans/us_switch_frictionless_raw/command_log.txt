@@ -1,0 +1,1 @@
+inline python extended scan: fixed R2=0.30,target_vol=25%,vol_window=20,max_lev=1.5; switch_buffer 1.00..1.50 step 0.01 plus 1.60..3.00 step 0.10; cost 0; outputs overwritten with extended scan

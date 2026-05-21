@@ -1,0 +1,5 @@
+﻿market,code,name,source,adjustment,first,last,rows
+CN,159941.SZ,CN_NASDAQ_ETF,akshare.fund_etf_hist_sina,raw close; 159941 pre-2022-07-05 multiplied by 0.25 for split continuity,2015-07-13,2026-05-15,2632
+CN,518880.SH,CN_GOLD_ETF,akshare.fund_etf_hist_sina,raw/unadjusted close,2013-07-29,2026-05-15,3109
+US,QQQ,,Yahoo Finance chart API,adjusted close,2010-01-04,2026-05-15,4117
+US,GLD,,Yahoo Finance chart API,adjusted close,2010-01-04,2026-05-15,4117

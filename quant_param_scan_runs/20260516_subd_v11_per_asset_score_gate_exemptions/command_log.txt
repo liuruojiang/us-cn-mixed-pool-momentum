@@ -1,0 +1,9 @@
+init_quant_param_scan_run.py
+run_id=20260516_subd_v11_per_asset_score_gate_exemptions
+project=subd_six_etf
+strategy=v1_1
+subsystem=score_gate
+parameter_group=per_asset_score_max_exemption
+repo=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+
+python .\analyze_score_gate_exemptions_20260516.py

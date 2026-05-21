@@ -1,0 +1,15 @@
+init_quant_param_scan_run.py
+run_id=20260516_subd_v11_per_asset_score_cap_values
+project=subd_six_etf
+strategy=v1_1
+subsystem=score_gate
+parameter_group=per_asset_score_max_values
+repo=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+
+python .\analyze_score_gate_cap_values_20260516.py
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-05-16T10:41:11+08:00
+decision=Research-only result: prefer 159915.SZ no upper cap; optional 513030.SH cap 12-15 with 159915.SZ no cap improves full/from-2020 Sharpe but weakens recent 3Y annual return versus baseline; keep other assets at cap 5 except 159985.SZ cap 6 is a small single-asset candidate needing combo confirmation.
+stability_label=single_asset_clear_159915_focus_combo_mixed
+supplemental inline python: wrote supplemental_159985_cap6_combo_check.csv

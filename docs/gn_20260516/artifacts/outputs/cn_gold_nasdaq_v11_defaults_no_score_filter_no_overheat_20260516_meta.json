@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-05-16T01:59:58.118211",
+  "condition": "CN 159941/518880; V1.1 defaults R2=0.20 switch=1.05 target_vol=25 vol_window=80 cost=0.001; no overheat; no score 0-5 gate; main variant keeps V1.1 half-entry; extra variant removes half-entry",
+  "outputs": {
+    "summary": "outputs\\cn_gold_nasdaq_v11_defaults_no_score_filter_no_overheat_20260516_summary.csv",
+    "daily": "outputs\\cn_gold_nasdaq_v11_defaults_no_score_filter_no_overheat_20260516_daily.csv",
+    "sources": "outputs\\cn_gold_nasdaq_v11_defaults_no_score_filter_no_overheat_20260516_sources.csv"
+  }
+}

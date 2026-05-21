@@ -1,0 +1,332 @@
+{
+  "entrypoint": "run_subd_six_etf_v1_1.py V1.1 functions via analyze_subd_v11_us_etf_pool_20260515.py",
+  "generated_at": "2026-05-15T21:20:41",
+  "rules": {
+    "lookback": 25,
+    "r2_threshold": 0.2,
+    "target_vol": 0.25,
+    "max_lev": 1.5,
+    "one_way_cost": 0.001,
+    "entry_fraction": 0.5,
+    "switch_buffer": 1.05,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18,
+    "overheat_derisk_scale": 0.0
+  },
+  "scenarios": [
+    {
+      "scenario": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+      "source_label": "Yahoo adjusted close",
+      "common_start": "2010-01-04",
+      "common_end": "2026-05-14",
+      "last_by_asset": {
+        "QQQ": "2026-05-14",
+        "GLD": "2026-05-14",
+        "EMXC": "2026-05-14",
+        "VEA": "2026-05-14",
+        "DBC": "2026-05-14",
+        "DBMF": "2026-05-14"
+      },
+      "rows": 4116,
+      "sources": [
+        {
+          "scenario_name": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+          "code": "QQQ",
+          "name": "Nasdaq100_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+          "code": "GLD",
+          "name": "Gold_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+          "code": "EMXC",
+          "name": "EM_ex_China_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2017-07-26",
+          "last": "2026-05-14",
+          "rows": 2213
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+          "code": "VEA",
+          "name": "Developed_ex_US_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+          "code": "DBC",
+          "name": "Commodity_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_emxc_vea_dbc_dbmf",
+          "code": "DBMF",
+          "name": "Managed_Futures_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2019-05-08",
+          "last": "2026-05-14",
+          "rows": 1765
+        }
+      ]
+    },
+    {
+      "scenario": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+      "source_label": "Yahoo adjusted close; EMXC<-EEM, DBMF<-WTMF",
+      "common_start": "2010-01-04",
+      "common_end": "2026-05-14",
+      "last_by_asset": {
+        "QQQ": "2026-05-14",
+        "GLD": "2026-05-14",
+        "EMXC": "2026-05-14",
+        "VEA": "2026-05-14",
+        "DBC": "2026-05-14",
+        "DBMF": "2026-05-14"
+      },
+      "rows": 4116,
+      "sources": [
+        {
+          "scenario_name": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+          "code": "QQQ",
+          "name": "Nasdaq100_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+          "code": "GLD",
+          "name": "Gold_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+          "code": "EMXC",
+          "name": "EM_ex_China_ETF",
+          "source": "Yahoo adjusted close splice; proxy=EEM scaled at proxy_anchor=2017-07-26 to live_first=2017-07-26 scale=1.14863761",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+          "code": "VEA",
+          "name": "Developed_ex_US_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+          "code": "DBC",
+          "name": "Commodity_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_spliced_qqq_gld_emxc_eem_vea_dbc_dbmf_wtmf",
+          "code": "DBMF",
+          "name": "Managed_Futures_ETF",
+          "source": "Yahoo adjusted close splice; proxy=WTMF scaled at proxy_anchor=2019-05-08 to live_first=2019-05-08 scale=0.57442501",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2011-01-05",
+          "last": "2026-05-14",
+          "rows": 3862
+        }
+      ]
+    },
+    {
+      "scenario": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+      "source_label": "Yahoo adjusted close",
+      "common_start": "2010-01-04",
+      "common_end": "2026-05-14",
+      "last_by_asset": {
+        "QQQ": "2026-05-14",
+        "GLD": "2026-05-14",
+        "TLT": "2026-05-14",
+        "PDBC": "2026-05-14",
+        "EEM": "2026-05-14",
+        "VEA": "2026-05-14"
+      },
+      "rows": 4116,
+      "sources": [
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+          "code": "QQQ",
+          "name": "Nasdaq100_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+          "code": "GLD",
+          "name": "Gold_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+          "code": "TLT",
+          "name": "Long_Treasury_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+          "code": "PDBC",
+          "name": "Commodity_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2014-11-07",
+          "last": "2026-05-14",
+          "rows": 2895
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+          "code": "EEM",
+          "name": "Emerging_Markets_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_eem_vea",
+          "code": "VEA",
+          "name": "Developed_ex_US_ETF",
+          "source": "Yahoo Finance chart API",
+          "adjustment": "adjusted close",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        }
+      ]
+    },
+    {
+      "scenario": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+      "source_label": "Yahoo adjusted close; PDBC<-DBC",
+      "common_start": "2010-01-04",
+      "common_end": "2026-05-14",
+      "last_by_asset": {
+        "QQQ": "2026-05-14",
+        "GLD": "2026-05-14",
+        "TLT": "2026-05-14",
+        "PDBC": "2026-05-14",
+        "EEM": "2026-05-14",
+        "VEA": "2026-05-14"
+      },
+      "rows": 4116,
+      "sources": [
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+          "code": "QQQ",
+          "name": "Nasdaq100_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+          "code": "GLD",
+          "name": "Gold_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+          "code": "TLT",
+          "name": "Long_Treasury_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+          "code": "PDBC",
+          "name": "Commodity_ETF",
+          "source": "Yahoo adjusted close splice; proxy=DBC scaled at proxy_anchor=2014-11-07 to live_first=2014-11-07 scale=0.60593161",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+          "code": "EEM",
+          "name": "Emerging_Markets_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        },
+        {
+          "scenario_name": "us_etf_qqq_gld_tlt_pdbc_dbc_eem_vea",
+          "code": "VEA",
+          "name": "Developed_ex_US_ETF",
+          "source": "Yahoo Finance chart API adjusted close",
+          "adjustment": "adjusted close; proxy-scaled where noted",
+          "first": "2010-01-04",
+          "last": "2026-05-14",
+          "rows": 4116
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "scenario": "current_subd_cn6",
+      "reason": "All qfq data sources failed. 159915.SZ akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 159915.SZ / 159915; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 159915.SZ Eastmoney push2his kline: Eastmoney returned no rows for 159915.SZ; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
+    }
+  ]
+}

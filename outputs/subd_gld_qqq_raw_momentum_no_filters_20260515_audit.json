@@ -1,0 +1,32 @@
+{
+  "entrypoint": "inline raw momentum runner using research_subd_six_etf_weighted_slope weighted slope formula",
+  "rules": {
+    "assets": [
+      "GLD",
+      "QQQ"
+    ],
+    "lookback": 25,
+    "removed": "R2 filter, score min/max cap, staged entry, MA60 overheat, target volatility, leverage",
+    "one_way_cost": 0.001
+  },
+  "sources": [
+    {
+      "code": "GLD",
+      "name": "Gold_ETF",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    },
+    {
+      "code": "QQQ",
+      "name": "Nasdaq100_ETF",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first": "2010-01-04",
+      "last": "2026-05-15",
+      "rows": 4117
+    }
+  ]
+}

@@ -1,0 +1,432 @@
+{
+  "run_id": "20260516_subd_v11_score_min_positive_values",
+  "created_at": "2026-05-16T11:14:19+08:00",
+  "phase": "complete",
+  "project": "subd_six_etf",
+  "strategy": "v1_1",
+  "subsystem": "score_gate",
+  "repo_root": "C:\\Users\\Administrator.DESKTOP-95I7VVU\\Desktop\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "analyze_score_gate_min_positive_values_20260516.py",
+  "git_branch": "main",
+  "git_commit": "d7c3790bd3a4f1b5715f4583b995542f5ad076c2",
+  "git_status_before": "?? analyze_lookback_half_life_grid_20260511.py\n?? analyze_r2_threshold_scan_20260511.py\n?? analyze_score_cap_alternatives_20260511.py\n?? analyze_score_gate_cap_values_20260516.py\n?? analyze_score_gate_exemptions_20260516.py\n?? analyze_score_gate_min_values_20260516.py\n?? analyze_score_max_veto_robustness_20260511.py\n?? analyze_score_transform_variants_20260511.py\n?? analyze_soymeal_etf_futures_correlation_20260510.py\n?? analyze_subd_v11_1_2_switch_entry_20260511.py\n?? analyze_subd_v11_1_3_overheat_20260511.py\n?? analyze_subd_v11_1_4_target_vol_20260511.py\n?? analyze_subd_v11_30y_bond_expansion_20260510.py\n?? analyze_subd_v11_csi2000_expansion_20260510.py\n?? analyze_subd_v11_pool_expansion_20260510.py\n?? analyze_subd_v11_remove_soymeal_20260510.py\n?? analyze_subd_v11_signal_jitter_20260510.py\n?? analyze_subd_v11_switch_buffer_fine_scan_20260510.py\n?? analyze_subd_v11_us_etf_pool_20260515.py\n?? analyze_weighted_log_slope_diagnostics_20260511.py\n?? analyze_weighting_half_life_platform_20260511.py\n?? analyze_weighting_half_life_scan_20260511.py\n?? docs/gn_20260516/\n?? outputs/soymeal_etf_futures_correlation_20260510_close.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_etf_source.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_returns.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_single_contracts.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_summary.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_audit.json\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_daily.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_selection.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_summary.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_daily.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_selection.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_sources.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_summary.csv\n?? outputs/subd_v11_before_after_execution_fix_compare_20260511.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_daily.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_selection.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_sources.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_summary.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_audit.json\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_daily.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_drop_ashr.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_held_contribution.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_selection.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_summary.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_audit.json\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_daily.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_selection.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_summary.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_audit.json\n?? outputs/subd_v11_ewj_vs_vea_20260515_daily.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_selection.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_summary.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_audit.json\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_daily.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_selection.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_summary.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_audit.json\n?? outputs/subd_v11_gld_qqq_only_20260515_daily.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_selection.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_summary.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_audit.json\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_daily.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_selection.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_summary.csv\n?? outputs/subd_v11_overheat_recovery_ab_20260511_daily.csv\n?? outputs/subd_v11_overheat_recovery_ab_20260511_summary.csv\n?? outputs/subd_v11_pool_expansion_20260510_daily.csv\n?? outputs/subd_v11_pool_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_pool_expansion_20260510_selection.csv\n?? outputs/subd_v11_pool_expansion_20260510_sources.csv\n?? outputs/subd_v11_pool_expansion_20260510_summary.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_daily.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_deltas_vs_r2_0p20.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_sources.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_summary.csv\n?? outputs/subd_v11_remove_soymeal_20260510_daily.csv\n?? outputs/subd_v11_remove_soymeal_20260510_data_quality.csv\n?? outputs/subd_v11_remove_soymeal_20260510_selection.csv\n?? outputs/subd_v11_remove_soymeal_20260510_sources.csv\n?? outputs/subd_v11_remove_soymeal_20260510_summary.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_daily.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_deltas.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_sources.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_summary.csv\n?? outputs/subd_v11_signal_jitter_20260510_daily.csv\n?? outputs/subd_v11_signal_jitter_20260510_segments.csv\n?? outputs/subd_v11_signal_jitter_20260510_sources.csv\n?? outputs/subd_v11_signal_jitter_20260510_summary.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_audit.json\n?? outputs/subd_v11_single_gld_qqq_20260515_daily.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_selection.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_summary.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_daily.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_segments.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_sources.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_summary.csv\n?? outputs/subd_v11_switch_buffer_from_20250101_compare_20260510.csv\n?? outputs/subd_v11_us_etf_pool_20260515_audit.json\n?? outputs/subd_v11_us_etf_pool_20260515_daily.csv\n?? outputs/subd_v11_us_etf_pool_20260515_held_contribution.csv\n?? outputs/subd_v11_us_etf_pool_20260515_leave_one_out.csv\n?? outputs/subd_v11_us_etf_pool_20260515_selection.csv\n?? outputs/subd_v11_us_etf_pool_20260515_summary.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_daily.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_deltas_vs_linear.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_sources.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_summary.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_forward_return_buckets.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_lookback_matrix.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_lookback_sharpe.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_forward_buckets.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_hist.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_panel.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_score_r2_distribution.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_score_rule_ablation.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_sources.csv\n?? quant_param_scan_runs/",
+  "git_status_after": "?? analyze_lookback_half_life_grid_20260511.py\n?? analyze_r2_threshold_scan_20260511.py\n?? analyze_score_cap_alternatives_20260511.py\n?? analyze_score_gate_cap_values_20260516.py\n?? analyze_score_gate_exemptions_20260516.py\n?? analyze_score_gate_min_positive_values_20260516.py\n?? analyze_score_gate_min_values_20260516.py\n?? analyze_score_max_veto_robustness_20260511.py\n?? analyze_score_transform_variants_20260511.py\n?? analyze_soymeal_etf_futures_correlation_20260510.py\n?? analyze_subd_v11_1_2_switch_entry_20260511.py\n?? analyze_subd_v11_1_3_overheat_20260511.py\n?? analyze_subd_v11_1_4_target_vol_20260511.py\n?? analyze_subd_v11_30y_bond_expansion_20260510.py\n?? analyze_subd_v11_csi2000_expansion_20260510.py\n?? analyze_subd_v11_pool_expansion_20260510.py\n?? analyze_subd_v11_remove_soymeal_20260510.py\n?? analyze_subd_v11_signal_jitter_20260510.py\n?? analyze_subd_v11_switch_buffer_fine_scan_20260510.py\n?? analyze_subd_v11_us_etf_pool_20260515.py\n?? analyze_weighted_log_slope_diagnostics_20260511.py\n?? analyze_weighting_half_life_platform_20260511.py\n?? analyze_weighting_half_life_scan_20260511.py\n?? docs/gn_20260516/\n?? outputs/soymeal_etf_futures_correlation_20260510_close.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_etf_source.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_returns.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_single_contracts.csv\n?? outputs/soymeal_etf_futures_correlation_20260510_summary.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_audit.json\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_daily.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_selection.csv\n?? outputs/subd_gld_qqq_raw_momentum_no_filters_20260515_summary.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_daily.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_selection.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_sources.csv\n?? outputs/subd_v11_30y_bond_expansion_20260510_summary.csv\n?? outputs/subd_v11_before_after_execution_fix_compare_20260511.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_daily.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_selection.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_sources.csv\n?? outputs/subd_v11_csi2000_expansion_20260510_summary.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_audit.json\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_daily.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_drop_ashr.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_held_contribution.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_selection.csv\n?? outputs/subd_v11_dbc_qqq_gld_ashr_20260515_summary.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_audit.json\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_daily.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_selection.csv\n?? outputs/subd_v11_dbc_qqq_gld_ewj_20260515_summary.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_audit.json\n?? outputs/subd_v11_ewj_vs_vea_20260515_daily.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_selection.csv\n?? outputs/subd_v11_ewj_vs_vea_20260515_summary.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_audit.json\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_daily.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_selection.csv\n?? outputs/subd_v11_gld_qqq_allow_negative_score_20260515_summary.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_audit.json\n?? outputs/subd_v11_gld_qqq_only_20260515_daily.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_selection.csv\n?? outputs/subd_v11_gld_qqq_only_20260515_summary.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_audit.json\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_daily.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_selection.csv\n?? outputs/subd_v11_original_pool_allow_negative_yahoo_20260515_summary.csv\n?? outputs/subd_v11_overheat_recovery_ab_20260511_daily.csv\n?? outputs/subd_v11_overheat_recovery_ab_20260511_summary.csv\n?? outputs/subd_v11_pool_expansion_20260510_daily.csv\n?? outputs/subd_v11_pool_expansion_20260510_data_quality.csv\n?? outputs/subd_v11_pool_expansion_20260510_selection.csv\n?? outputs/subd_v11_pool_expansion_20260510_sources.csv\n?? outputs/subd_v11_pool_expansion_20260510_summary.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_daily.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_deltas_vs_r2_0p20.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_sources.csv\n?? outputs/subd_v11_r2_threshold_scan_20260511_summary.csv\n?? outputs/subd_v11_remove_soymeal_20260510_daily.csv\n?? outputs/subd_v11_remove_soymeal_20260510_data_quality.csv\n?? outputs/subd_v11_remove_soymeal_20260510_selection.csv\n?? outputs/subd_v11_remove_soymeal_20260510_sources.csv\n?? outputs/subd_v11_remove_soymeal_20260510_summary.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_daily.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_deltas.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_sources.csv\n?? outputs/subd_v11_score_cap_alternatives_20260511_summary.csv\n?? outputs/subd_v11_signal_jitter_20260510_daily.csv\n?? outputs/subd_v11_signal_jitter_20260510_segments.csv\n?? outputs/subd_v11_signal_jitter_20260510_sources.csv\n?? outputs/subd_v11_signal_jitter_20260510_summary.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_audit.json\n?? outputs/subd_v11_single_gld_qqq_20260515_daily.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_selection.csv\n?? outputs/subd_v11_single_gld_qqq_20260515_summary.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_daily.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_segments.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_sources.csv\n?? outputs/subd_v11_switch_buffer_fine_scan_20260510_summary.csv\n?? outputs/subd_v11_switch_buffer_from_20250101_compare_20260510.csv\n?? outputs/subd_v11_us_etf_pool_20260515_audit.json\n?? outputs/subd_v11_us_etf_pool_20260515_daily.csv\n?? outputs/subd_v11_us_etf_pool_20260515_held_contribution.csv\n?? outputs/subd_v11_us_etf_pool_20260515_leave_one_out.csv\n?? outputs/subd_v11_us_etf_pool_20260515_selection.csv\n?? outputs/subd_v11_us_etf_pool_20260515_summary.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_daily.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_deltas_vs_linear.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_sources.csv\n?? outputs/subd_v11_weighting_half_life_scan_20260511_summary.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_forward_return_buckets.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_lookback_matrix.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_lookback_sharpe.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_forward_buckets.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_hist.png\n?? outputs/weighted_log_slope_diagnostics_20260511_score_panel.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_score_r2_distribution.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_score_rule_ablation.csv\n?? outputs/weighted_log_slope_diagnostics_20260511_sources.csv\n?? quant_param_scan_runs/",
+  "scan_type": "uniform_score_min_sweep",
+  "parameter_group": "score_min_values",
+  "baseline": {
+    "candidate": "official_caps_min_0",
+    "score_rule": "all six assets use score > 0 and score < 5",
+    "from_2020_ann_return": 0.5932200361031534,
+    "from_2020_max_dd": -0.18054057908721044,
+    "from_2020_sharpe": 1.9095598116288215
+  },
+  "candidate_grid": [
+    {
+      "candidate": "official_caps_min_0",
+      "score_min": 0.0,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_0p1",
+      "score_min": 0.1,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_0p2",
+      "score_min": 0.2,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_0p3",
+      "score_min": 0.3,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_0p5",
+      "score_min": 0.5,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_0p75",
+      "score_min": 0.75,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_1",
+      "score_min": 1.0,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_1p5",
+      "score_min": 1.5,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_2",
+      "score_min": 2.0,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_3",
+      "score_min": 3.0,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_4",
+      "score_min": 4.0,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "official_caps_min_5",
+      "score_min": 5.0,
+      "cap_family": "official_caps",
+      "cap_map": {
+        "159915.SZ": 5.0,
+        "159941.SZ": 5.0,
+        "513030.SH": 5.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_0",
+      "score_min": 0.0,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_0p1",
+      "score_min": 0.1,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_0p2",
+      "score_min": 0.2,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_0p3",
+      "score_min": 0.3,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_0p5",
+      "score_min": 0.5,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_0p75",
+      "score_min": 0.75,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_1",
+      "score_min": 1.0,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_1p5",
+      "score_min": 1.5,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_2",
+      "score_min": 2.0,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_3",
+      "score_min": 3.0,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_4",
+      "score_min": 4.0,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    },
+    {
+      "candidate": "recommended_caps_min_5",
+      "score_min": 5.0,
+      "cap_family": "recommended_caps",
+      "cap_map": {
+        "159915.SZ": Infinity,
+        "159941.SZ": 5.0,
+        "513030.SH": 15.0,
+        "513520.SH": 5.0,
+        "159985.SZ": 5.0,
+        "518880.SH": 5.0
+      }
+    }
+  ],
+  "data_snapshot": {
+    "common_last": "2026-05-15",
+    "last_by_asset": {
+      "159915.SZ": "2026-05-15",
+      "159941.SZ": "2026-05-15",
+      "513030.SH": "2026-05-15",
+      "513520.SH": "2026-05-15",
+      "159985.SZ": "2026-05-15",
+      "518880.SH": "2026-05-15"
+    },
+    "source_table": [
+      {
+        "code": "159915.SZ",
+        "name": "CYB100_ETF",
+        "source": "akshare.fund_etf_hist_sina raw close",
+        "adjustment": "raw/unadjusted as served by Sina",
+        "first": "2011-12-09",
+        "last": "2026-05-15",
+        "rows": 3500
+      },
+      {
+        "code": "159941.SZ",
+        "name": "NASDAQ_ETF",
+        "source": "akshare.fund_etf_hist_sina raw close",
+        "adjustment": "raw/unadjusted as served by Sina",
+        "first": "2015-07-13",
+        "last": "2026-05-15",
+        "rows": 2632
+      },
+      {
+        "code": "513030.SH",
+        "name": "GERMANY_ETF",
+        "source": "akshare.fund_etf_hist_sina raw close",
+        "adjustment": "raw/unadjusted as served by Sina",
+        "first": "2014-09-05",
+        "last": "2026-05-15",
+        "rows": 2836
+      },
+      {
+        "code": "513520.SH",
+        "name": "NIKKEI_ETF",
+        "source": "akshare.fund_etf_hist_sina raw close",
+        "adjustment": "raw/unadjusted as served by Sina",
+        "first": "2019-06-25",
+        "last": "2026-05-15",
+        "rows": 1670
+      },
+      {
+        "code": "159985.SZ",
+        "name": "SOYMEAL_ETF",
+        "source": "akshare.fund_etf_hist_sina raw close",
+        "adjustment": "raw/unadjusted as served by Sina",
+        "first": "2019-12-05",
+        "last": "2026-05-15",
+        "rows": 1559
+      },
+      {
+        "code": "518880.SH",
+        "name": "GOLD_ETF",
+        "source": "akshare.fund_etf_hist_sina raw close",
+        "adjustment": "raw/unadjusted as served by Sina",
+        "first": "2013-07-29",
+        "last": "2026-05-15",
+        "rows": 3109
+      }
+    ],
+    "adjustment": "raw/unadjusted as served by Sina via akshare.fund_etf_hist_sina",
+    "parity_check": {
+      "max_abs_nav_diff": 0.0,
+      "official_final_nav": 58.50632171310665,
+      "fast_final_nav": 58.50632171310665
+    }
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "target_vol": 0.25,
+    "vol_window": 80,
+    "max_lev": 1.5,
+    "r2_threshold": 0.2,
+    "switch_buffer": 1.05,
+    "initial_entry_fraction": 0.5,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18,
+    "overheat_derisk_scale": 0.0
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260516_subd_v11_score_min_positive_values\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260516_subd_v11_score_min_positive_values\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260516_subd_v11_score_min_positive_values\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260516_subd_v11_score_min_positive_values\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260516_subd_v11_score_min_positive_values\\command_log.txt"
+  },
+  "decision": "Research-only result: score_min=0.20 is the best broad 0-5 lower-bound candidate under both official caps and the recommended cap map, with only a small gain over 0 and slightly deeper drawdown; score_min above 0.30 quickly degrades returns and Sharpe.",
+  "stability_label": "score_min_0p2_small_improvement",
+  "finalized_at": "2026-05-16T11:18:38+08:00"
+}

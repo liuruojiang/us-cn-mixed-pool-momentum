@@ -1,0 +1,16 @@
+init_quant_param_scan_run.py
+run_id=20260516_subd_v11_score_min_positive_values
+project=subd_six_etf
+strategy=v1_1
+subsystem=score_gate
+parameter_group=score_min_positive_values
+repo=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+
+python .\analyze_score_gate_min_positive_values_20260516.py
+
+python .\analyze_score_gate_min_positive_values_20260516.py
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-05-16T11:18:38+08:00
+decision=Research-only result: score_min=0.20 is the best broad 0-5 lower-bound candidate under both official caps and the recommended cap map, with only a small gain over 0 and slightly deeper drawdown; score_min above 0.30 quickly degrades returns and Sharpe.
+stability_label=score_min_0p2_small_improvement

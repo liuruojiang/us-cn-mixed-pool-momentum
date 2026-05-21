@@ -1,0 +1,19 @@
+init_quant_param_scan_run.py
+run_id=20260521_subd_v11_target_vol
+project=mixed-us-cn-momentum
+strategy=SubD V1.1
+subsystem=six-etf mixed pool
+parameter_group=target_vol
+repo=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+
+[scan]
+cwd=C:\Users\Administrator.DESKTOP-95I7VVU\Desktop\动量策略\美股A股混合池子动量策略
+command=python .\quant_param_scan_runs\20260521_subd_v11_target_vol\run_scan.py
+source=eastmoney
+target_vols=0.100,0.125,0.150,0.175,0.200,0.225,0.250,0.275,0.300,0.325,0.350,0.375,0.400
+elapsed_sec=33.84
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-05-21T18:19:54+08:00
+decision=keep_default_25_balanced
+stability_label=balanced_recent_stable
