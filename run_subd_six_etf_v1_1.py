@@ -15,6 +15,7 @@ EVAL_START = pd.Timestamp("2020-01-02")
 END_DATE = pd.Timestamp.today().normalize()
 R2_THRESHOLD = 0.20
 TARGET_VOL = 0.25
+TARGET_VOL_SCALE_REBALANCE_THRESHOLD = 0.075
 V10_BASELINE_SWITCH_BUFFER = 1.00
 SWITCH_BUFFER = 1.05
 INITIAL_ENTRY_FRACTION = 0.50
@@ -314,6 +315,21 @@ def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series
     return pd.Series(default, index=curve.index, dtype=float)
 
 
+def apply_target_vol_scale_rebalance_threshold(
+    raw_next_scale: pd.Series,
+    threshold: float = TARGET_VOL_SCALE_REBALANCE_THRESHOLD,
+) -> pd.Series:
+    raw = raw_next_scale.astype(float).replace([np.inf, -np.inf], np.nan).fillna(1.0)
+    confirmed = []
+    last_confirmed = 1.0
+    for value in raw:
+        value = float(value)
+        if threshold <= 0 or abs(value - last_confirmed) >= threshold:
+            last_confirmed = value
+        confirmed.append(last_confirmed)
+    return pd.Series(confirmed, index=raw.index, dtype=float)
+
+
 def _compute_target_vol_scales(
     curve: pd.DataFrame,
     target_vol: float,
@@ -324,6 +340,7 @@ def _compute_target_vol_scales(
     realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(subd.TRADING_DAYS)
     next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], max_lev)
     next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
+    next_scale = apply_target_vol_scale_rebalance_threshold(next_scale)
     effective_scale = next_scale.shift(1).fillna(1.0)
     return realized_vol, effective_scale.astype(float), next_scale.astype(float)
 

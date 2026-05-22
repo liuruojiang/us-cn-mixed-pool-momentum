@@ -125,6 +125,7 @@ START_DATE = pd.Timestamp("2010-01-01")
 EVAL_START = pd.Timestamp("2020-01-02")
 R2_THRESHOLD = 0.20
 TARGET_VOL = 0.25
+TARGET_VOL_SCALE_REBALANCE_THRESHOLD = 0.075
 V10_BASELINE_SWITCH_BUFFER = 1.00
 SWITCH_BUFFER = 1.05
 INITIAL_ENTRY_FRACTION = 0.50
@@ -775,6 +776,21 @@ def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series
     return pd.Series(default, index=curve.index, dtype=float)
 
 
+def apply_target_vol_scale_rebalance_threshold(
+    raw_next_scale: pd.Series,
+    threshold: float = TARGET_VOL_SCALE_REBALANCE_THRESHOLD,
+) -> pd.Series:
+    raw = raw_next_scale.astype(float).replace([np.inf, -np.inf], np.nan).fillna(1.0)
+    confirmed: list[float] = []
+    last_confirmed = 1.0
+    for value in raw:
+        value = float(value)
+        if threshold <= 0 or abs(value - last_confirmed) >= threshold:
+            last_confirmed = value
+        confirmed.append(last_confirmed)
+    return pd.Series(confirmed, index=raw.index, dtype=float)
+
+
 def _compute_target_vol_scales(
     curve: pd.DataFrame,
     target_vol: float,
@@ -785,6 +801,7 @@ def _compute_target_vol_scales(
     realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(TRADING_DAYS)
     next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], max_lev)
     next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
+    next_scale = apply_target_vol_scale_rebalance_threshold(next_scale)
     effective_scale = next_scale.shift(1).fillna(1.0)
     return realized_vol, effective_scale.astype(float), next_scale.astype(float)
 
@@ -1704,6 +1721,7 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append(f"| 基础仓位 | **{_fmt_pct(holding_fraction)}** | V1.1新资产先建50%，等待下跌日补足 |")
     lines.append(f"| Target-vol scale(今日已生效) | **{_fmt_num(target_vol_scale_effective, 3)}x** | 用于本日收益 |")
     lines.append(f"| Target-vol scale(收盘后目标) | **{_fmt_num(target_vol_scale_next, 3)}x** | 目标波动率{TARGET_VOL:.0%}，{DEFAULT_VOL_WINDOW}日收益率估计 |")
+    lines.append(f"| Scale调整阈值 | **Δ≥{TARGET_VOL_SCALE_REBALANCE_THRESHOLD:.3f}** | 小于阈值沿用上次确认scale |")
     lines.append(f"| 过热防守scale(今日已生效) | **{_fmt_num(overheat_scale_effective, 3)}x** | 用于本日收益 |")
     lines.append(f"| 过热防守scale(收盘后目标) | **{_fmt_num(overheat_scale_next, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
     lines.append(f"| 执行scale | **{_fmt_num(execution_scale, 3)}x** | Target-vol × 过热防守 |")
@@ -1863,6 +1881,7 @@ def format_live_params_snapshot(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("|:-|--:|:-|")
     lines.append(f"| Target-vol scale(今日已生效) | **{_fmt_num(target_vol_scale_effective, 3)}x** | 用于本日收益 |")
     lines.append(f"| Target-vol scale(收盘后目标) | **{_fmt_num(target_vol_scale_next, 3)}x** | 目标波动率{TARGET_VOL:.0%}，波动窗口{DEFAULT_VOL_WINDOW}日 |")
+    lines.append(f"| Scale调整阈值 | **Δ≥{TARGET_VOL_SCALE_REBALANCE_THRESHOLD:.3f}** | 小于阈值沿用上次确认scale |")
     lines.append(f"| 过热防守scale(今日已生效) | **{_fmt_num(overheat_scale_effective, 3)}x** | 用于本日收益 |")
     lines.append(f"| 过热防守scale(收盘后目标) | **{_fmt_num(overheat_scale_next, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
     lines.append(f"| 执行scale | **{_fmt_num(execution_scale, 3)}x** | Target-vol × 过热防守 |")
@@ -2073,6 +2092,7 @@ class SubDSixEtfV11Bot:
             msg.write(f"| 目标波动率 | **{TARGET_VOL:.0%}** | target-vol overlay |\n")
             msg.write(f"| 波动率窗口 | **{DEFAULT_VOL_WINDOW}日** | 用策略收益率估计 |\n")
             msg.write(f"| 最大杠杆 | **{DEFAULT_MAX_LEV:.1f}x** | scale上限 |\n")
+            msg.write(f"| Scale调整阈值 | **Δ≥{TARGET_VOL_SCALE_REBALANCE_THRESHOLD:.3f}** | 小于阈值沿用上次确认scale |\n")
             msg.write(f"| 切换buffer | **{SWITCH_BUFFER:.2f}x** | 当前持仓保护 |\n")
             msg.write(f"| 新资产首笔 | **{INITIAL_ENTRY_FRACTION:.0%}** | 从现金或换新资产时先买入 |\n")
             msg.write("| 补仓规则 | **等下跌日补足** | 无固定超时 |\n")
