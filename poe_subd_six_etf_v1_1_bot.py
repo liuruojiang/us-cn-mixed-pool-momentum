@@ -1538,6 +1538,8 @@ def classify_query(text: str) -> str:
         return "live_signal"
     if "实时参数" in compact or "参数实时" in compact:
         return "live_params"
+    if re.search(r"交易记录|调仓记录|成交记录|换仓记录", query):
+        return "performance"
     if re.search(r"净值曲线|收益曲线|走势", query):
         return "performance"
     if re.search(r"表现|收益(?!曲线)|回撤|年化|夏普|回报|绩效", query):
@@ -1640,6 +1642,136 @@ def _last_signal_date(daily: pd.DataFrame) -> str:
     if changed.empty:
         return "暂无换仓记录"
     return pd.Timestamp(changed.iloc[-1]["date"]).date().isoformat()
+
+
+def _trade_note(row: pd.Series) -> str:
+    notes: list[str] = []
+    if _bool(row.get("staged_initial")):
+        notes.append("新资产先建50%")
+    if _bool(row.get("fill_on_down_day")):
+        notes.append("下跌日补仓")
+    if not notes and _empty_to_none(row.get("trade_target")) is None:
+        notes.append("scale调整")
+    return " / ".join(notes) if notes else "-"
+
+
+def _trade_operation_text(row: pd.Series) -> str:
+    previous_code = str(row.get("position_before", ""))
+    target_code = str(row.get("position", ""))
+    previous = _asset_name(previous_code)
+    target = _asset_name(target_code)
+    old_fraction = _float(row.get("fraction_before"), default=0.0)
+    new_fraction = _float(row.get("holding_fraction"), default=0.0)
+    trade_target = _empty_to_none(row.get("trade_target"))
+
+    if trade_target is None:
+        return f"调: {target}"
+    if previous_code == target_code:
+        if new_fraction > old_fraction + 1e-12:
+            return f"补: {target}"
+        if new_fraction < old_fraction - 1e-12:
+            return f"减: {target}"
+        return f"调: {target}"
+
+    parts: list[str] = []
+    if previous_code != "CASH" and old_fraction > 1e-12:
+        parts.append(f"减: {previous}")
+    if target_code != "CASH" and new_fraction > 1e-12:
+        parts.append(f"加: {target}")
+    return " / ".join(parts) if parts else "调: CASH"
+
+
+def format_trade_records_table(
+    daily: pd.DataFrame,
+    limit: int = 20,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> str:
+    records = trade_records_frame(daily, start=start, end=end)
+    total = len(records)
+
+    lines: list[str] = [f"### 调仓记录 ({total}条)", ""]
+    if records.empty:
+        lines.append("该时段无调仓记录")
+        return "\n".join(lines) + "\n"
+
+    lines.append("| 日期 | 策略 | 操作 | 基础仓位 | 目标敞口 | 换手 | 成本 | 说明 |")
+    lines.append("|:-|:-|:-|--:|--:|--:|--:|:-|")
+    for _, row in records.head(limit).iterrows():
+        lines.append(
+            f"| {row['date']} | {row['strategy']} | {row['operation']} | "
+            f"{_fmt_pct(row['fraction_before'])} -> {_fmt_pct(row['holding_fraction'])} | "
+            f"{_fmt_pct(row['final_exposure_after_overheat'])} | {_fmt_pct(row['turnover'])} | "
+            f"{_fmt_pct(row['cost'], 3)} | {row['note']} |"
+        )
+    if total > limit:
+        lines.append("")
+        lines.append(f"（仅显示最近{limit}条）")
+    return "\n".join(lines) + "\n"
+
+
+def trade_records_frame(
+    daily: pd.DataFrame,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    data = daily.copy()
+    data["date"] = pd.to_datetime(data["date"])
+    if start is not None:
+        data = data[data["date"] >= pd.Timestamp(start).normalize()]
+    if end is not None:
+        data = data[data["date"] <= pd.Timestamp(end).normalize()]
+    turnover = pd.to_numeric(data.get("turnover", 0.0), errors="coerce").fillna(0.0)
+    records = data[turnover > 1e-12].sort_values("date", ascending=False)
+    if records.empty:
+        return pd.DataFrame(
+            columns=[
+                "date",
+                "strategy",
+                "operation",
+                "position_before_name",
+                "position_name",
+                "fraction_before",
+                "holding_fraction",
+                "final_exposure_after_overheat",
+                "turnover",
+                "cost",
+                "note",
+            ]
+        )
+
+    output = records.copy()
+    output.insert(0, "note", [_trade_note(row) for _, row in records.iterrows()])
+    output.insert(0, "operation", [_trade_operation_text(row) for _, row in records.iterrows()])
+    output.insert(0, "strategy", [f"SubD V{row.get('version', VERSION)}" for _, row in records.iterrows()])
+    output.insert(0, "position_name", [_asset_name(str(row.get("position", ""))) for _, row in records.iterrows()])
+    output.insert(0, "position_before_name", [_asset_name(str(row.get("position_before", ""))) for _, row in records.iterrows()])
+    output["date"] = output["date"].dt.date.astype(str)
+
+    first_columns = [
+        "date",
+        "strategy",
+        "operation",
+        "position_before_name",
+        "position_name",
+        "fraction_before",
+        "holding_fraction",
+        "final_exposure_after_overheat",
+        "turnover",
+        "cost",
+        "note",
+    ]
+    remaining = [col for col in output.columns if col not in first_columns]
+    return output[first_columns + remaining]
+
+
+def trade_records_csv_bytes(
+    daily: pd.DataFrame,
+    start: pd.Timestamp | None = None,
+    end: pd.Timestamp | None = None,
+) -> bytes:
+    records = trade_records_frame(daily, start=start, end=end)
+    return records.to_csv(index=False).encode("utf-8-sig")
 
 
 def _asset_last_dates_text(row: pd.Series) -> str:
@@ -1799,6 +1931,8 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
         lines.append(f"| 过热前净值 | **{_fmt_num(nav_before_overheat, 4)}** |")
     if not pd.isna(base_nav):
         lines.append(f"| 基础策略净值 | **{_fmt_num(base_nav, 4)}** |")
+    lines.append("")
+    lines.append(format_trade_records_table(ordered, limit=10).rstrip())
     lines.append("")
     lines.append("> 执行提醒: 这是日线收盘确认信号；当前回测和信号口径按当日收盘价执行。")
     return "\n".join(lines) + "\n"
@@ -2150,6 +2284,19 @@ class SubDSixEtfV11Bot:
                         msg.write("\n")
                 except Exception:
                     pass
+                try:
+                    label, start, end = first_chart_range
+                    msg.write(format_trade_records_table(daily, limit=20, start=start, end=end))
+                    csv_name = f"subd_v11_trade_records_{pd.Timestamp(start).date()}_{pd.Timestamp(end).date()}.csv"
+                    msg.attach_file(
+                        name=csv_name,
+                        contents=trade_records_csv_bytes(daily, start=start, end=end),
+                        content_type="text/csv; charset=utf-8",
+                    )
+                    msg.write(f"📎 完整调仓记录CSV: **{csv_name}**\n")
+                    msg.write("\n")
+                except Exception:
+                    pass
                 chart_args = None
         if chart_args is not None:
             daily, label, start, end = chart_args
@@ -2173,6 +2320,7 @@ poe.update_settings(SettingsResponse(
         "- 发送 **\"参数\"** -> V1.1参数总览\n"
         "- 发送 **\"实时参数\"** -> 参数 + 实时数据快照\n"
         '- 发送 **"表现"** / **"表现 过去两年"** / **"今年收益"** -> 绩效表\n'
+        '- 发送 **"交易记录 过去两个月"** -> 调仓记录表 + 完整CSV\n'
         '- 发送 **"净值曲线 过去两年"** / **"收益曲线 今年"** -> 绩效表 + 净值曲线\n'
     ),
 ))

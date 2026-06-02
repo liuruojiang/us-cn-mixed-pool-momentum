@@ -110,19 +110,40 @@ def load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> p
     return close
 
 
+def load_akshare_sina_raw_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
+    symbol = sina_symbol(code)
+    last_error = None
+    for attempt in range(1, 4):
+        try:
+            df = ak.fund_etf_hist_sina(symbol=symbol)
+            if not df.empty:
+                break
+        except Exception as exc:  # noqa: BLE001 - external data source can fail transiently.
+            last_error = exc
+        time.sleep(1.5 * attempt)
+    else:
+        raise RuntimeError(f"AkShare Sina returned no rows for {code} / {symbol}; last_error={last_error}")
+    close = df[["date", "close"]].copy()
+    close["date"] = pd.to_datetime(close["date"])
+    close = close.set_index("date")["close"].astype(float).sort_index()
+    close = close.loc[:end_date]
+    close.name = code
+    return close
+
+
 def load_sina_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFrame, pd.DataFrame]:
     series = []
     sources = []
     for code in codes:
-        close = load_akshare_eastmoney_qfq_one_close(code, end_date)
+        close = load_akshare_sina_raw_one_close(code, end_date)
         series.append(close)
         non_na = close.dropna()
         sources.append(
             {
                 "code": code,
                 "name": ASSETS[code],
-                "source": "akshare.fund_etf_hist_em daily close",
-                "adjustment": "qfq/front-adjusted",
+                "source": "akshare.fund_etf_hist_sina raw close",
+                "adjustment": "raw/unadjusted as served by Sina",
                 "first": non_na.index.min().date().isoformat(),
                 "last": non_na.index.max().date().isoformat(),
                 "rows": int(non_na.shape[0]),

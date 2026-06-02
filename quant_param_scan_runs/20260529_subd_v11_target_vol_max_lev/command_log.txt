@@ -1,0 +1,21 @@
+init_quant_param_scan_run.py
+run_id=20260529_subd_v11_target_vol_max_lev
+project=mixed-us-cn-momentum
+strategy=SubD V1.1
+subsystem=six-etf mixed pool
+parameter_group=target_vol_max_lev
+repo=D:\动量策略\美股A股混合池子动量策略
+
+[scan]
+cwd=D:\动量策略\美股A股混合池子动量策略
+command=python .\quant_param_scan_runs\20260529_subd_v11_target_vol_max_lev\run_scan.py
+source=eastmoney
+target_vols=0.100,0.125,0.150,0.175,0.200,0.225,0.250,0.275,0.300,0.325,0.350,0.375,0.400
+max_levs=1.00,1.25,1.50,1.75,2.00
+data_mode=normalized_from_existing_official_daily_artifact
+elapsed_sec=50.45
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-05-30T00:02:53+08:00
+decision=recommend_tv30_maxlev1_risk_adjusted_keep_tv25_maxlev1p5_as_leveraged_balanced_alt
+stability_label=strict_pass_fallback_data_to_20260508_no_financing_open_impact
