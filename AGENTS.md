@@ -1,6 +1,6 @@
 # Agent Notes
 
-Common rules live in `C:\Users\Administrator.DESKTOP-95I7VVU\AGENTS.md`. This file only adds local rules for the mixed US/A-share momentum workspace.
+Use this repo-local file as the source of workspace guidance for the mixed US/A-share momentum workspace at `D:\动量策略\美股A股混合池子动量策略`. Do not depend on a user-home `AGENTS.md` or any machine-local Codex configuration path.
 
 ## CNFin Notes
 

@@ -28,5 +28,5 @@ Optimize Strategy D / SubD V1.1 target volatility and max leverage using the rea
 
 ```powershell
 python .\quant_param_scan_runs\20260529_subd_v11_target_vol_max_lev\run_scan.py
-python C:\Users\Administrator.DESKTOP-95I7VVU\.codex\skills\quant-param-scan\scripts\check_quant_param_scan_artifacts.py --phase complete --strict .\quant_param_scan_runs\20260529_subd_v11_target_vol_max_lev
+python <quant-param-scan-skill>\scripts\check_quant_param_scan_artifacts.py --phase complete --strict .\quant_param_scan_runs\20260529_subd_v11_target_vol_max_lev
 ```
