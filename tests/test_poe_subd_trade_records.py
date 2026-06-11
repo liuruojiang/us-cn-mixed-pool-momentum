@@ -30,6 +30,7 @@ def sample_daily():
                 "trade_fraction": 0.5,
                 "turnover": 1.6523324516,
                 "cost": 0.0016523324,
+                "exposure_effective": 1.1015549678,
                 "final_exposure_after_overheat": 0.5507774839,
                 "staged_initial": True,
                 "fill_on_down_day": False,
@@ -45,6 +46,7 @@ def sample_daily():
                 "trade_fraction": 1.0,
                 "turnover": 0.5507774839,
                 "cost": 0.0005507775,
+                "exposure_effective": 0.5507774839,
                 "final_exposure_after_overheat": 1.1015549678,
                 "staged_initial": False,
                 "fill_on_down_day": True,
@@ -60,6 +62,7 @@ def sample_daily():
                 "trade_fraction": float("nan"),
                 "turnover": 0.0,
                 "cost": 0.0,
+                "exposure_effective": 1.1015549678,
                 "final_exposure_after_overheat": 1.1015549678,
                 "staged_initial": False,
                 "fill_on_down_day": False,
@@ -74,8 +77,9 @@ def test_trade_records_table_shows_recent_adjustments_newest_first():
     text = bot.format_trade_records_table(sample_daily(), limit=5)
 
     assert "### 调仓记录 (2条)" in text
-    assert "| 日期 | 策略 | 操作 | 基础仓位 | 目标敞口 | 换手 | 成本 | 说明 |" in text
+    assert "| 日期 | 策略 | 操作 | 基础仓位 | 有效敞口 | 换手 | 成本 | 说明 |" in text
     assert text.index("2026-05-26") < text.index("2026-05-19")
+    assert "55.08% -> 110.16%" in text
     assert "补: 纳指ETF(159941.SZ)" in text
     assert "减: 创业板100ETF(159915.SZ) / 加: 纳指ETF(159941.SZ)" in text
     assert "下跌日补仓" in text

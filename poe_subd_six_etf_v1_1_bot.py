@@ -7,7 +7,7 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, time as dt_time, timedelta, timezone
 from functools import lru_cache
 from typing import Dict, List, Literal, Optional, Tuple
 
@@ -137,6 +137,8 @@ CN_BIAS_N = 60
 CN_MOM_DAY = 20
 
 V11_SCENARIO = "v1_1_staged_50_plus_ma60_overheat"
+CN_TZ = timezone(timedelta(hours=8))
+CONFIRMED_CLOSE_CUTOFF = dt_time(15, 30)
 
 
 # ════════════════════════════════════════════════════════════════
@@ -1175,9 +1177,87 @@ def _cached_daily(date_key: str) -> tuple[pd.DataFrame, str]:
 _PERFORMANCE_RESPONSE_RENDERED = False
 
 
-def _get_daily_for_today() -> tuple[pd.DataFrame, str]:
+def _now_bj() -> datetime:
+    return datetime.now(CN_TZ)
+
+
+def _as_bj_datetime(now: datetime | None = None) -> datetime:
+    if now is None:
+        return _now_bj()
+    if now.tzinfo is None:
+        return now.replace(tzinfo=CN_TZ)
+    return now.astimezone(CN_TZ)
+
+
+def should_drop_unconfirmed_bar(latest_date: pd.Timestamp, now: datetime | None = None) -> bool:
+    ts = _as_bj_datetime(now)
+    latest = pd.Timestamp(latest_date).date()
+    return latest == ts.date() and ts.time() < CONFIRMED_CLOSE_CUTOFF
+
+
+def _cap_row_date_text(value: object, latest_confirmed: pd.Timestamp) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        parsed = pd.Timestamp(text).normalize()
+    except Exception:
+        return text
+    if parsed > latest_confirmed:
+        return latest_confirmed.date().isoformat()
+    return parsed.date().isoformat()
+
+
+def prepare_daily_for_signal(
+    daily: pd.DataFrame,
+    live: bool,
+    now: datetime | None = None,
+) -> pd.DataFrame:
+    ordered = daily.copy()
+    ordered["date"] = pd.to_datetime(ordered["date"])
+    ordered = ordered.sort_values("date").reset_index(drop=True)
+    if not live and len(ordered) >= 2 and should_drop_unconfirmed_bar(ordered["date"].iloc[-1], now):
+        ordered = ordered.iloc[:-1].copy()
+        latest_confirmed = pd.Timestamp(ordered["date"].iloc[-1]).normalize()
+        if "common_last_date" in ordered.columns:
+            ordered["common_last_date"] = latest_confirmed.date().isoformat()
+        for code in ASSETS:
+            col = f"last_date_{code}"
+            if col in ordered.columns:
+                ordered[col] = ordered[col].map(lambda value: _cap_row_date_text(value, latest_confirmed))
+    if ordered.empty:
+        raise poe.BotError("没有可用的已确认日线信号。")
+    return ordered
+
+
+def signal_data_status(
+    daily: pd.DataFrame,
+    live: bool,
+    now: datetime | None = None,
+) -> dict[str, object]:
+    ts = _as_bj_datetime(now)
+    latest = pd.Timestamp(daily["date"].max()).normalize()
+    uses_unconfirmed = bool(live and should_drop_unconfirmed_bar(latest, ts))
+    if uses_unconfirmed:
+        label = "盘中未确认"
+    elif ts.weekday() < 5 and latest.date() < ts.date() and ts.time() >= CONFIRMED_CLOSE_CUTOFF:
+        label = "数据未到今日，可能是非交易日或数据滞后"
+    else:
+        label = "已确认收盘"
+    return {
+        "label": label,
+        "latest_date": latest.date().isoformat(),
+        "uses_unconfirmed_bar": uses_unconfirmed,
+        "now_bj": ts.strftime("%Y-%m-%d %H:%M"),
+    }
+
+
+def _get_daily_for_today(force_refresh: bool = False) -> tuple[pd.DataFrame, str]:
     date_key = pd.Timestamp.today().normalize().date().isoformat()
-    daily, source_name = _cached_daily(date_key)
+    if force_refresh:
+        daily, source_name = _build_v11_daily(end_date=pd.Timestamp(date_key))
+    else:
+        daily, source_name = _cached_daily(date_key)
     return daily.copy(), source_name
 
 
@@ -1634,6 +1714,21 @@ def _display_score(raw_score: float, eligible_score: float) -> float:
     return raw_score if not pd.isna(raw_score) else eligible_score
 
 
+def _score_red_light_lines(daily: pd.DataFrame) -> list[str]:
+    lines: list[str] = []
+    for item in _signal_rank_rows(daily, limit=len(ASSETS)):
+        raw_score = _float(item["raw_score"], default=math.nan)
+        r2 = _float(item["r2"], default=math.nan)
+        if pd.isna(raw_score) or pd.isna(r2) or raw_score < SCORE_MAX:
+            continue
+        code = str(item["code"])
+        lines.append(
+            f"- 🔴 红灯: **{_asset_name(code)}** Raw Score **{_fmt_num(raw_score, 4)}** ≥ {SCORE_MAX:.0f}，"
+            "仅展示，不进入候选池。"
+        )
+    return lines
+
+
 def _last_signal_date(daily: pd.DataFrame) -> str:
     ordered = daily.sort_values("date")
     if "trade_target" not in ordered.columns:
@@ -1651,7 +1746,18 @@ def _trade_note(row: pd.Series) -> str:
     if _bool(row.get("fill_on_down_day")):
         notes.append("下跌日补仓")
     if not notes and _empty_to_none(row.get("trade_target")) is None:
-        notes.append("scale调整")
+        old_exposure = _float(row.get("exposure_effective"), default=0.0)
+        new_exposure = _float(row.get("final_exposure_after_overheat"), default=0.0)
+        if old_exposure > 1e-12 and new_exposure <= 1e-12:
+            notes.append("有效敞口清零")
+        elif old_exposure <= 1e-12 and new_exposure > 1e-12:
+            notes.append("恢复有效敞口")
+        elif new_exposure < old_exposure - 1e-12:
+            notes.append("降低有效敞口")
+        elif new_exposure > old_exposure + 1e-12:
+            notes.append("提高有效敞口")
+        else:
+            notes.append("scale调整")
     return " / ".join(notes) if notes else "-"
 
 
@@ -1660,23 +1766,20 @@ def _trade_operation_text(row: pd.Series) -> str:
     target_code = str(row.get("position", ""))
     previous = _asset_name(previous_code)
     target = _asset_name(target_code)
-    old_fraction = _float(row.get("fraction_before"), default=0.0)
-    new_fraction = _float(row.get("holding_fraction"), default=0.0)
-    trade_target = _empty_to_none(row.get("trade_target"))
+    old_exposure = _float(row.get("exposure_effective"), default=0.0)
+    new_exposure = _float(row.get("final_exposure_after_overheat"), default=0.0)
 
-    if trade_target is None:
-        return f"调: {target}"
     if previous_code == target_code:
-        if new_fraction > old_fraction + 1e-12:
+        if new_exposure > old_exposure + 1e-12:
             return f"补: {target}"
-        if new_fraction < old_fraction - 1e-12:
+        if new_exposure < old_exposure - 1e-12:
             return f"减: {target}"
         return f"调: {target}"
 
     parts: list[str] = []
-    if previous_code != "CASH" and old_fraction > 1e-12:
+    if previous_code != "CASH" and old_exposure > 1e-12:
         parts.append(f"减: {previous}")
-    if target_code != "CASH" and new_fraction > 1e-12:
+    if target_code != "CASH" and new_exposure > 1e-12:
         parts.append(f"加: {target}")
     return " / ".join(parts) if parts else "调: CASH"
 
@@ -1695,13 +1798,14 @@ def format_trade_records_table(
         lines.append("该时段无调仓记录")
         return "\n".join(lines) + "\n"
 
-    lines.append("| 日期 | 策略 | 操作 | 基础仓位 | 目标敞口 | 换手 | 成本 | 说明 |")
+    lines.append("| 日期 | 策略 | 操作 | 基础仓位 | 有效敞口 | 换手 | 成本 | 说明 |")
     lines.append("|:-|:-|:-|--:|--:|--:|--:|:-|")
     for _, row in records.head(limit).iterrows():
         lines.append(
             f"| {row['date']} | {row['strategy']} | {row['operation']} | "
             f"{_fmt_pct(row['fraction_before'])} -> {_fmt_pct(row['holding_fraction'])} | "
-            f"{_fmt_pct(row['final_exposure_after_overheat'])} | {_fmt_pct(row['turnover'])} | "
+            f"{_fmt_pct(row['exposure_effective'])} -> {_fmt_pct(row['final_exposure_after_overheat'])} | "
+            f"{_fmt_pct(row['turnover'])} | "
             f"{_fmt_pct(row['cost'], 3)} | {row['note']} |"
         )
     if total > limit:
@@ -1733,6 +1837,7 @@ def trade_records_frame(
                 "position_name",
                 "fraction_before",
                 "holding_fraction",
+                "exposure_effective",
                 "final_exposure_after_overheat",
                 "turnover",
                 "cost",
@@ -1756,6 +1861,7 @@ def trade_records_frame(
         "position_name",
         "fraction_before",
         "holding_fraction",
+        "exposure_effective",
         "final_exposure_after_overheat",
         "turnover",
         "cost",
@@ -1795,8 +1901,14 @@ def _overheat_rule_text(row: pd.Series) -> str:
     return f"{trigger}；{recovery}。"
 
 
-def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
-    ordered = daily.sort_values("date").reset_index(drop=True)
+def format_signal_report(
+    daily: pd.DataFrame,
+    source_note: str,
+    live: bool = False,
+    now: datetime | None = None,
+) -> str:
+    ordered = prepare_daily_for_signal(daily, live=live, now=now)
+    data_status = signal_data_status(ordered, live=live, now=now)
     row = ordered.iloc[-1]
     sig = latest_signal(ordered)
     trade_label = _trade_action_label(sig)
@@ -1824,24 +1936,40 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     last_signal = _last_signal_date(ordered)
 
     lines: list[str] = []
-    lines.append("## SubD六ETF V1.1 操作信号")
+    mode_label = "实时" if live else "收盘确认"
+    target_position_label = "若现在收盘目标持仓" if data_status["uses_unconfirmed_bar"] else "收盘后目标持仓"
+    target_exposure_label = "若现在收盘目标敞口" if data_status["uses_unconfirmed_bar"] else "收盘后目标敞口"
+    trade_action_label = "若现在收盘调仓动作" if data_status["uses_unconfirmed_bar"] else "本日调仓动作"
+    target_scale_label = "若现在收盘目标" if data_status["uses_unconfirmed_bar"] else "收盘后目标"
+    lines.append(f"## SubD六ETF V1.1 {mode_label}操作信号")
     lines.append("")
     lines.append(f"数据源: **{source_note}** | 信号日: **{sig['date']}** | 版本: **V{sig['version']}**")
+    lines.append(f"- 北京时间: **{data_status['now_bj']}**")
+    lines.append(f"- 数据状态: **{data_status['label']}**")
+    lines.append(f"- 是否使用当天未确认bar: **{'是' if data_status['uses_unconfirmed_bar'] else '否'}**")
+    if data_status["uses_unconfirmed_bar"]:
+        lines.append("- 实时口径: 使用当前日线/盘中快照假设现在收盘；收盘前仍可能变化。")
     if sig.get("common_last_date"):
         lines.append(f"最新共同有效日线: **{sig['common_last_date']}**")
     last_dates_text = _asset_last_dates_text(row)
     if last_dates_text:
         lines.append(f"各资产最后数据日: {last_dates_text}")
+    red_light_lines = _score_red_light_lines(ordered)
+    if red_light_lines:
+        lines.append("")
+        lines.append("### 风险提示")
+        lines.append("")
+        lines.extend(red_light_lines)
     lines.append("")
     lines.append("### 结论")
     lines.append("")
     lines.append(f"**{_signal_action_text(sig)}**")
     lines.append("")
     lines.append(f"- 当前已生效持仓: **{prev_name}**")
-    lines.append(f"- 今日目标持仓: **{next_name}**")
-    lines.append(f"- 本日调仓动作: **{trade_label}**")
+    lines.append(f"- {target_position_label}: **{next_name}**")
+    lines.append(f"- {trade_action_label}: **{trade_label}**")
     lines.append(f"- 当前已生效敞口: **{_fmt_pct(exposure_effective)}**")
-    lines.append(f"- 收盘后目标敞口: **{_fmt_pct(final_exposure)}**")
+    lines.append(f"- {target_exposure_label}: **{_fmt_pct(final_exposure)}**")
     if turnover > 1e-12:
         lines.append(f"- 本日目标turnover: **{_fmt_pct(turnover)}**，成本: **{_fmt_pct(cost, 3)}**")
     lines.append(f"- 上次出现调仓信号: **{last_signal}**")
@@ -1852,13 +1980,13 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("|:-|--:|:-|")
     lines.append(f"| 基础仓位 | **{_fmt_pct(holding_fraction)}** | V1.1新资产先建50%，等待下跌日补足 |")
     lines.append(f"| Target-vol scale(今日已生效) | **{_fmt_num(target_vol_scale_effective, 3)}x** | 用于本日收益 |")
-    lines.append(f"| Target-vol scale(收盘后目标) | **{_fmt_num(target_vol_scale_next, 3)}x** | 目标波动率{TARGET_VOL:.0%}，{DEFAULT_VOL_WINDOW}日收益率估计 |")
+    lines.append(f"| Target-vol scale({target_scale_label}) | **{_fmt_num(target_vol_scale_next, 3)}x** | 目标波动率{TARGET_VOL:.0%}，{DEFAULT_VOL_WINDOW}日收益率估计 |")
     lines.append(f"| Scale调整阈值 | **Δ≥{TARGET_VOL_SCALE_REBALANCE_THRESHOLD:.3f}** | 小于阈值沿用上次确认scale |")
     lines.append(f"| 过热防守scale(今日已生效) | **{_fmt_num(overheat_scale_effective, 3)}x** | 用于本日收益 |")
-    lines.append(f"| 过热防守scale(收盘后目标) | **{_fmt_num(overheat_scale_next, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
+    lines.append(f"| 过热防守scale({target_scale_label}) | **{_fmt_num(overheat_scale_next, 3)}x** | 触发{OVERHEAT_ENTER:.0%} / 恢复{OVERHEAT_EXIT:.0%} |")
     lines.append(f"| 执行scale | **{_fmt_num(execution_scale, 3)}x** | Target-vol × 过热防守 |")
     lines.append(f"| 当前已生效敞口 | **{_fmt_pct(exposure_effective)}** | 本日收益使用的敞口 |")
-    lines.append(f"| 收盘后目标敞口 | **{_fmt_pct(final_exposure)}** | 基础仓位 × 收盘后目标执行scale |")
+    lines.append(f"| {target_exposure_label} | **{_fmt_pct(final_exposure)}** | 基础仓位 × {target_scale_label}执行scale |")
     if not pd.isna(realized_vol):
         lines.append(f"| 已实现波动率 | **{_fmt_pct(realized_vol)}** | 用于下一期target-vol计算 |")
     lines.append("")
@@ -1934,7 +2062,10 @@ def format_signal_report(daily: pd.DataFrame, source_note: str) -> str:
     lines.append("")
     lines.append(format_trade_records_table(ordered, limit=10).rstrip())
     lines.append("")
-    lines.append("> 执行提醒: 这是日线收盘确认信号；当前回测和信号口径按当日收盘价执行。")
+    if data_status["uses_unconfirmed_bar"]:
+        lines.append("> 执行提醒: 这是盘中假设信号；收盘前仍可能变化，最终以收盘确认信号为准。")
+    else:
+        lines.append("> 执行提醒: 这是日线收盘确认信号；当前回测和信号口径按当日收盘价执行。")
     return "\n".join(lines) + "\n"
 
 
@@ -2167,8 +2298,10 @@ class SubDSixEtfV11Bot:
         query = poe.query.text.strip()
         kind = classify_query(query)
         try:
-            if kind in ("signal", "live_signal"):
-                self._handle_signal()
+            if kind == "live_signal":
+                self._handle_signal(live=True)
+            elif kind == "signal":
+                self._handle_signal(live=False)
             elif kind == "live_params":
                 self._handle_params(live=True)
             elif kind == "params":
@@ -2183,7 +2316,7 @@ class SubDSixEtfV11Bot:
                         return
                     raise
             else:
-                self._handle_signal()
+                self._handle_signal(live=False)
         except poe.BotError:
             raise
         except Exception as exc:
@@ -2191,12 +2324,15 @@ class SubDSixEtfV11Bot:
 
     # ---- signal --------------------------------------------------------
 
-    def _handle_signal(self):
+    def _handle_signal(self, live: bool = False):
         with poe.start_message() as msg:
-            msg.write("正在加载数据并计算回测...\n")
-            daily, source_note = _get_daily_for_today()
+            if live:
+                msg.write("正在实时刷新数据并计算盘中假设信号...\n")
+            else:
+                msg.write("正在刷新数据并计算收盘确认信号...\n")
+            daily, source_note = _get_daily_for_today(force_refresh=True)
             msg.overwrite("")
-            msg.write(format_signal_report(daily, source_note))
+            msg.write(format_signal_report(daily, source_note, live=live))
 
     # ---- params --------------------------------------------------------
 
@@ -2207,7 +2343,7 @@ class SubDSixEtfV11Bot:
             if live:
                 msg.write("正在加载数据...\n")
                 try:
-                    daily, source_note = _get_daily_for_today()
+                    daily, source_note = _get_daily_for_today(force_refresh=True)
                 except Exception as exc:
                     source_note = f"加载失败: {str(exc)[:120]}"
                 msg.overwrite("")
@@ -2316,7 +2452,8 @@ poe.update_settings(SettingsResponse(
     allow_attachments=True,
     introduction_message=(
         "**SubD六ETF V1.1 信号查询**\n\n"
-        "- 发送 **\"信号\"** -> 最新信号（实时计算）\n"
+        "- 发送 **\"信号\"** -> 最新收盘确认信号（查询时刷新；收盘确认前不使用当天盘中bar）\n"
+        "- 发送 **\"实时信号\"** -> 盘中/最新日线快照下的假设收盘信号\n"
         "- 发送 **\"参数\"** -> V1.1参数总览\n"
         "- 发送 **\"实时参数\"** -> 参数 + 实时数据快照\n"
         '- 发送 **"表现"** / **"表现 过去两年"** / **"今年收益"** -> 绩效表\n'
