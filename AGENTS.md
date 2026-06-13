@@ -14,3 +14,4 @@ Use this repo-local file as the source of workspace guidance for the mixed US/A-
 
 - For Sub-D / weighted-slope / ETF-pool experiments, keep same data slices, cost assumptions, and execution timing when comparing against Strategy A, ADK, or other sleeves.
 - Preserve docs records for accepted conclusions; old `outputs/` files are diagnostic unless rebuilt or cited as preserved evidence.
+- New strategy tests and candidate promotions must follow `docs/new_strategy_test_standard_process.md`; every display/report must include full sample, 10Y, 5Y, 3Y, and 1Y annualized return plus max drawdown, or explicit `N/A` reasons.
