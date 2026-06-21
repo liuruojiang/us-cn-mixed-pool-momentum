@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,11 +35,24 @@ COOLDOWN_TRADING_DAYS = 5
 DEFAULT_ONE_WAY_COST = 0.001
 DEFAULT_VOL_WINDOW = 80
 DEFAULT_MAX_LEV = 1.5
+SOURCE_AKSHARE_SINA_RAW = "akshare_sina_raw"
+SOURCE_AKSHARE_EM_QFQ = "akshare_em_qfq"
+SOURCE_ALIASES = {
+    "sina": SOURCE_AKSHARE_SINA_RAW,
+    "eastmoney": SOURCE_AKSHARE_EM_QFQ,
+    SOURCE_AKSHARE_SINA_RAW: SOURCE_AKSHARE_SINA_RAW,
+    SOURCE_AKSHARE_EM_QFQ: SOURCE_AKSHARE_EM_QFQ,
+}
+HTTP_SESSION = requests.Session()
+
+
+def http_get(url: str, **kwargs):
+    return HTTP_SESSION.get(url, **kwargs)
 
 
 @dataclass(frozen=True)
 class RunConfig:
-    source: Literal["sina", "eastmoney"]
+    source: Literal["akshare_sina_raw", "akshare_em_qfq"]
     one_way_cost: float
     start_date: pd.Timestamp
     end_date: pd.Timestamp
@@ -200,7 +214,7 @@ def load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     data = None
     for attempt in range(1, 4):
         try:
-            response = requests.get(
+            response = http_get(
                 url,
                 params=params,
                 timeout=20,
@@ -263,11 +277,19 @@ def load_eastmoney_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.D
     return pd.concat(series, axis=1).sort_index(), pd.DataFrame(sources)
 
 
+def _canonical_source(source: str) -> Literal["akshare_sina_raw", "akshare_em_qfq"]:
+    try:
+        return SOURCE_ALIASES[str(source).strip().lower()]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported source: {source}") from exc
+
+
 def load_close(config: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
     codes = list(ASSETS)
-    if config.source == "sina":
+    source = _canonical_source(config.source)
+    if source == SOURCE_AKSHARE_SINA_RAW:
         return load_sina_close(codes, config.end_date)
-    if config.source == "eastmoney":
+    if source == SOURCE_AKSHARE_EM_QFQ:
         return load_qfq_close_with_per_code_fallback(codes, config.end_date)
     raise ValueError(f"Unsupported source: {config.source}")
 
@@ -292,7 +314,10 @@ def weighted_slope_score_and_r2(window: pd.Series) -> tuple[float, float]:
         return math.nan, math.nan
     ss_res = float(np.sum(weights * (y - fitted) ** 2))
     r2 = max(0.0, 1.0 - ss_res / ss_tot)
-    score = math.exp(float(slope) * TRADING_DAYS) - 1.0
+    annual_log_return = float(slope) * TRADING_DAYS
+    if not math.isfinite(annual_log_return) or annual_log_return > math.log(sys.float_info.max):
+        return math.nan, r2
+    score = math.exp(annual_log_return) - 1.0
     return score, r2
 
 
@@ -405,7 +430,9 @@ def run_subd(
 
 
 def max_drawdown(nav: pd.Series) -> float:
-    return float((nav / nav.cummax() - 1.0).min())
+    nav = nav.astype(float)
+    peak = nav.cummax().clip(lower=1.0)
+    return float((nav / peak - 1.0).min())
 
 
 def summarize_curve(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str, object]:
@@ -716,7 +743,11 @@ def write_outputs(prices: pd.DataFrame, sources: pd.DataFrame, curve: pd.DataFra
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sub-D six ETF weighted slope baseline research.")
-    parser.add_argument("--source", choices=["sina", "eastmoney"], default="eastmoney")
+    parser.add_argument(
+        "--source",
+        choices=["akshare_sina_raw", "akshare_em_qfq", "sina", "eastmoney"],
+        default="akshare_em_qfq",
+    )
     parser.add_argument("--one-way-cost", type=float, default=DEFAULT_ONE_WAY_COST)
     parser.add_argument("--start-date", default="20100101")
     parser.add_argument("--end-date", default=END_DATE.strftime("%Y%m%d"))
@@ -742,7 +773,7 @@ def main() -> None:
         if item.strip()
     )
     config = RunConfig(
-        source=args.source,
+        source=_canonical_source(args.source),
         one_way_cost=float(args.one_way_cost),
         start_date=pd.Timestamp(args.start_date),
         end_date=pd.Timestamp(args.end_date),

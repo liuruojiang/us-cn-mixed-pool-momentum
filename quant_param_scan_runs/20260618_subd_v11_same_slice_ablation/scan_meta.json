@@ -1,0 +1,273 @@
+{
+  "run_id": "20260618_subd_v11_same_slice_ablation",
+  "created_at": "2026-06-18T21:23:33+08:00",
+  "phase": "complete",
+  "project": "SubD six ETF",
+  "strategy": "V1.1",
+  "subsystem": "ablation_chain",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "quant_param_scan_runs\\20260618_subd_v11_same_slice_ablation\\run_scan.py",
+  "git_branch": "main",
+  "git_commit": "3c83a03ee62b45371f79836d4a0ac56db0f701c6",
+  "git_status_before": "M poe_subd_six_etf_v1_1_bot.py\n M run_subd_six_etf_v1_1.py\n?? tests/test_poe_subd_external_review_regressions.py",
+  "git_status_after": "M poe_subd_six_etf_v1_1_bot.py\n M research_subd_six_etf_weighted_slope.py\n M run_subd_six_etf_v1_1.py\n?? quant_param_scan_runs/20260618_subd_v11_same_slice_ablation/\n?? tests/test_poe_subd_external_review_regressions.py",
+  "scan_type": "ablation_chain",
+  "parameter_group": "same_slice_ablation",
+  "baseline": {
+    "candidate": "06_full_v11_add_overheat"
+  },
+  "candidate_grid": [
+    {
+      "candidate": "01_score_gate_full_entry",
+      "step_order": 1,
+      "r2_threshold": null,
+      "switch_buffer": 1.0,
+      "entry_mode": "full_entry",
+      "initial_fraction": 1.0,
+      "target_vol_enabled": false,
+      "overheat_enabled": false,
+      "description": "Score gate only, full entry, no R2, no switch buffer, no target-vol, no overheat."
+    },
+    {
+      "candidate": "02_add_r2_full_entry",
+      "step_order": 2,
+      "r2_threshold": 0.2,
+      "switch_buffer": 1.0,
+      "entry_mode": "full_entry",
+      "initial_fraction": 1.0,
+      "target_vol_enabled": false,
+      "overheat_enabled": false,
+      "description": "Add R2 threshold 0.20, full entry."
+    },
+    {
+      "candidate": "03_add_switch_buffer",
+      "step_order": 3,
+      "r2_threshold": 0.2,
+      "switch_buffer": 1.05,
+      "entry_mode": "full_entry",
+      "initial_fraction": 1.0,
+      "target_vol_enabled": false,
+      "overheat_enabled": false,
+      "description": "Add 1.05 switch buffer, full entry."
+    },
+    {
+      "candidate": "04_add_staged_entry",
+      "step_order": 4,
+      "r2_threshold": 0.2,
+      "switch_buffer": 1.05,
+      "entry_mode": "all_new_asset_50_wait_down",
+      "initial_fraction": 0.5,
+      "target_vol_enabled": false,
+      "overheat_enabled": false,
+      "description": "Add 50% staged entry and fill-on-down-day rule."
+    },
+    {
+      "candidate": "05_add_target_vol",
+      "step_order": 5,
+      "r2_threshold": 0.2,
+      "switch_buffer": 1.05,
+      "entry_mode": "all_new_asset_50_wait_down",
+      "initial_fraction": 0.5,
+      "target_vol_enabled": true,
+      "overheat_enabled": false,
+      "description": "Add 25% target-vol overlay, 80-day realized vol, max leverage 1.5."
+    },
+    {
+      "candidate": "06_full_v11_add_overheat",
+      "step_order": 6,
+      "r2_threshold": 0.2,
+      "switch_buffer": 1.05,
+      "entry_mode": "all_new_asset_50_wait_down",
+      "initial_fraction": 0.5,
+      "target_vol_enabled": true,
+      "overheat_enabled": true,
+      "description": "Full V1.1 chain with MA60 overheat derisk scale 0."
+    }
+  ],
+  "data_snapshot": {
+    "primary_source": "akshare.fund_etf_hist_sina",
+    "adjustment_policy": "sina_raw_split_continuity_159941_pre_20220705_x0.25",
+    "start_date": "2010-01-01",
+    "eval_start": "2020-01-02",
+    "end_date": "2026-06-17",
+    "sources": [
+      {
+        "code": "159915.SZ",
+        "name": "CYB100_ETF",
+        "source": "akshare.fund_etf_hist_sina",
+        "adjustment": "sina_raw_unadjusted_no_detected_split_patch",
+        "first": "2011-12-09",
+        "last": "2026-06-17",
+        "rows": 3523
+      },
+      {
+        "code": "159941.SZ",
+        "name": "NASDAQ_ETF",
+        "source": "akshare.fund_etf_hist_sina",
+        "adjustment": "sina_raw_split_continuity_159941_pre_20220705_x0.25",
+        "first": "2015-07-13",
+        "last": "2026-06-17",
+        "rows": 2655
+      },
+      {
+        "code": "513030.SH",
+        "name": "GERMANY_ETF",
+        "source": "akshare.fund_etf_hist_sina",
+        "adjustment": "sina_raw_unadjusted_no_detected_split_patch",
+        "first": "2014-09-05",
+        "last": "2026-06-17",
+        "rows": 2859
+      },
+      {
+        "code": "513520.SH",
+        "name": "NIKKEI_ETF",
+        "source": "akshare.fund_etf_hist_sina",
+        "adjustment": "sina_raw_unadjusted_no_detected_split_patch",
+        "first": "2019-06-25",
+        "last": "2026-06-17",
+        "rows": 1693
+      },
+      {
+        "code": "159985.SZ",
+        "name": "SOYMEAL_ETF",
+        "source": "akshare.fund_etf_hist_sina",
+        "adjustment": "sina_raw_unadjusted_no_detected_split_patch",
+        "first": "2019-12-05",
+        "last": "2026-06-17",
+        "rows": 1582
+      },
+      {
+        "code": "518880.SH",
+        "name": "GOLD_ETF",
+        "source": "akshare.fund_etf_hist_sina",
+        "adjustment": "sina_raw_unadjusted_no_detected_split_patch",
+        "first": "2013-07-29",
+        "last": "2026-06-17",
+        "rows": 3132
+      }
+    ],
+    "validation": [
+      {
+        "code": "159915.SZ",
+        "independent_source": "Yahoo Finance chart adjusted close",
+        "validation_status": "ok",
+        "primary_rows": 1580,
+        "independent_rows": 3536,
+        "primary_first": "2019-12-05",
+        "primary_last": "2026-06-17",
+        "independent_first": "2011-09-20",
+        "independent_last": "2026-06-17",
+        "common_rows": 1579,
+        "recent_common_rows": 78,
+        "last_common_date": "2026-06-17",
+        "last_common_close_diff_pct": -2.097490692243298e-08,
+        "max_abs_recent_close_diff_pct": 5.737093689006656e-08,
+        "note": ""
+      },
+      {
+        "code": "159941.SZ",
+        "independent_source": "Yahoo Finance chart adjusted close",
+        "validation_status": "ok",
+        "primary_rows": 1580,
+        "independent_rows": 2662,
+        "primary_first": "2019-12-05",
+        "primary_last": "2026-06-17",
+        "independent_first": "2015-06-10",
+        "independent_last": "2026-06-17",
+        "common_rows": 1580,
+        "recent_common_rows": 78,
+        "last_common_date": "2026-06-17",
+        "last_common_close_diff_pct": 2.6958991927727993e-08,
+        "max_abs_recent_close_diff_pct": 4.419118460052829e-08,
+        "note": "Yahoo has a known 159941 split-point glitch; it is not used for returns."
+      },
+      {
+        "code": "513030.SH",
+        "independent_source": "Yahoo Finance chart adjusted close",
+        "validation_status": "ok",
+        "primary_rows": 1580,
+        "independent_rows": 2863,
+        "primary_first": "2019-12-05",
+        "primary_last": "2026-06-17",
+        "independent_first": "2014-08-08",
+        "independent_last": "2026-06-17",
+        "common_rows": 1580,
+        "recent_common_rows": 78,
+        "last_common_date": "2026-06-17",
+        "last_common_close_diff_pct": 6.933873697434478e-09,
+        "max_abs_recent_close_diff_pct": 3.3181228875633906e-08,
+        "note": ""
+      },
+      {
+        "code": "513520.SH",
+        "independent_source": "Yahoo Finance chart adjusted close",
+        "validation_status": "ok",
+        "primary_rows": 1580,
+        "independent_rows": 1696,
+        "primary_first": "2019-12-05",
+        "primary_last": "2026-06-17",
+        "independent_first": "2019-06-12",
+        "independent_last": "2026-06-17",
+        "common_rows": 1579,
+        "recent_common_rows": 78,
+        "last_common_date": "2026-06-17",
+        "last_common_close_diff_pct": -4.4988294312098276e-08,
+        "max_abs_recent_close_diff_pct": 5.576490358372155e-08,
+        "note": ""
+      },
+      {
+        "code": "159985.SZ",
+        "independent_source": "Yahoo Finance chart adjusted close",
+        "validation_status": "ok",
+        "primary_rows": 1580,
+        "independent_rows": 1593,
+        "primary_first": "2019-12-05",
+        "primary_last": "2026-06-17",
+        "independent_first": "2019-09-24",
+        "independent_last": "2026-06-17",
+        "common_rows": 1579,
+        "recent_common_rows": 78,
+        "last_common_date": "2026-06-17",
+        "last_common_close_diff_pct": -5.737093689006656e-08,
+        "max_abs_recent_close_diff_pct": 5.7657536967070655e-08,
+        "note": ""
+      },
+      {
+        "code": "518880.SH",
+        "independent_source": "Yahoo Finance chart adjusted close",
+        "validation_status": "ok",
+        "primary_rows": 1580,
+        "independent_rows": 3133,
+        "primary_first": "2019-12-05",
+        "primary_last": "2026-06-17",
+        "independent_first": "2013-07-18",
+        "independent_last": "2026-06-17",
+        "common_rows": 1579,
+        "recent_common_rows": 78,
+        "last_common_date": "2026-06-17",
+        "last_common_close_diff_pct": 2.470162407952614e-08,
+        "max_abs_recent_close_diff_pct": 5.11257360891193e-08,
+        "note": ""
+      }
+    ]
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "execution_timing": "close_to_close",
+    "target_vol": 0.25,
+    "vol_window": 80,
+    "max_leverage": 1.5
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260618_subd_v11_same_slice_ablation\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260618_subd_v11_same_slice_ablation\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260618_subd_v11_same_slice_ablation\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260618_subd_v11_same_slice_ablation\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260618_subd_v11_same_slice_ablation\\command_log.txt"
+  },
+  "decision": "research_only_no_promotion",
+  "stability_label": "same_slice_directional_only_non_qfq",
+  "git_status_after_scan": "M poe_subd_six_etf_v1_1_bot.py\n M research_subd_six_etf_weighted_slope.py\n M run_subd_six_etf_v1_1.py\n?? quant_param_scan_runs/20260618_subd_v11_same_slice_ablation/\n?? tests/test_poe_subd_external_review_regressions.py",
+  "result_row_count": 30,
+  "finalized_at": "2026-06-18T22:14:38+08:00"
+}

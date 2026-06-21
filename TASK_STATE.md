@@ -1,32 +1,43 @@
 # Task State
 
-## Goal
+## Current Focus
 
-Optimize Strategy D / SubD V1.1 target volatility and max leverage using the real mixed US/A-share six-ETF weighted-slope code path.
+SubD six-ETF V1.1 Poe bot live/confirmed-signal hardening and cleanup.
 
 ## Key Paths
 
-- Entrypoint: `run_subd_six_etf_v1_1.py`
-- Base research module: `research_subd_six_etf_weighted_slope.py`
-- Prior target-vol scan: `quant_param_scan_runs/20260521_subd_v11_target_vol`
-- Planned run folder: `quant_param_scan_runs/20260529_subd_v11_target_vol_max_lev`
+- Poe bot entrypoint: `poe_subd_six_etf_v1_1_bot.py`
+- Formal local runner: `run_subd_six_etf_v1_1.py`
+- Research module: `research_subd_six_etf_weighted_slope.py`
+- Regression tests: `tests/test_poe_subd_external_review_regressions.py`
+- Handoff record: `docs/subd_v11_poe_live_hardening_record_20260621.md`
+- Target-vol comparison run: `quant_param_scan_runs/20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input/`
 
-## Assumptions
+## Decisions Locked In
 
-- Strategy D means the mixed-pool Sub-D / six-ETF weighted-slope V1.1 path.
-- This is research-only; do not change production parameters unless explicitly requested.
-- Use the same data slice, cost model, staged-entry rule, MA60 overheat overlay, and close-to-close execution timing as the official V1.1 runner.
+- Production target-vol remains the existing strategy-return realized-vol policy, including cash days, until a separate strategy-change review explicitly promotes a new policy.
+- The non-cash asset-return realized-vol variant is research-only. The 2026-06-21 comparison lowered return and drawdown, with little Sharpe improvement, and was finalized as `keep_default_pending_user_review`.
+- The 50% staged entry / wait-for-down-day rule was intentionally left unchanged.
+- Live signal requests must force a fresh live build; confirmed signal requests may use the confirmed cache.
 
-## Next Steps
+## Live/Confirmed Data Safety Notes
 
-1. Inspect the official target-vol and max-leverage consumers.
-2. Completed target-vol by max-leverage grid scan from the official V1.1 path.
-3. Saved `scan_summary.csv`, `window_metrics.csv`, `scan_meta.json`, `record.md`, and `command_log.txt`.
-4. Strict artifact check passed; recommendation is `TARGET_VOL = 0.30`, `MAX_LEV = 1.0` for risk-adjusted/default use, with `0.25/1.5` as leveraged balanced alternative.
+- Live quote candidates must pass completeness, temporal quality, source eligibility, and price-quality gates before execution eligibility.
+- Stale or unsynchronized but price-valid quotes may be monitor-only; price-invalid quotes must not enter monitor candidates.
+- Confirmed close bars require per-asset final fields and current raw asset dates. Forward-filled prices can support historical continuity, but cannot receive same-day final-close stamps or executable confirmation.
+- If a trade leg uses a forward-filled/stale asset price, execution is blocked and the report should remain monitor/review only.
+
+## Open Items
+
+- Official raw/reference previous-close and exchange limit-up/limit-down fields are still not fully sourced; current live price bands are a fail-closed proxy based on the price matrix.
+- QDII same-day EOD vendor lag can make 15:30+ confirmed signals unavailable; this is expected conservative behavior until a stronger final-close source is added.
+- CNFin/Tencent historical fallback code was removed rather than promoted; add them back only with independent validation of prices, dates, and rows.
 
 ## Verification Commands
 
 ```powershell
-python .\quant_param_scan_runs\20260529_subd_v11_target_vol_max_lev\run_scan.py
-python <quant-param-scan-skill>\scripts\check_quant_param_scan_artifacts.py --phase complete --strict .\quant_param_scan_runs\20260529_subd_v11_target_vol_max_lev
+python -m pytest tests -q
+python -m py_compile poe_subd_six_etf_v1_1_bot.py research_subd_six_etf_weighted_slope.py run_subd_six_etf_v1_1.py tests/test_poe_subd_external_review_regressions.py
+python D:\Codex\home\skills\quant-param-scan\scripts\check_quant_param_scan_artifacts.py --phase complete --strict quant_param_scan_runs\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input
+git diff --check
 ```

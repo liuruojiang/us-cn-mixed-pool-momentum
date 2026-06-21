@@ -1,5 +1,6 @@
 import argparse
 import math
+import warnings
 from dataclasses import dataclass
 from typing import Literal
 
@@ -92,6 +93,16 @@ def _target_from_scores(
         target = prev_holding
         blocked = True
     return target, best, best_score, current_score, blocked
+
+
+def _require_valid_close(value: object, code: str, date: object, role: str) -> float:
+    try:
+        result = float(value)
+    except Exception as exc:
+        raise RuntimeError(f"missing close for held asset {code} on {pd.Timestamp(date).date()} ({role})") from exc
+    if not math.isfinite(result) or result <= 0:
+        raise RuntimeError(f"missing close for held asset {code} on {pd.Timestamp(date).date()} ({role})")
+    return result
 
 
 def run_staged_entry(
@@ -221,13 +232,16 @@ def run_staged_entry(
                     pending_entry_days = 0
 
         if old_holding == "CASH" or old_fraction <= 1e-12 or idx == 0:
+            asset_return = 0.0
             gross_return = 0.0
             asset_component = 0.0
         else:
             prev_px = prices.iloc[idx - 1].get(old_holding, np.nan)
             cur_px = prices.iloc[idx].get(old_holding, np.nan)
-            asset_ret = float(cur_px / prev_px - 1.0) if pd.notna(prev_px) and pd.notna(cur_px) and prev_px > 0 else 0.0
-            asset_component = old_fraction * asset_ret
+            prev_px = _require_valid_close(prev_px, old_holding, prices.index[idx - 1], "previous")
+            cur_px = _require_valid_close(cur_px, old_holding, date, "current")
+            asset_return = float(cur_px / prev_px - 1.0)
+            asset_component = old_fraction * asset_return
             gross_return = asset_component
 
         turnover = 0.0
@@ -270,6 +284,7 @@ def run_staged_entry(
                 "best_candidate_score": best_score,
                 "current_score": current_score,
                 "buffer_blocked": buffer_blocked,
+                "asset_return": asset_return,
                 "gross_return": gross_return,
                 "asset_component": asset_component,
                 "turnover": turnover,
@@ -290,22 +305,108 @@ def run_staged_entry(
     return pd.DataFrame(rows).set_index("date")
 
 
+def _expected_cn_trading_days(start: pd.Timestamp, end: pd.Timestamp) -> pd.DatetimeIndex | None:
+    helper = getattr(subd, "_expected_cn_trading_days", None)
+    if callable(helper):
+        try:
+            result = helper(start, end)
+            reason = str(getattr(subd, "_CN_TRADING_DAY_FAILURE_REASON", "") or "")
+            if result is None and ("交易日历落后于行情数据" in reason or "覆盖不足" in reason):
+                raise RuntimeError(reason)
+            return result
+        except RuntimeError as exc:
+            if "交易日历落后于行情数据" in str(exc) or "覆盖不足" in str(exc):
+                raise
+            return None
+    return None
+
+
+def _expected_latest_from_asset_dates(latest_valid_dates: list[pd.Timestamp], fallback: pd.Timestamp) -> pd.Timestamp:
+    if not latest_valid_dates:
+        return fallback
+    normalized = pd.Series([pd.Timestamp(item).normalize() for item in latest_valid_dates])
+    mode = normalized.mode()
+    if not mode.empty:
+        return pd.Timestamp(mode.max())
+    return pd.Timestamp(normalized.median()).normalize()
+
+
 def align_prices_to_common_valid_date(
     prices: pd.DataFrame,
     asset_cols: list[str] | tuple[str, ...],
+    calendar_validation_mode: str = "required",
 ) -> tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+    if calendar_validation_mode not in {"required", "warning"}:
+        raise ValueError(f"Unknown calendar validation mode: {calendar_validation_mode}")
     asset_cols = list(asset_cols)
     missing = [col for col in asset_cols if col not in prices.columns]
     if missing:
         raise ValueError(f"Missing asset columns: {missing}")
+    if not prices.index.is_unique:
+        duplicates = pd.Index(prices.index[prices.index.duplicated()]).unique()
+        first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+        raise ValueError(f"Price index must be unique; first duplicate={first}")
+    if not prices.index.is_monotonic_increasing:
+        raise ValueError("Price index must be strictly increasing")
     last_by_asset: dict[str, pd.Timestamp] = {}
     for col in asset_cols:
-        valid_dates = prices.index[prices[col].notna()]
+        series = pd.to_numeric(prices[col], errors="coerce")
+        finite = np.isfinite(series.to_numpy(dtype=float))
+        invalid = series.notna() & (~finite | (series <= 0))
+        if invalid.any():
+            first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
+            raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
+        valid_dates = prices.index[series.notna()]
+        if len(valid_dates):
+            first_valid = pd.Timestamp(valid_dates.min())
+            last_valid = pd.Timestamp(valid_dates.max())
+            internal = series.loc[first_valid:last_valid].isna()
+            if internal.any():
+                first_missing = pd.Timestamp(internal.index[internal][0]).date().isoformat()
+                raise ValueError(f"{col} has internal missing close after start at {first_missing}")
         last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
     valid_all = prices[asset_cols].notna().all(axis=1)
     if not valid_all.any():
         raise ValueError("No date has valid close prices for all assets")
     common_last = pd.Timestamp(prices.index[valid_all].max())
+    common_valid_dates = pd.DatetimeIndex(prices.index[valid_all]).normalize().unique().sort_values()
+    first_common = pd.Timestamp(common_valid_dates.min())
+    expected_sessions = _expected_cn_trading_days(first_common, common_last)
+    if expected_sessions is None:
+        reason = str(getattr(subd, "_CN_TRADING_DAY_FAILURE_REASON", "") or "")
+        if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
+            raise RuntimeError(reason)
+        if calendar_validation_mode == "required":
+            raise RuntimeError(reason or "交易日历不可用，无法校验历史行情完整性")
+        warnings.warn(
+            reason or "交易日历不可用，未校验历史行情完整性",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    elif len(expected_sessions):
+        expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
+        missing_common = pd.DatetimeIndex(expected_sessions).difference(common_valid_dates)
+        if len(missing_common):
+            sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
+            more = "..." if len(missing_common) > 5 else ""
+            raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
+        unexpected_common = common_valid_dates.difference(expected_sessions)
+        if len(unexpected_common):
+            sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in unexpected_common[:5])
+            more = "..." if len(unexpected_common) > 5 else ""
+            raise ValueError(f"Prices contain unexpected non-trading dates: {sample}{more}")
+    latest_valid_dates = [pd.Timestamp(last).normalize() for last in last_by_asset.values() if pd.notna(last)]
+    expected_latest = _expected_latest_from_asset_dates(latest_valid_dates, common_last)
+    stale = [
+        f"{code}:{last.date().isoformat() if pd.notna(last) else 'N/A'}"
+        for code, last in last_by_asset.items()
+        if pd.isna(last) or pd.Timestamp(last).normalize() != expected_latest.normalize()
+    ]
+    if stale:
+        raise ValueError(
+            f"Latest close dates are not aligned to expected {expected_latest.date().isoformat()}: "
+            f"{', '.join(stale)}"
+        )
     return prices.loc[:common_last].copy(), common_last, last_by_asset
 
 
@@ -375,26 +476,68 @@ def _recompute_final_exposure_nav(
     overheat_effective = overheat_effective.reindex(out.index).astype(float).fillna(1.0)
     overheat_next = overheat_next.reindex(out.index).astype(float).fillna(1.0)
 
+    if "asset_return" not in out.columns:
+        base_fraction_col = "base_fraction_before" if "base_fraction_before" in out.columns else "fraction_before"
+        base_fraction = _float_series(out, base_fraction_col, 0.0)
+        base_gross = out["base_gross_return"].astype(float).fillna(0.0)
+        out["asset_return"] = pd.Series(
+            np.divide(
+                base_gross.to_numpy(dtype=float),
+                base_fraction.to_numpy(dtype=float),
+                out=np.zeros(len(out), dtype=float),
+                where=np.abs(base_fraction.to_numpy(dtype=float)) > 1e-12,
+            ),
+            index=out.index,
+            dtype=float,
+        )
+    asset_return = pd.to_numeric(out["asset_return"], errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
     exposure_effective = fraction_before * target_vol_effective * overheat_effective
     exposure_effective = exposure_effective.where(position_before != "CASH", 0.0)
     final_exposure = holding_fraction * target_vol_next
     final_exposure = final_exposure.where(position_next != "CASH", 0.0)
     final_exposure_after_overheat = final_exposure * overheat_next
 
+    gross_return = asset_return * exposure_effective
+    drift_denominator = (1.0 + gross_return).replace(0.0, np.nan)
+    drifted_exposure = exposure_effective * (1.0 + asset_return) / drift_denominator
+    drifted_exposure = drifted_exposure.replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    drifted_exposure = drifted_exposure.where(position_before != "CASH", 0.0)
+
     same_asset = (position_before == position_next) & (position_before != "CASH")
+    rebalance_delta = final_exposure_after_overheat - drifted_exposure
+    buy_delta = pd.Series(
+        np.where(same_asset, np.maximum(rebalance_delta, 0.0), final_exposure_after_overheat),
+        index=out.index,
+        dtype=float,
+    )
+    sell_delta = pd.Series(
+        np.where(same_asset, np.maximum(-rebalance_delta, 0.0), drifted_exposure),
+        index=out.index,
+        dtype=float,
+    )
     turnover = pd.Series(
         np.where(
             same_asset,
-            (final_exposure_after_overheat - exposure_effective).abs(),
-            exposure_effective + final_exposure_after_overheat,
+            rebalance_delta.abs(),
+            sell_delta.abs() + buy_delta.abs(),
         ),
         index=out.index,
         dtype=float,
     )
     cost = turnover * float(one_way_cost)
-    gross_return = out["base_gross_return"].astype(float).fillna(0.0) * target_vol_effective * overheat_effective
     net_return = (1.0 + gross_return) * (1.0 - cost) - 1.0
 
+    out["base_position_before"] = position_before
+    out["base_position_next"] = position_next
+    out["actual_position_before"] = pd.Series(
+        np.where(exposure_effective.abs() > 1e-12, position_before, "CASH"),
+        index=out.index,
+    )
+    out["actual_position_next"] = pd.Series(
+        np.where(final_exposure_after_overheat.abs() > 1e-12, position_next, "CASH"),
+        index=out.index,
+    )
     out["target_vol_scale_effective"] = target_vol_effective
     out["target_vol_scale_next"] = target_vol_next
     out["weight"] = target_vol_next
@@ -404,6 +547,10 @@ def _recompute_final_exposure_nav(
     out["exposure_effective"] = exposure_effective
     out["final_exposure"] = final_exposure
     out["final_exposure_after_overheat"] = final_exposure_after_overheat
+    out["drifted_exposure_before_trade"] = drifted_exposure
+    out["rebalance_delta"] = rebalance_delta
+    out["buy_delta"] = buy_delta
+    out["sell_delta"] = sell_delta
     out["turnover"] = turnover
     out["cost"] = cost
     out["gross_return"] = gross_return
@@ -431,6 +578,7 @@ def apply_target_vol_overlay(
     result["base_nav"] = result["nav"].astype(float)
     result["base_turnover"] = _float_series(result, "turnover", 0.0)
     result["base_cost"] = _float_series(result, "cost", 0.0)
+    result["virtual_base_realized_vol"] = realized_vol
     result["realized_vol"] = realized_vol
     ones = pd.Series(1.0, index=result.index, dtype=float)
     result = _recompute_final_exposure_nav(
@@ -448,7 +596,8 @@ def calc_bias_momentum(close_series: pd.Series) -> pd.Series:
     result = np.full(n, np.nan)
     ma = close_series.rolling(CN_BIAS_N).mean().values
     total_lookback = CN_BIAS_N + CN_MOM_DAY - 1
-    if n <= total_lookback:
+    first_valid_idx = total_lookback - 1
+    if n <= first_valid_idx:
         return pd.Series(result, index=close_series.index)
 
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -458,7 +607,7 @@ def calc_bias_momentum(close_series: pd.Series) -> pd.Series:
     starts = windows[:, 0]
     valid = np.isfinite(windows).all(axis=1) & (starts >= 1e-10)
     end_indices = np.arange(CN_MOM_DAY - 1, n)
-    valid &= end_indices >= total_lookback
+    valid &= end_indices >= first_valid_idx
     if valid.any():
         x = np.arange(CN_MOM_DAY, dtype=float)
         x_centered = x - x.mean()
@@ -483,6 +632,202 @@ def build_overheat_features(prices: pd.DataFrame) -> dict[str, pd.DataFrame]:
             index=prices.index,
         )
     return features
+
+
+def _text_or_none(value: object) -> str | None:
+    if value is None or pd.isna(value):
+        return None
+    text = str(value).strip()
+    return text if text else None
+
+
+def _float_or_default(value: object, default: float = 0.0) -> float:
+    try:
+        result = float(value)
+    except Exception:
+        return default
+    return result if math.isfinite(result) else default
+
+
+def _truthy(value: object) -> bool:
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    return str(value).strip().lower() in {"true", "1", "yes", "y"}
+
+
+def _set_if_present(frame: pd.DataFrame, idx: object, column: str, value: object) -> None:
+    if column in frame.columns:
+        frame.at[idx, column] = value
+
+
+def _apply_zero_overheat_execution_guard(out: pd.DataFrame) -> pd.DataFrame:
+    required = {"position_before", "position", "fraction_before", "holding_fraction"}
+    if not required.issubset(out.columns) or "overheat_scale_next" not in out.columns:
+        return out
+
+    guarded = out.copy()
+    for col in (
+        "position_before",
+        "position",
+        "fraction_before",
+        "holding_fraction",
+        "trade_target",
+        "trade_fraction",
+        "pending_entry_target",
+        "pending_entry_since",
+        "pending_entry_days",
+        "staged_initial",
+        "fill_on_down_day",
+    ):
+        if col in guarded.columns and f"base_{col}" not in guarded.columns:
+            guarded[f"base_{col}"] = guarded[col]
+
+    guarded["actual_entry_state"] = "CASH"
+    guarded["actual_pending_target"] = pd.NA
+    guarded["actual_pending_since"] = pd.NaT
+    guarded["actual_pending_days"] = 0
+    guarded["actual_staged_initial"] = False
+    guarded["actual_fill_on_down_day"] = False
+    guarded["actual_staged_initial_count"] = 0
+    guarded["actual_staged_fill_count"] = 0
+    guarded["staged_entry_event_count"] = 0
+
+    actual_position = "CASH"
+    actual_fraction = 0.0
+    actual_pending_target: str | None = None
+    actual_pending_since: pd.Timestamp | None = None
+    actual_pending_days = 0
+    actual_staged_initial_count = 0
+    actual_staged_fill_count = 0
+    staged_entry_event_count = 0
+    eps = 1e-12
+
+    for idx, row in guarded.iterrows():
+        base_prev = str(row.get("position_before", "CASH"))
+        base_target = str(row.get("position", "CASH"))
+        base_fraction = float(np.clip(_float_or_default(row.get("holding_fraction"), 0.0), 0.0, 1.0))
+        asset_return = _float_or_default(row.get("asset_return"), 0.0)
+        next_scale = _float_or_default(row.get("overheat_scale_next"), 1.0)
+        target_eligible = base_target in subd.ASSETS
+        blocked_next = bool(target_eligible and next_scale <= eps)
+
+        prior_fraction = actual_fraction if actual_position == base_prev and base_prev in subd.ASSETS else 0.0
+        guarded.at[idx, "fraction_before"] = prior_fraction
+        _set_if_present(guarded, idx, "staged_initial", False)
+        _set_if_present(guarded, idx, "fill_on_down_day", False)
+
+        state = "CASH"
+        new_fraction = 0.0
+        staged_initial = False
+        fill_on_down_day = False
+
+        if blocked_next:
+            new_fraction = 0.0
+            state = "BLOCKED_BY_OVERHEAT"
+            _set_if_present(guarded, idx, "trade_fraction", 0.0)
+            _set_if_present(guarded, idx, "pending_entry_target", None)
+            _set_if_present(guarded, idx, "pending_entry_since", None)
+            _set_if_present(guarded, idx, "pending_entry_days", 0)
+            actual_pending_target = None
+            actual_pending_since = None
+            actual_pending_days = 0
+            actual_position = "CASH"
+            actual_fraction = 0.0
+        elif base_target == "CASH" or not target_eligible:
+            new_fraction = 0.0
+            state = "CASH"
+            _set_if_present(guarded, idx, "pending_entry_target", None)
+            _set_if_present(guarded, idx, "pending_entry_since", None)
+            _set_if_present(guarded, idx, "pending_entry_days", 0)
+            actual_position = "CASH"
+            actual_fraction = 0.0
+            actual_pending_target = None
+            actual_pending_since = None
+            actual_pending_days = 0
+        else:
+            row_pending = _text_or_none(row.get("pending_entry_target"))
+            if actual_position != base_target or actual_fraction <= eps:
+                new_fraction = min(base_fraction, INITIAL_ENTRY_FRACTION) if base_fraction > eps else 0.0
+                if new_fraction > eps:
+                    _set_if_present(guarded, idx, "trade_target", base_target)
+                    _set_if_present(guarded, idx, "trade_fraction", new_fraction)
+                if row_pending == base_target or base_fraction > new_fraction + eps:
+                    actual_pending_target = base_target
+                    actual_pending_since = pd.Timestamp(idx)
+                    actual_pending_days = 0
+                    staged_initial = new_fraction > eps
+                    if staged_initial:
+                        actual_staged_initial_count += 1
+                    _set_if_present(guarded, idx, "pending_entry_target", base_target)
+                    _set_if_present(guarded, idx, "pending_entry_since", actual_pending_since)
+                    _set_if_present(guarded, idx, "pending_entry_days", actual_pending_days)
+                    _set_if_present(guarded, idx, "staged_initial", staged_initial)
+                else:
+                    actual_pending_target = None
+                    actual_pending_since = None
+                    actual_pending_days = 0
+                    _set_if_present(guarded, idx, "pending_entry_target", None)
+                    _set_if_present(guarded, idx, "pending_entry_since", None)
+                    _set_if_present(guarded, idx, "pending_entry_days", 0)
+            elif actual_pending_target == base_target:
+                actual_down_day = bool(asset_return < -eps)
+                if actual_down_day:
+                    new_fraction = base_fraction
+                    fill_on_down_day = True
+                    actual_staged_fill_count += 1
+                    actual_pending_target = None if new_fraction >= 1.0 - eps else base_target
+                    if actual_pending_target is None:
+                        actual_pending_since = None
+                        actual_pending_days = 0
+                    _set_if_present(guarded, idx, "trade_target", base_target)
+                    _set_if_present(guarded, idx, "trade_fraction", new_fraction)
+                    _set_if_present(guarded, idx, "fill_on_down_day", True)
+                    _set_if_present(guarded, idx, "pending_entry_target", actual_pending_target)
+                    _set_if_present(guarded, idx, "pending_entry_since", actual_pending_since)
+                    _set_if_present(guarded, idx, "pending_entry_days", actual_pending_days)
+                else:
+                    new_fraction = min(actual_fraction, base_fraction)
+                    actual_pending_days += 1
+                    _set_if_present(guarded, idx, "pending_entry_target", base_target)
+                    _set_if_present(guarded, idx, "pending_entry_since", actual_pending_since)
+                    _set_if_present(guarded, idx, "pending_entry_days", actual_pending_days)
+            else:
+                new_fraction = base_fraction
+                actual_pending_target = None
+                actual_pending_since = None
+                actual_pending_days = 0
+                _set_if_present(guarded, idx, "pending_entry_target", None)
+                _set_if_present(guarded, idx, "pending_entry_since", None)
+                _set_if_present(guarded, idx, "pending_entry_days", 0)
+
+            if actual_pending_target == base_target:
+                state = "HALF_POSITION_WAIT_DOWN"
+            elif new_fraction >= 1.0 - eps:
+                state = "FULL_POSITION"
+            elif new_fraction > eps:
+                state = "PARTIAL_POSITION"
+            else:
+                state = "CASH"
+
+        if new_fraction < base_fraction - eps and _truthy(row.get("fill_on_down_day")):
+            _set_if_present(guarded, idx, "fill_on_down_day", False)
+
+        guarded.at[idx, "holding_fraction"] = new_fraction
+        if abs(new_fraction - prior_fraction) > eps or (prior_fraction > eps and base_prev != base_target):
+            staged_entry_event_count += 1
+        guarded.at[idx, "actual_entry_state"] = state
+        guarded.at[idx, "actual_pending_target"] = actual_pending_target if state == "HALF_POSITION_WAIT_DOWN" else pd.NA
+        guarded.at[idx, "actual_pending_since"] = actual_pending_since if state == "HALF_POSITION_WAIT_DOWN" else pd.NaT
+        guarded.at[idx, "actual_pending_days"] = actual_pending_days if state == "HALF_POSITION_WAIT_DOWN" else 0
+        guarded.at[idx, "actual_staged_initial"] = staged_initial
+        guarded.at[idx, "actual_fill_on_down_day"] = fill_on_down_day
+        guarded.at[idx, "actual_staged_initial_count"] = actual_staged_initial_count
+        guarded.at[idx, "actual_staged_fill_count"] = actual_staged_fill_count
+        guarded.at[idx, "staged_entry_event_count"] = staged_entry_event_count
+        actual_position = base_target if new_fraction > eps else "CASH"
+        actual_fraction = new_fraction if actual_position != "CASH" else 0.0
+
+    return guarded
 
 
 def apply_overheat_overlay(
@@ -515,6 +860,7 @@ def apply_overheat_overlay(
     bias_vals = []
     mom_vals = []
     same_side_vals = []
+    missing_feature_vals = []
 
     aligned_features: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
     for code, frame in features.items():
@@ -545,19 +891,22 @@ def apply_overheat_overlay(
             bias = float(bias_arr[i]) if pd.notna(bias_arr[i]) else math.nan
             mom = float(mom_arr[i]) if pd.notna(mom_arr[i]) else math.nan
             same_side = bool(same_side_arr[i])
+        feature_missing = bool(target_eligible and (pd.isna(bias) or pd.isna(mom)))
 
         triggered = False
         recovered = False
         prior_next_state = next_state
         if target_eligible:
             if next_state:
-                if pd.notna(bias) and bias <= case.exit:
+                if feature_missing:
+                    next_state = True
+                elif bias <= case.exit:
                     next_state = False
                     recovered = True
                 elif recovery_mode == "same_side_or_exit" and not same_side:
                     next_state = False
                     recovered = True
-            elif pd.notna(bias) and same_side and bias >= case.enter:
+            elif not feature_missing and same_side and bias >= case.enter:
                 next_state = True
                 triggered = True
         else:
@@ -573,6 +922,7 @@ def apply_overheat_overlay(
         bias_vals.append(bias)
         mom_vals.append(mom)
         same_side_vals.append(same_side)
+        missing_feature_vals.append(feature_missing)
         defense_on = next_state
         state_asset = target_holding if target_eligible else None
 
@@ -593,7 +943,9 @@ def apply_overheat_overlay(
     out["overheat_bias"] = pd.Series(bias_vals, index=out.index, dtype=float)
     out["overheat_bias_mom"] = pd.Series(mom_vals, index=out.index, dtype=float)
     out["overheat_same_side"] = pd.Series(same_side_vals, index=out.index, dtype=bool)
+    out["overheat_feature_missing"] = pd.Series(missing_feature_vals, index=out.index, dtype=bool)
     out["overheat_tc"] = 0.0
+    out = _apply_zero_overheat_execution_guard(out)
     target_vol_effective = _float_series(out, "target_vol_scale_effective", 1.0)
     target_vol_next = _float_series(out, "target_vol_scale_next", 1.0)
     out = _recompute_final_exposure_nav(
@@ -607,14 +959,27 @@ def apply_overheat_overlay(
     return out
 
 
+def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
+    if "return" in sub.columns:
+        ret = pd.to_numeric(sub["return"], errors="coerce").fillna(0.0)
+        return pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
+    nav = pd.to_numeric(sub["nav"], errors="coerce").astype(float)
+    return nav.pct_change().fillna(0.0)
+
+
+def _wealth_from_returns(ret: pd.Series) -> pd.Series:
+    return (1.0 + ret.astype(float)).cumprod()
+
+
 def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str, object]:
     sub = curve.loc[curve.index >= start].copy()
-    nav = sub["nav"] / float(sub["nav"].iloc[0])
-    ret = nav.pct_change().fillna(0.0)
+    ret = _daily_returns_for_window(sub)
+    wealth = _wealth_from_returns(ret)
     years = len(sub) / subd.TRADING_DAYS
     std = ret.std(ddof=0)
-    exposure_col = "final_exposure_after_overheat" if "final_exposure_after_overheat" in sub.columns else "final_exposure"
+    exposure_col = "exposure_effective" if "exposure_effective" in sub.columns else "final_exposure_after_overheat"
     final_exposure = sub[exposure_col].astype(float).fillna(0.0)
+    overheat_col = "overheat_on_effective" if "overheat_on_effective" in sub.columns else "overheat_on"
     return {
         "version": curve["version"].iloc[0],
         "scenario": curve["scenario"].iloc[0],
@@ -622,9 +987,9 @@ def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str,
         "start": sub.index[0].date().isoformat(),
         "end": sub.index[-1].date().isoformat(),
         "days": len(sub),
-        "total": float(nav.iloc[-1] - 1.0),
-        "cagr": float(nav.iloc[-1] ** (1.0 / years) - 1.0),
-        "maxdd": subd.max_drawdown(nav),
+        "total": float(wealth.iloc[-1] - 1.0),
+        "cagr": float(wealth.iloc[-1] ** (1.0 / years) - 1.0),
+        "maxdd": subd.max_drawdown(wealth),
         "sharpe": float(ret.mean() / std * math.sqrt(subd.TRADING_DAYS)) if std > 0 else math.nan,
         "vol": float(std * math.sqrt(subd.TRADING_DAYS)),
         "cash_days": int((sub["position"] == "CASH").sum()),
@@ -632,7 +997,7 @@ def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str,
         "pending_days": int(sub["pending_entry_target"].notna().sum()),
         "staged_initials": int(sub["staged_initial"].astype(bool).sum()),
         "staged_fills": int(sub["fill_on_down_day"].astype(bool).sum()),
-        "overheat_days": int(sub["overheat_on"].astype(bool).sum()) if "overheat_on" in sub.columns else 0,
+        "overheat_days": int(sub[overheat_col].astype(bool).sum()) if overheat_col in sub.columns else 0,
         "overheat_triggers": int(sub["overheat_triggered"].astype(bool).sum()) if "overheat_triggered" in sub.columns else 0,
         "overheat_recoveries": int(sub["overheat_recovered"].astype(bool).sum()) if "overheat_recovered" in sub.columns else 0,
         "trades": int((sub["turnover"].astype(float) > 1e-12).sum()),
@@ -659,6 +1024,7 @@ def tag_original(curve: pd.DataFrame) -> pd.DataFrame:
     out["overheat_on_effective"] = False
     out["overheat_triggered"] = False
     out["overheat_recovered"] = False
+    out["overheat_feature_missing"] = False
     out["overheat_tc"] = 0.0
     out["nav_before_overheat"] = out["nav"]
     return out

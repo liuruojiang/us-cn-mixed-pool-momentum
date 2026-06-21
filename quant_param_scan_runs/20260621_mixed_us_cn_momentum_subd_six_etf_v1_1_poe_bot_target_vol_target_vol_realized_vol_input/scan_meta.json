@@ -1,0 +1,76 @@
+{
+  "run_id": "20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input",
+  "created_at": "2026-06-21T23:40:13.418043+08:00",
+  "run_timestamp_bj": "2026-06-21T23:40:45.083491+08:00",
+  "phase": "complete",
+  "project": "mixed_us_cn_momentum",
+  "strategy": "subd_six_etf_v1_1",
+  "subsystem": "poe_bot_target_vol",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "poe_subd_six_etf_v1_1_bot.py",
+  "git_branch": "main",
+  "git_commit": "3c83a03ee62b45371f79836d4a0ac56db0f701c6",
+  "git_status_before": "M poe_subd_six_etf_v1_1_bot.py\n M research_subd_six_etf_weighted_slope.py\n M run_subd_six_etf_v1_1.py\n M tests/test_poe_subd_live_signal_freshness.py\n M tests/test_poe_subd_trade_records.py\n?? quant_param_scan_runs/20260618_subd_v11_same_slice_ablation/\n?? quant_param_scan_runs/20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input/\n?? tests/test_poe_subd_external_review_regressions.py",
+  "git_status_after": "M poe_subd_six_etf_v1_1_bot.py\n M research_subd_six_etf_weighted_slope.py\n M run_subd_six_etf_v1_1.py\n M tests/test_poe_subd_live_signal_freshness.py\n M tests/test_poe_subd_trade_records.py\n?? quant_param_scan_runs/20260618_subd_v11_same_slice_ablation/\n?? quant_param_scan_runs/20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input/\n?? tests/test_poe_subd_external_review_regressions.py",
+  "scan_type": "paired_strategy_mouth_comparison",
+  "parameter_group": "target_vol_realized_vol_input",
+  "baseline": {
+    "candidate": "baseline_strategy_return_vol",
+    "target_vol_realized_vol_input": "strategy_return_including_cash"
+  },
+  "candidate_grid": [
+    {
+      "candidate": "baseline_strategy_return_vol",
+      "target_vol_realized_vol_input": "strategy_return_including_cash"
+    },
+    {
+      "candidate": "candidate_non_cash_asset_vol",
+      "target_vol_realized_vol_input": "non_cash_asset_return"
+    }
+  ],
+  "data_snapshot": {
+    "data_mode": "local_same_slice_fallback",
+    "raw_start": "2019-12-05",
+    "raw_end": "2026-06-17",
+    "metrics_start": "2019-12-05",
+    "metrics_end": "2026-06-17",
+    "common_last": "2026-06-17",
+    "last_by_asset": {},
+    "rows": 1580,
+    "source_summary": "akshare.fund_etf_hist_sina [sina_raw_unadjusted_no_detected_split_patch; ], akshare.fund_etf_hist_sina [sina_raw_split_continuity_159941_pre_20220705_x0.25; ]",
+    "cache_paths": [
+      "outputs\\cn_trading_days_cache.csv"
+    ],
+    "missing_or_stale": "remote qfq failed; local fallback is stale vs current date",
+    "remote_load_failure": "All qfq data sources failed. 159915.SZ akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 159915.SZ / 159915; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 159915.SZ Eastmoney push2his kline: Eastmoney returned no data for 159915.SZ; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "target_vol": 0.25,
+    "vol_window": 80,
+    "max_lev": 1.5,
+    "execution_timing": "daily close-to-close historical model",
+    "slippage": 0.0,
+    "financing": 0.0
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input\\command_log.txt"
+  },
+  "decision": "keep_default_pending_user_review",
+  "stability_label": "needs_review",
+  "parity_check": {
+    "passed": true,
+    "max_abs_nav_diff": 0.0
+  },
+  "cache_write_risk": "trading calendar cache may be refreshed by official calendar helper",
+  "warnings": [
+    "working tree was dirty before scan; comparison used current local source state",
+    "candidate is research-only and is not present in production source",
+    "remote current qfq load failed; used local same-slice artifact"
+  ],
+  "finalized_at": "2026-06-21T23:41:09+08:00"
+}

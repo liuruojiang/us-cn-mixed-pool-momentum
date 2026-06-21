@@ -1,0 +1,7 @@
+﻿code,independent_source,validation_status,primary_rows,independent_rows,primary_first,primary_last,independent_first,independent_last,common_rows,recent_common_rows,last_common_date,last_common_close_diff_pct,max_abs_recent_close_diff_pct,note
+159915.SZ,Yahoo Finance chart adjusted close,ok,1580,3536,2019-12-05,2026-06-17,2011-09-20,2026-06-17,1579,78,2026-06-17,-2.097490692243298e-08,5.737093689006656e-08,
+159941.SZ,Yahoo Finance chart adjusted close,ok,1580,2662,2019-12-05,2026-06-17,2015-06-10,2026-06-17,1580,78,2026-06-17,2.6958991927727993e-08,4.419118460052829e-08,Yahoo has a known 159941 split-point glitch; it is not used for returns.
+513030.SH,Yahoo Finance chart adjusted close,ok,1580,2863,2019-12-05,2026-06-17,2014-08-08,2026-06-17,1580,78,2026-06-17,6.933873697434478e-09,3.3181228875633906e-08,
+513520.SH,Yahoo Finance chart adjusted close,ok,1580,1696,2019-12-05,2026-06-17,2019-06-12,2026-06-17,1579,78,2026-06-17,-4.4988294312098276e-08,5.576490358372155e-08,
+159985.SZ,Yahoo Finance chart adjusted close,ok,1580,1593,2019-12-05,2026-06-17,2019-09-24,2026-06-17,1579,78,2026-06-17,-5.737093689006656e-08,5.7657536967070655e-08,
+518880.SH,Yahoo Finance chart adjusted close,ok,1580,3133,2019-12-05,2026-06-17,2013-07-18,2026-06-17,1579,78,2026-06-17,2.470162407952614e-08,5.11257360891193e-08,
