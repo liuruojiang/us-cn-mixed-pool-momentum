@@ -135,7 +135,7 @@ def test_live_signal_report_marks_intraday_as_hypothetical(monkeypatch):
         now=datetime(2026, 6, 9, 13, 0),
     )
 
-    assert "数据状态: **盘中未确认**" in report
+    assert "数据: **盘中未确认**" in report
     assert "若现在收盘目标持仓" in report
     assert "收盘前仍可能变化" in report
 

@@ -165,6 +165,7 @@ ADJUSTMENT_TOTAL_RETURN = "total-return/adjusted-close"
 QFQ_ADJUSTMENT_ALLOWLIST = {ADJUSTMENT_QFQ, ADJUSTMENT_TOTAL_RETURN}
 SOURCE_DETAIL_AKSHARE_QFQ = "adjust=qfq"
 SOURCE_DETAIL_EASTMONEY_FQT1 = "fqt=1"
+SOURCE_DETAIL_TENCENT_QFQ = "qfqday"
 
 
 # ════════════════════════════════════════════════════════════════
@@ -209,6 +210,11 @@ def _eastmoney_market_id(code: str) -> str:
 
 def _eastmoney_symbol(code: str) -> str:
     return code.split(".", 1)[0]
+
+
+def _tencent_fq_symbol(code: str) -> str:
+    ticker, suffix = code.split(".")
+    return f"{'sz' if suffix == 'SZ' else 'sh'}{ticker}"
 
 
 HTTP_HEADERS = {
@@ -325,6 +331,58 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     df.columns = col_names
     close = df[["date", "close"]].copy()
     close["date"] = pd.to_datetime(close["date"])
+    close = close.set_index("date")["close"].astype(float).sort_index()
+    close = close.loc[:end_date]
+    close.name = code
+    return close
+
+
+def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
+    """Fallback: fetch historical daily close from Tencent fqkline (qfqday)."""
+    url = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
+    symbol = _tencent_fq_symbol(code)
+    rows: list[list[str]] = []
+    current_end = pd.Timestamp(end_date).normalize()
+    last_error = None
+    for _page in range(10):
+        page_rows = None
+        params = {
+            "param": f"{symbol},day,2010-01-01,{current_end.date().isoformat()},640,qfq",
+        }
+        for attempt in range(1, 4):
+            try:
+                resp = _http_get(url, params=params, timeout=20, headers=HTTP_HEADERS)
+                resp.raise_for_status()
+                payload = resp.json()
+                data = payload.get("data") or {}
+                if not isinstance(data, dict):
+                    raise RuntimeError(f"Tencent returned non-object data for {code}: {payload.get('msg', '')}")
+                node = data.get(symbol) or {}
+                page_rows = node.get("qfqday") or node.get("day") or []
+                if page_rows:
+                    break
+            except Exception as exc:
+                last_error = exc
+            time.sleep(0.5 * attempt)
+        if not page_rows:
+            if not rows:
+                raise RuntimeError(f"Tencent fqkline qfq returned no data for {code}; last_error={last_error}")
+            break
+        rows = page_rows + rows
+        first_date = pd.Timestamp(page_rows[0][0]).normalize()
+        if len(page_rows) < 640 or first_date <= START_DATE:
+            break
+        current_end = first_date - pd.Timedelta(days=1)
+        if current_end < START_DATE:
+            break
+        time.sleep(0.2)
+    df = pd.DataFrame(rows)
+    col_names = ["date", "open", "close", "high", "low", "volume"]
+    df = df.iloc[:, :len(col_names)]
+    df.columns = col_names
+    close = df[["date", "close"]].copy()
+    close["date"] = pd.to_datetime(close["date"])
+    close = close.drop_duplicates(subset=["date"], keep="last")
     close = close.set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end_date]
     close.name = code
@@ -891,6 +949,12 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
                 ADJUSTMENT_QFQ,
                 SOURCE_DETAIL_AKSHARE_QFQ,
                 _load_akshare_eastmoney_qfq_one_close,
+            ),
+            (
+                "Tencent fqkline",
+                ADJUSTMENT_QFQ,
+                SOURCE_DETAIL_TENCENT_QFQ,
+                _load_tencent_qfq_one_close,
             ),
             (
                 "Eastmoney push2his kline",
@@ -1489,6 +1553,57 @@ def _load_cached_cn_trading_days() -> tuple[pd.DatetimeIndex, pd.Timestamp | Non
     return calendar, _calendar_cache_coverage_end(raw, calendar)
 
 
+def _load_cnfin_trading_calendar(
+    required_start: pd.Timestamp,
+    required_end: pd.Timestamp,
+) -> tuple[pd.DatetimeIndex, pd.Timestamp | None]:
+    url = "https://quotedata.cnfin.com/quote/v1/kline"
+    code = "000001.SS"
+    required_start = pd.Timestamp(required_start).normalize()
+    current_end = pd.Timestamp(required_end).normalize()
+    rows: list[list[object]] = []
+    last_error = None
+    for _page in range(10):
+        page_rows = None
+        params = {
+            "prod_code": code,
+            "candle_period": "6",
+            "get_type": "range",
+            "start_date": required_start.strftime("%Y%m%d"),
+            "end_date": current_end.strftime("%Y%m%d"),
+            "fields": "open_px,high_px,low_px,close_px,business_amount,business_balance",
+        }
+        for attempt in range(1, 4):
+            try:
+                resp = _http_get(url, params=params, timeout=30, headers=HTTP_HEADERS)
+                resp.raise_for_status()
+                candle = (resp.json().get("data") or {}).get("candle") or {}
+                page_rows = candle.get(code) or []
+                if page_rows:
+                    break
+            except Exception as exc:
+                last_error = exc
+            time.sleep(0.5 * attempt)
+        if not page_rows:
+            if not rows:
+                raise RuntimeError(f"CNFin trading calendar returned no data; last_error={last_error}")
+            break
+        rows = page_rows + rows
+        first_date = pd.Timestamp(str(page_rows[0][0])).normalize()
+        if len(page_rows) < 2001 or first_date <= required_start:
+            break
+        current_end = first_date - pd.Timedelta(days=1)
+        if current_end < required_start:
+            break
+        time.sleep(0.2)
+    calendar = pd.DatetimeIndex(
+        pd.to_datetime([str(row[0]) for row in rows], errors="coerce")
+    ).dropna().normalize().unique().sort_values()
+    if len(calendar) == 0:
+        raise RuntimeError("CNFin trading calendar normalized to empty")
+    return pd.DatetimeIndex(calendar), pd.Timestamp(calendar.max()).normalize()
+
+
 def _write_cached_cn_trading_days(calendar: pd.DatetimeIndex, source: str = "akshare.tool_trade_date_hist_sina") -> None:
     calendar = pd.DatetimeIndex(calendar).normalize().unique().sort_values()
     if len(calendar) == 0:
@@ -1578,6 +1693,20 @@ def _load_cn_trading_calendar(
                 f"{(coverage_end or pd.Timestamp(calendar.max())).date()}"
             )
 
+    if not valid_candidates:
+        try:
+            cnfin_calendar, cnfin_coverage_end = _load_cnfin_trading_calendar(required_start, required_end)
+            if _calendar_is_usable(cnfin_calendar, required_start, required_end, cnfin_coverage_end):
+                valid_candidates.append(("CNFin", cnfin_calendar, cnfin_coverage_end))
+            else:
+                source_errors.append(
+                    f"CNFin交易日历覆盖不足：需要 {required_start.date()} 至 {required_end.date()}，"
+                    f"实际 {cnfin_calendar.min().date()} 至 "
+                    f"{(cnfin_coverage_end or pd.Timestamp(cnfin_calendar.max())).date()}"
+                )
+        except Exception as exc:
+            source_errors.append(str(exc))
+
     if valid_candidates:
         source_name, chosen_calendar, chosen_coverage_end = max(
             valid_candidates,
@@ -1586,8 +1715,11 @@ def _load_cn_trading_calendar(
                 pd.Timestamp(item[2] or item[1].max()).normalize(),
             ),
         )
-        if source_name == "AkShare":
-            _write_cached_cn_trading_days(chosen_calendar)
+        if source_name in {"AkShare", "CNFin"}:
+            _write_cached_cn_trading_days(
+                chosen_calendar,
+                source="akshare.tool_trade_date_hist_sina" if source_name == "AkShare" else "CNFin 000001.SS kline",
+            )
         _CN_TRADING_DAY_CACHE = chosen_calendar
         _CN_TRADING_DAY_CACHE_COVERAGE_END = chosen_coverage_end
         return chosen_calendar, chosen_coverage_end
@@ -1760,52 +1892,129 @@ def _recompute_final_exposure_nav(
         )
     asset_return = pd.to_numeric(out["asset_return"], errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
-    exposure_effective = fraction_before * target_vol_effective * overheat_effective
-    exposure_effective = exposure_effective.where(position_before != "CASH", 0.0)
-    final_exposure = holding_fraction * target_vol_next
-    final_exposure = final_exposure.where(position_next != "CASH", 0.0)
-    final_exposure_after_overheat = final_exposure * overheat_next
+    eps = 1e-12
+    exposure_effective_vals: list[float] = []
+    final_exposure_vals: list[float] = []
+    final_exposure_after_overheat_vals: list[float] = []
+    drifted_exposure_vals: list[float] = []
+    rebalance_delta_vals: list[float] = []
+    buy_delta_vals: list[float] = []
+    sell_delta_vals: list[float] = []
+    turnover_vals: list[float] = []
+    cost_vals: list[float] = []
+    gross_return_vals: list[float] = []
+    net_return_vals: list[float] = []
+    actual_position_before_vals: list[str] = []
+    actual_position_next_vals: list[str] = []
+    carried_position = "CASH"
+    carried_exposure = 0.0
 
-    gross_return = asset_return * exposure_effective
-    drift_denominator = (1.0 + gross_return).replace(0.0, np.nan)
-    drifted_exposure = exposure_effective * (1.0 + asset_return) / drift_denominator
-    drifted_exposure = drifted_exposure.replace([np.inf, -np.inf], np.nan).fillna(0.0)
-    drifted_exposure = drifted_exposure.where(position_before != "CASH", 0.0)
+    for idx in out.index:
+        prev_position = str(position_before.loc[idx])
+        next_position = str(position_next.loc[idx])
+        frac_before = float(fraction_before.loc[idx])
+        hold_frac = float(holding_fraction.loc[idx])
+        tv_effective = float(target_vol_effective.loc[idx])
+        tv_next = float(target_vol_next.loc[idx])
+        oh_effective = float(overheat_effective.loc[idx])
+        oh_next = float(overheat_next.loc[idx])
+        asset_ret = float(asset_return.loc[idx])
 
-    same_asset = (position_before == position_next) & (position_before != "CASH")
-    rebalance_delta = final_exposure_after_overheat - drifted_exposure
-    buy_delta = pd.Series(
-        np.where(same_asset, np.maximum(rebalance_delta, 0.0), final_exposure_after_overheat),
-        index=out.index,
-        dtype=float,
-    )
-    sell_delta = pd.Series(
-        np.where(same_asset, np.maximum(-rebalance_delta, 0.0), drifted_exposure),
-        index=out.index,
-        dtype=float,
-    )
-    turnover = pd.Series(
-        np.where(
-            same_asset,
-            rebalance_delta.abs(),
-            sell_delta.abs() + buy_delta.abs(),
-        ),
-        index=out.index,
-        dtype=float,
-    )
-    cost = turnover * float(one_way_cost)
-    net_return = (1.0 + gross_return) * (1.0 - cost) - 1.0
+        scheduled_exposure = frac_before * tv_effective * oh_effective if prev_position != "CASH" else 0.0
+        if carried_position == prev_position and prev_position != "CASH":
+            exposure_before = carried_exposure
+        else:
+            exposure_before = scheduled_exposure
+        if prev_position == "CASH":
+            exposure_before = 0.0
+
+        gross = asset_ret * exposure_before
+        denominator = 1.0 + gross
+        if abs(denominator) <= eps or prev_position == "CASH":
+            drifted = 0.0
+        else:
+            drifted = exposure_before * (1.0 + asset_ret) / denominator
+            if not math.isfinite(drifted):
+                drifted = 0.0
+
+        desired_final = hold_frac * tv_next if next_position != "CASH" else 0.0
+        desired_after_overheat = desired_final * oh_next
+        raw_trade_target = out.at[idx, "trade_target"] if "trade_target" in out.columns else None
+        has_base_trade = not (
+            raw_trade_target is None
+            or pd.isna(raw_trade_target)
+            or str(raw_trade_target).strip().lower() in {"", "none", "nan", "<na>"}
+        )
+        position_changed = prev_position != next_position
+        fraction_changed = abs(hold_frac - frac_before) > eps
+        scale_changed = abs(tv_next - tv_effective) > eps
+        overheat_changed = abs(oh_next - oh_effective) > eps
+        should_rebalance = (
+            has_base_trade
+            or position_changed
+            or fraction_changed
+            or scale_changed
+            or overheat_changed
+        )
+
+        if should_rebalance:
+            final_after_overheat = desired_after_overheat
+            final_before_overheat = desired_final
+            rebalance = final_after_overheat - drifted
+            same_asset = prev_position == next_position and prev_position != "CASH"
+            if same_asset:
+                buy = max(rebalance, 0.0)
+                sell = max(-rebalance, 0.0)
+                day_turnover = abs(rebalance)
+            else:
+                sell = drifted if prev_position != "CASH" else 0.0
+                buy = final_after_overheat if next_position != "CASH" else 0.0
+                day_turnover = abs(sell) + abs(buy)
+        else:
+            final_after_overheat = drifted
+            final_before_overheat = final_after_overheat / oh_next if next_position != "CASH" and abs(oh_next) > eps else 0.0
+            rebalance = 0.0
+            buy = 0.0
+            sell = 0.0
+            day_turnover = 0.0
+
+        day_cost = day_turnover * float(one_way_cost)
+        net = (1.0 + gross) * (1.0 - day_cost) - 1.0
+        actual_before = prev_position if exposure_before > eps else "CASH"
+        actual_next = next_position if final_after_overheat > eps else "CASH"
+
+        exposure_effective_vals.append(exposure_before)
+        final_exposure_vals.append(final_before_overheat)
+        final_exposure_after_overheat_vals.append(final_after_overheat)
+        drifted_exposure_vals.append(drifted)
+        rebalance_delta_vals.append(rebalance)
+        buy_delta_vals.append(buy)
+        sell_delta_vals.append(sell)
+        turnover_vals.append(day_turnover)
+        cost_vals.append(day_cost)
+        gross_return_vals.append(gross)
+        net_return_vals.append(net)
+        actual_position_before_vals.append(actual_before)
+        actual_position_next_vals.append(actual_next)
+        carried_position = actual_next
+        carried_exposure = final_after_overheat if actual_next != "CASH" else 0.0
+
+    exposure_effective = pd.Series(exposure_effective_vals, index=out.index, dtype=float)
+    final_exposure = pd.Series(final_exposure_vals, index=out.index, dtype=float)
+    final_exposure_after_overheat = pd.Series(final_exposure_after_overheat_vals, index=out.index, dtype=float)
+    drifted_exposure = pd.Series(drifted_exposure_vals, index=out.index, dtype=float)
+    rebalance_delta = pd.Series(rebalance_delta_vals, index=out.index, dtype=float)
+    buy_delta = pd.Series(buy_delta_vals, index=out.index, dtype=float)
+    sell_delta = pd.Series(sell_delta_vals, index=out.index, dtype=float)
+    turnover = pd.Series(turnover_vals, index=out.index, dtype=float)
+    cost = pd.Series(cost_vals, index=out.index, dtype=float)
+    gross_return = pd.Series(gross_return_vals, index=out.index, dtype=float)
+    net_return = pd.Series(net_return_vals, index=out.index, dtype=float)
 
     out["base_position_before"] = position_before
     out["base_position_next"] = position_next
-    out["actual_position_before"] = pd.Series(
-        np.where(exposure_effective.abs() > 1e-12, position_before, "CASH"),
-        index=out.index,
-    )
-    out["actual_position_next"] = pd.Series(
-        np.where(final_exposure_after_overheat.abs() > 1e-12, position_next, "CASH"),
-        index=out.index,
-    )
+    out["actual_position_before"] = pd.Series(actual_position_before_vals, index=out.index)
+    out["actual_position_next"] = pd.Series(actual_position_next_vals, index=out.index)
     out["target_vol_scale_effective"] = target_vol_effective
     out["target_vol_scale_next"] = target_vol_next
     out["weight"] = target_vol_next
@@ -2406,6 +2615,13 @@ def _cached_daily(date_key: str, data_state: str = "confirmed") -> tuple[pd.Data
 
 
 _cached_daily.cache_clear = _clear_daily_cache  # type: ignore[attr-defined]
+
+
+def _refresh_failed_cache_note(source_name: str, cached_at: datetime, exc: Exception) -> str:
+    return (
+        f"{source_name}; refresh failed, reused cached daily as of "
+        f"{cached_at.strftime('%Y-%m-%d %H:%M:%S')}: {str(exc)[:120]}"
+    )
 
 
 def _call_build_v11_daily(
@@ -3295,9 +3511,16 @@ def _get_daily_for_today(force_refresh: bool = False, data_state: str = "confirm
     key = _daily_cache_key(date_key, data_state)
     if force_refresh:
         now = _now_bj()
-        daily, source_name = _call_build_v11_daily(pd.Timestamp(date_key), data_state, now)
-        daily = _with_cache_metadata(daily, now)
-        _DAILY_CACHE[key] = (now, daily, source_name)
+        try:
+            daily, source_name = _call_build_v11_daily(pd.Timestamp(date_key), data_state, now)
+            daily = _with_cache_metadata(daily, now)
+            _DAILY_CACHE[key] = (now, daily, source_name)
+        except Exception as exc:
+            cached = _DAILY_CACHE.get(key)
+            if cached is None:
+                raise
+            cached_at, daily, source_name = cached
+            source_name = _refresh_failed_cache_note(source_name, cached_at, exc)
     else:
         daily, source_name = _cached_daily(date_key, data_state=data_state)
     return daily.copy(), source_name
@@ -3887,7 +4110,7 @@ def _score_red_light_lines(daily: pd.DataFrame) -> list[str]:
             continue
         code = str(item["code"])
         lines.append(
-            f"- 🔴 红灯: **{_asset_name(code)}** Raw Score **{_fmt_num(raw_score, 4)}** ≥ {SCORE_MAX:.0f}，"
+            f"- 红灯: **{_asset_name(code)}** Raw Score **{_fmt_num(raw_score, 4)}** ≥ {SCORE_MAX:.0f}，"
             "仅展示，不进入候选池。"
         )
     return lines
@@ -4156,7 +4379,72 @@ def _overheat_rule_text(row: pd.Series) -> str:
     return f"{trigger}；{recovery}。"
 
 
-def format_signal_report(
+def _entry_state_text(
+    row: pd.Series,
+    pending_target: str | None,
+    pending_days: int,
+    fill_on_down: bool,
+    staged_initial: bool,
+) -> str:
+    actual_entry_state = str(row.get("actual_entry_state", "") or "")
+    if actual_entry_state == "BLOCKED_BY_OVERHEAT":
+        return "分阶段建仓: 过热防守阻断建仓，当前保持现金。"
+    if actual_entry_state == "HALF_POSITION_WAIT_DOWN" and pending_target:
+        return f"分阶段建仓: 等待补仓，待补目标 {_asset_name(pending_target)}，已等待 {pending_days} 个交易日。"
+    if fill_on_down:
+        return "分阶段建仓: 本日下跌补足仓位。"
+    if staged_initial:
+        return "分阶段建仓: 本日首笔50%建仓，后续等待下跌日补足。"
+    return "分阶段建仓: 当前无待补仓。"
+
+
+def _signal_exception_lines(
+    data_status: dict[str, object],
+    sig: dict[str, object],
+) -> list[str]:
+    lines: list[str] = []
+    if not data_status["signal_valid"]:
+        lines.append(f"- 数据不可交易: {data_status['label']}。")
+        lines.append(
+            f"- 预期最新交易日: {data_status['expected_latest_session']} | "
+            f"实际最新交易日: {data_status['actual_latest_session']} | "
+            f"信号计算日期: {data_status['signal_date']}。"
+        )
+        lines.append("- 本次只展示最近可用信号，不输出可执行交易指令。")
+    elif data_status["delayed_execution"]:
+        lines.append(f"- 延迟执行: {data_status['execution_note']}")
+    elif data_status["raw_signal_has_trade"] and not data_status["strategy_actionable_now"]:
+        lines.append(f"- 当前不可执行: {data_status['execution_note']}")
+    elif data_status["raw_signal_has_trade"] and not (
+        data_status["exchange_can_complete_full_rebalance_now"] or data_status["post_close_actionable_now"]
+    ):
+        if data_status["exchange_all_legs_can_submit"]:
+            lines.append("- 当前可提交全部委托，但不能立即完成全部换仓；需等待集合竞价统一撮合。")
+        else:
+            lines.append(f"- 当前无法提交完整换仓指令: {data_status['execution_note']}")
+
+    if data_status["execution_legs"] and data_status["raw_signal_has_trade"] and lines:
+        leg_text = "；".join(
+            f"{leg['side']} {leg['asset']}({leg['exchange']}/{leg['security_type']}): "
+            f"{leg['execution_session']}，"
+            f"可申报={'是' if leg['can_submit_order_now'] else '否'}，"
+            f"可即时撮合={'是' if leg['can_match_immediately'] else '否'}"
+            for leg in data_status["execution_legs"]
+        )
+        lines.append(f"- 分腿状态: {leg_text}")
+
+    if sig.get("overheat_feature_missing"):
+        lines.append("- Overheat feature missing: keep prior defense state; do not trade on a recovery signal.")
+    return lines
+
+
+def _unconfirmed_bar_note(data_status: dict[str, object]) -> str:
+    if data_status["strategy_execution_window_status"] == "AFTER":
+        return "提示: 当前日线bar尚未最终确认；最终以收盘确认信号为准。"
+    return "提示: 使用当天未确认bar，收盘前仍可能变化；最终以收盘确认信号为准。"
+
+
+def _format_signal_report_compact(
     daily: pd.DataFrame,
     source_note: str,
     live: bool = False,
@@ -4166,25 +4454,24 @@ def format_signal_report(
     data_status = signal_data_status(ordered, live=live, now=now)
     row = ordered.iloc[-1]
     sig = latest_signal(ordered)
-    trade_label = _trade_action_label(sig)
+
     prev_name = _asset_name(str(sig["actual_position_before"]))
     next_name = _asset_name(str(sig["actual_position_next"]))
     final_exposure = _float(sig["final_exposure"], default=math.nan)
+    exposure_effective = _float(sig["exposure_effective"], default=math.nan)
+    turnover = _float(sig["turnover"], default=0.0)
+    cost = _float(sig["cost"], default=0.0)
     holding_fraction = _float(sig["holding_fraction"], default=math.nan)
     target_vol_scale_effective = _float(sig["target_vol_scale_effective"], default=math.nan)
     target_vol_scale_next = _float(sig["target_vol_scale_next"], default=math.nan)
     overheat_scale_effective = _float(sig["overheat_scale_effective"], default=1.0)
     overheat_scale_next = _float(sig["overheat_scale_next"], default=1.0)
-    execution_scale = _float(sig["execution_scale"], default=math.nan)
-    exposure_effective = _float(sig["exposure_effective"], default=math.nan)
-    turnover = _float(sig["turnover"], default=0.0)
-    cost = _float(sig["cost"], default=0.0)
+    execution_scale = _float(sig.get("execution_scale"), default=math.nan)
     realized_vol = _float(row.get("virtual_base_realized_vol", row.get("realized_vol")), default=math.nan)
     base_nav = _float(row.get("base_nav"), default=math.nan)
     nav_before_overheat = _float(row.get("nav_before_overheat"), default=math.nan)
     overheat_bias = _float(row.get("overheat_bias"), default=math.nan)
     overheat_mom = _float(row.get("overheat_bias_mom"), default=math.nan)
-    actual_entry_state = str(row.get("actual_entry_state", "") or "")
     pending_target = _empty_to_none(row.get("actual_pending_target", row.get("pending_entry_target")))
     pending_days = int(_float(row.get("actual_pending_days", row.get("pending_entry_days")), default=0.0))
     fill_on_down = _bool(row.get("actual_fill_on_down_day", row.get("fill_on_down_day")))
@@ -4192,121 +4479,85 @@ def format_signal_report(
     last_base_signal = _last_base_signal_date(ordered)
     last_actual_trade = _last_actual_trade_date(ordered)
 
-    lines: list[str] = []
-    mode_label = "实时" if live else "收盘确认"
     target_position_label = "若现在收盘目标持仓" if data_status["uses_unconfirmed_bar"] else "收盘后目标持仓"
     target_exposure_label = "若现在收盘目标敞口" if data_status["uses_unconfirmed_bar"] else "收盘后目标敞口"
     trade_action_label = "若现在收盘调仓动作" if data_status["uses_unconfirmed_bar"] else "本日调仓动作"
     target_scale_label = "若现在收盘目标" if data_status["uses_unconfirmed_bar"] else "收盘后目标"
-    lines.append(f"## SubD六ETF V1.1 {mode_label}操作信号")
-    lines.append("")
-    lines.append(f"数据源: **{source_note}** | 信号日: **{sig['date']}** | 版本: **V{sig['version']}**")
-    lines.append(f"- 北京时间: **{data_status['now_bj']}**")
-    lines.append(f"- 数据状态: **{data_status['label']}**")
-    lines.append(f"- 预期最新交易日: **{data_status['expected_latest_session']}** | 实际最新交易日: **{data_status['actual_latest_session']}**")
-    lines.append(f"- 数据是否完整: **{'是' if data_status['data_usable'] else '否'}**")
-    lines.append(f"- 信号是否有效: **{'是' if data_status['signal_valid'] else '否'}**")
-    lines.append(f"- 信号计算日期: **{data_status['signal_date']}**")
-    lines.append(f"- 日线bar是否确认: **{'是' if data_status['bar_is_confirmed'] else '否'}**")
-    lines.append(f"- 正式收盘价是否就绪: **{'是' if data_status['official_close_ready'] else '否'}**")
-    lines.append(f"- 行情时间戳: **{data_status['source_quote_time'] or '无'}**")
-    lines.append(
-        f"- 逐ETF报价时间范围: **{data_status['earliest_quote_time'] or '无'}"
-        f" ~ {data_status['latest_quote_time'] or '无'}**，"
-        f"最大时间差: **{_fmt_num(data_status['max_quote_time_skew_seconds'], 0)}秒**"
-    )
-    lines.append(f"- 全资产实时快照是否新鲜: **{'是' if data_status['live_snapshot_fresh'] else '否'}**")
-    lines.append(f"- 报价价格-时间对是否完整: **{'是' if data_status['all_quote_price_time_pairs_valid'] else '否'}**")
-    lines.append(f"- 策略价格是否来自实时快照: **{'是' if data_status['price_matrix_uses_live_quotes'] else '否'}**")
-    lines.append(f"- 信号是否基于今日收盘价: **{'是' if data_status['signal_uses_today_close'] else '否'}**")
-    lines.append(f"- 信号是否属于当前交易日: **{'是' if data_status['signal_is_current_session'] else '否'}**")
-    lines.append(f"- 模型成交价格是否仍可用: **{'是' if data_status['model_execution_price_available'] else '否'}**")
-    lines.append(f"- 是否延迟执行: **{'是' if data_status['delayed_execution'] else '否'}**")
-    lines.append(f"- 当前交易时段: **{data_status['execution_session']}**")
-    lines.append(f"- 原始信号是否包含调仓: **{'是' if data_status['raw_signal_has_trade'] else '否'}**")
-    lines.append(f"- 当前是否需要执行: **{'是' if data_status['action_required_now'] else '否'}**")
-    lines.append(f"- 策略执行窗口状态: **{data_status['strategy_execution_window_status']}**")
-    lines.append(f"- 交易所是否可以提交全部委托: **{'是' if data_status['exchange_all_legs_can_submit'] else '否'}**")
-    lines.append(f"- 交易所是否可以立即完成全部换仓: **{'是' if data_status['exchange_can_complete_full_rebalance_now'] else '否'}**")
-    lines.append(f"- 是否仅部分交易腿可即时撮合: **{'是' if data_status['partially_executable'] else '否'}**")
-    lines.append(f"- 当前盘后固定价格能否完成全部换仓: **{'是' if data_status['post_close_actionable_now'] else '否'}**")
-    lines.append(f"- 是否可作为实盘动作: **{'是' if data_status['tradable'] else '否'}**")
-    lines.append(f"- 是否使用当天未确认bar: **{'是' if data_status['uses_unconfirmed_bar'] else '否'}**")
-    lines.append(f"- 执行口径: **{data_status['execution_note']}**")
-    if data_status["uses_unconfirmed_bar"]:
-        lines.append("- 实时口径: 使用当前日线/盘中快照假设现在收盘；收盘前仍可能变化。")
-    if data_status["execution_legs"]:
-        leg_text = "；".join(
-            f"{leg['side']} {leg['asset']}({leg['exchange']}/{leg['security_type']}): "
-            f"{leg['execution_session']}，"
-            f"交易所可申报={'是' if leg['exchange_can_submit_order_now'] else '否'}，"
-            f"交易所可即时撮合={'是' if leg['exchange_can_match_immediately'] else '否'}，"
-            f"执行许可后可申报={'是' if leg['can_submit_order_now'] else '否'}，"
-            f"盘后固定价={'是' if leg['can_use_post_close_fixed_price'] else '否'}"
-            for leg in data_status["execution_legs"]
-        )
-        lines.append(f"- 分腿执行状态: {leg_text}")
-    if not data_status["signal_valid"]:
-        lines.append("- 实盘保护: 交易日历不可用、今日快照不可用或数据滞后，本次只展示最近可用日线，不输出可执行交易指令。")
-    elif data_status["delayed_execution"]:
-        lines.append("- 实盘保护: 历史调仓信号的模型成交时点已经过去，今日执行属于延迟执行。")
-    elif data_status["raw_signal_has_trade"] and not data_status["all_legs_can_submit"]:
-        lines.append("- 实盘保护: 当前无法提交完整换仓指令，执行前需重新确认价格。")
-    if sig.get("common_last_date"):
-        lines.append(f"最新共同有效日线: **{sig['common_last_date']}**")
-    last_dates_text = _asset_last_dates_text(row)
-    if last_dates_text:
-        lines.append(f"各资产最后数据日: {last_dates_text}")
-    red_light_lines = _score_red_light_lines(ordered)
-    if sig.get("overheat_feature_missing"):
-        red_light_lines.append(
-            "- Overheat feature missing: keep prior defense state; do not trade on a recovery signal."
-        )
-    if red_light_lines:
-        lines.append("")
-        lines.append("### 风险提示")
-        lines.append("")
-        lines.extend(red_light_lines)
-    lines.append("")
-    lines.append("### 结论")
-    lines.append("")
+
     if not data_status["signal_valid"]:
         trade_label = "数据不可交易：不输出实盘动作"
-        lines.append(f"**数据不可交易：{data_status['label']}。最近可用信号日 {sig['date']}，不输出实盘动作。**")
+        conclusion = f"数据不可交易：{data_status['label']}。最近可用信号日 {sig['date']}，不输出实盘动作。"
     elif not data_status["raw_signal_has_trade"]:
         trade_label = _trade_action_label(sig)
-        lines.append("**信号有效，当前持仓与目标一致，无需下单。**")
+        conclusion = "信号有效，无需下单。"
     elif data_status["delayed_execution"]:
         trade_label = "延迟执行，不直接下单"
-        lines.append(f"**存在历史调仓信号，但模型成交时点已经过去。最近可用信号日 {sig['date']}，不直接下单。**")
+        conclusion = f"存在历史调仓信号，但模型成交时点已经过去。最近可用信号日 {sig['date']}，不直接下单。"
     elif live and not data_status["strategy_actionable_now"]:
         trade_label = "实时估算，暂不执行"
         note = str(data_status["execution_note"]).rstrip("。")
-        lines.append(
-            f"**实时估算：{_signal_action_text(sig, target_exposure_label=target_exposure_label)}；"
-            f"{note}，不应下单。**"
-        )
+        conclusion = f"实时估算：{_signal_action_text(sig, target_exposure_label=target_exposure_label)}；{note}，不应下单。"
     elif data_status["strategy_actionable_now"] and (
         data_status["exchange_can_complete_full_rebalance_now"] or data_status["post_close_actionable_now"]
     ):
         trade_label = _trade_action_label(sig)
-        lines.append(f"**{_signal_action_text(sig, target_exposure_label=target_exposure_label)}**")
+        conclusion = _signal_action_text(sig, target_exposure_label=target_exposure_label)
     elif data_status["strategy_actionable_now"] and data_status["exchange_all_legs_can_submit"]:
         trade_label = _trade_action_label(sig)
-        lines.append(f"**{_signal_action_text(sig, target_exposure_label=target_exposure_label)}；当前可以提交全部委托，但需等待集合竞价统一撮合。**")
+        conclusion = (
+            f"{_signal_action_text(sig, target_exposure_label=target_exposure_label)}；"
+            "当前可以提交全部委托，但需等待集合竞价统一撮合。"
+        )
     else:
         trade_label = "当前无法提交完整换仓指令"
-        lines.append(f"**当前无法提交完整换仓指令：{data_status['execution_note']}。最近可用信号日 {sig['date']}。**")
+        conclusion = f"当前无法提交完整换仓指令：{data_status['execution_note']}。最近可用信号日 {sig['date']}。"
+
+    red_light_lines = _score_red_light_lines(ordered)
+    exception_lines = _signal_exception_lines(data_status, sig)
+    mode_label = "实时" if live else "收盘确认"
+
+    lines: list[str] = []
+    lines.append(f"## SubD六ETF V1.1 {mode_label}操作信号")
     lines.append("")
-    lines.append(f"- 当前已生效持仓: **{prev_name}**")
+    lines.append(f"信号日: **{sig['date']}** | 数据: **{data_status['label']}** | 来源: **{source_note}**")
+    lines.append("")
+    lines.append("### 结论")
+    lines.append("")
+    lines.append(f"**{conclusion}**")
+    lines.append("")
+    lines.append("### 信号摘要")
+    lines.append("")
+    lines.append(f"- 当前持仓: **{prev_name}**")
     lines.append(f"- {target_position_label}: **{next_name}**")
     lines.append(f"- {trade_action_label}: **{trade_label}**")
-    lines.append(f"- 当前已生效敞口: **{_fmt_pct(exposure_effective)}**")
+    lines.append(f"- 当前敞口: **{_fmt_pct(exposure_effective)}**")
     lines.append(f"- {target_exposure_label}: **{_fmt_pct(final_exposure)}**")
     if turnover > 1e-12:
-        lines.append(f"- 本日目标turnover: **{_fmt_pct(turnover)}**，成本: **{_fmt_pct(cost, 3)}**")
+        lines.append(f"- 目标turnover: **{_fmt_pct(turnover)}**，成本: **{_fmt_pct(cost, 3)}**")
+    lines.append(f"- 执行状态: **{data_status['execution_note']}**")
     lines.append(f"- 上次底层调仓信号: **{last_base_signal}**")
     lines.append(f"- 上次实际成交日: **{last_actual_trade}**")
+    lines.append(f"- {_entry_state_text(row, pending_target, pending_days, fill_on_down, staged_initial)}")
+    lines.append(
+        f"- 参数: 基础仓位 **{_fmt_pct(holding_fraction)}** | "
+        f"Target-vol **{_fmt_num(target_vol_scale_effective, 3)}x -> {_fmt_num(target_vol_scale_next, 3)}x** | "
+        f"过热防守 **{_fmt_num(overheat_scale_effective, 3)}x -> {_fmt_num(overheat_scale_next, 3)}x**"
+    )
+    if data_status["uses_unconfirmed_bar"]:
+        lines.append(f"- {_unconfirmed_bar_note(data_status)}")
+
+    if exception_lines:
+        lines.append("")
+        lines.append("### 【异常提示】")
+        lines.append("")
+        lines.extend(exception_lines)
+
+    if red_light_lines:
+        lines.append("")
+        lines.append("### 【风控提示】")
+        lines.append("")
+        lines.extend(red_light_lines)
+
     lines.append("")
     lines.append("### 仓位拆解")
     lines.append("")
@@ -4323,54 +4574,34 @@ def format_signal_report(
     lines.append(f"| {target_exposure_label} | **{_fmt_pct(final_exposure)}** | 基础仓位 × {target_scale_label}执行scale |")
     if not pd.isna(realized_vol):
         lines.append(f"| 虚拟底层已实现波动率 | **{_fmt_pct(realized_vol)}** | 过热/guard前曲线，用于下一期target-vol计算 |")
+
     lines.append("")
     lines.append("### 动量排名")
     lines.append("")
-    lines.append("| # | ETF | Raw Score | 显示Score | R² | 状态 |")
-    lines.append("|:-:|:-|--:|--:|--:|:-|")
+    lines.append("| # | ETF | Raw Score | 显示Score | R² | 状态 | 角色 |")
+    lines.append("|:-:|:-|--:|--:|--:|:-|:-|")
     for rank, item in enumerate(_signal_rank_rows(ordered), 1):
         code = str(item["code"])
         raw_score = _float(item["raw_score"], default=math.nan)
         eligible_score = _float(item["eligible_score"], default=math.nan)
         display_score = _display_score(raw_score, eligible_score)
         r2 = _float(item["r2"], default=math.nan)
-        marker = " <- 最强候选" if code == str(sig["best_candidate"]) else ""
-        hold_marker = " / 当前持仓" if code == str(sig["position_before"]) else ""
-        status = "入选" if bool(item.get("eligible")) else "未入选"
-        if pd.isna(raw_score) or pd.isna(r2):
-            status = "数据不足"
-        elif r2 < R2_THRESHOLD:
-            status = f"R²未过{R2_THRESHOLD:.2f}"
-        elif raw_score <= SCORE_MIN:
-            status = f"Score≤{SCORE_MIN:.0f}"
-        elif raw_score >= SCORE_MAX:
-            status = f"Score≥{SCORE_MAX:.0f}"
         lines.append(
-            f"| {rank} | {_asset_name(code)}{marker}{hold_marker} | "
-            f"{_fmt_num(raw_score, 4)} | {_fmt_num(display_score, 4)} | {_fmt_num(r2, 3)} | {status} |"
+            f"| {rank} | {_asset_name(code)} | {_fmt_num(raw_score, 4)} | "
+            f"{_fmt_num(display_score, 4)} | {_fmt_num(r2, 3)} | "
+            f"{_momentum_status(raw_score, r2)} | {_momentum_role(code, sig)} |"
         )
+
     lines.append("")
     lines.append("### 规则状态")
     lines.append("")
-    if actual_entry_state == "BLOCKED_BY_OVERHEAT":
-        lines.append("- 实际执行状态: **过热防守阻断建仓**，当前保持现金，待防守解除后才会开始首笔建仓。")
-    elif actual_entry_state == "HALF_POSITION_WAIT_DOWN" and pending_target:
-        lines.append(f"- 分阶段建仓: **等待补仓**，待补目标 **{_asset_name(pending_target)}**，已等待 **{pending_days}** 个交易日。")
-    elif fill_on_down:
-        lines.append("- 分阶段建仓: **本日下跌补足仓位**。")
-    elif staged_initial:
-        lines.append("- 分阶段建仓: **本日首笔50%建仓**，后续等待下跌日补足。")
-    else:
-        lines.append("- 分阶段建仓: 当前无待补仓。")
+    lines.append(f"- {_entry_state_text(row, pending_target, pending_days, fill_on_down, staged_initial)}")
     if sig["buffer_blocked"]:
         lines.append(
-            f"- 切换buffer: **{SWITCH_BUFFER:.2f}x 已生效**，最强候选未领先当前持仓超过 "
-            f"{(SWITCH_BUFFER - 1.0):.0%}，继续持有当前资产。"
+            f"- 切换buffer: **{SWITCH_BUFFER:.2f}x 已生效**，最强候选未领先当前持仓超过 {(SWITCH_BUFFER - 1.0):.0%}。"
         )
     else:
-        lines.append(
-            f"- 切换buffer: **{SWITCH_BUFFER:.2f}x**，换仓需要最强候选分数 > 当前持仓分数 × {SWITCH_BUFFER:.2f}。"
-        )
+        lines.append(f"- 切换buffer: **{SWITCH_BUFFER:.2f}x**，换仓需要最强候选分数 > 当前持仓分数 × {SWITCH_BUFFER:.2f}。")
     overheat_status = _fmt_bool_status(sig["overheat_on"], "**防守中**", "**未触发**")
     if sig["overheat_triggered"]:
         overheat_status = "**本日触发**"
@@ -4384,6 +4615,7 @@ def format_signal_report(
     lines.append(f"- 过热防守: {overheat_status}{bias_text}。")
     lines.append(f"- {_overheat_rule_text(row)}")
     lines.append(f"- 成本口径: 单边交易成本 **{ONE_WAY_COST:.1%}**，日线收盘价口径。")
+
     lines.append("")
     lines.append("### 净值快照")
     lines.append("")
@@ -4395,14 +4627,20 @@ def format_signal_report(
         lines.append(f"| 过热前净值 | **{_fmt_num(nav_before_overheat, 4)}** |")
     if not pd.isna(base_nav):
         lines.append(f"| 基础策略净值 | **{_fmt_num(base_nav, 4)}** |")
+
     lines.append("")
     lines.append(format_trade_records_table(ordered, limit=10).rstrip())
-    lines.append("")
-    if data_status["uses_unconfirmed_bar"]:
-        lines.append("> 执行提醒: 这是盘中假设信号；收盘前仍可能变化，最终以收盘确认信号为准。")
-    else:
-        lines.append("> 执行提醒: 这是日线收盘确认信号；当前回测和信号口径按当日收盘价执行。")
+
     return "\n".join(lines) + "\n"
+
+
+def format_signal_report(
+    daily: pd.DataFrame,
+    source_note: str,
+    live: bool = False,
+    now: datetime | None = None,
+) -> str:
+    return _format_signal_report_compact(daily, source_note, live=live, now=now)
 
 
 def _momentum_status(score: float, r2: float) -> str:
@@ -4727,7 +4965,7 @@ class SubDSixEtfV11Bot:
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}只ETF** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
-            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Eastmoney HTTP qfq** | 历史回测统一使用前复权日收盘价，不静默混入raw源 |\n")
+            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Tencent fqkline qfq -> Eastmoney HTTP qfq** | 历史回测统一使用前复权日收盘价，不静默混入raw源 |\n")
             msg.write(f"| Live price limit by ETF | **{_live_price_limit_summary()}** | {LIVE_PRICE_LIMIT_DESCRIPTION} |\n")
             msg.write(f"| Live history today cross-check | **>{LIVE_PRICE_HISTORY_TODAY_MAX_DIFF:.0%} => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |\n")
             if daily is not None:

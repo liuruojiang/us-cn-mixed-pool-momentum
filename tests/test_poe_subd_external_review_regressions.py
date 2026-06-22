@@ -131,6 +131,7 @@ def test_public_loader_rejects_raw_fallback_when_qfq_sources_fail(monkeypatch):
 
     monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
     monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_qfq, raising=False)
 
     with pytest.raises(RuntimeError, match="qfq"):
         module._load_public_close_with_per_code_fallback(["159915.SZ"], pd.Timestamp("2026-01-02"))
@@ -150,6 +151,7 @@ def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
         return pd.Series([1.0, 1.1], index=idx, name=code)
 
     monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_akshare)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_akshare)
     monkeypatch.setattr(module, "_load_eastmoney_one_close", eastmoney_qfq)
 
     prices, sources = module._load_public_close_with_per_code_fallback(
@@ -159,6 +161,95 @@ def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
     assert prices.columns.tolist() == ["159915.SZ"]
     assert sources.loc[0, "adjustment"] == module.ADJUSTMENT_QFQ
     assert sources.loc[0, "source_detail"] == "fqt=1"
+
+
+def test_tencent_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
+    module = load_bot_module()
+
+    def fail_qfq(code, end_date):
+        raise RuntimeError(f"provider unavailable for {code}")
+
+    def tencent_qfq(code, end_date):
+        idx = pd.to_datetime(["2026-01-01", "2026-01-02"])
+        return pd.Series([1.0, 1.1], index=idx, name=code)
+
+    monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", tencent_qfq, raising=False)
+
+    prices, sources = module._load_public_close_with_per_code_fallback(
+        ["159915.SZ"], pd.Timestamp("2026-01-02")
+    )
+
+    assert prices.columns.tolist() == ["159915.SZ"]
+    assert sources.loc[0, "source"] == "Tencent fqkline"
+    assert sources.loc[0, "adjustment"] == module.ADJUSTMENT_QFQ
+    assert sources.loc[0, "source_detail"] == "qfqday"
+
+
+def test_tencent_qfq_loader_pages_until_full_history(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"code": 0, "msg": "", "data": {"sz159915": {"qfqday": self._rows}}}
+
+    first_page = [
+        ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"],
+    ] * 640
+    first_page[0] = ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]
+    first_page[-1] = ["2026-01-02", "2.0", "2.1", "2.2", "1.9", "2000"]
+    second_page = [
+        ["2023-12-29", "0.9", "1.0", "1.1", "0.8", "900"],
+        ["2023-12-30", "1.0", "1.05", "1.1", "0.9", "950"],
+    ]
+
+    def fake_http_get(url, params=None, **kwargs):
+        calls.append(params["param"])
+        return FakeResponse(first_page if len(calls) == 1 else second_page)
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+
+    close = module._load_tencent_qfq_one_close("159915.SZ", pd.Timestamp("2026-01-02"))
+
+    assert len(calls) == 2
+    assert "sz159915,day,2010-01-01,2026-01-02,640,qfq" in calls[0]
+    assert "sz159915,day,2010-01-01,2024-01-01,640,qfq" in calls[1]
+    assert close.index.min() == pd.Timestamp("2023-12-29")
+    assert close.index.max() == pd.Timestamp("2026-01-02")
+    assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(2.1)
+
+
+def test_tencent_qfq_loader_accepts_day_key_when_qfqday_missing(monkeypatch):
+    module = load_bot_module()
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "code": 0,
+                "msg": "",
+                "data": {
+                    "sh513030": {
+                        "day": [["2026-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]]
+                    }
+                },
+            }
+
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: FakeResponse())
+
+    close = module._load_tencent_qfq_one_close("513030.SH", pd.Timestamp("2026-01-02"))
+
+    assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(1.1)
 
 
 def test_poe_bot_obsolete_dead_helpers_are_not_reintroduced():
@@ -587,7 +678,7 @@ def test_overheat_guard_recomputes_returns_and_refills_on_actual_down_day():
     assert float(out.loc[dates[3], "gross_return"]) == pytest.approx(-0.005)
 
 
-def test_recompute_nav_charges_turnover_from_drifted_weight():
+def test_recompute_nav_does_not_rebalance_same_asset_price_drift_without_signal():
     module = load_bot_module()
     date = pd.Timestamp("2026-01-02")
     curve = pd.DataFrame(
@@ -610,13 +701,54 @@ def test_recompute_nav_charges_turnover_from_drifted_weight():
     out = module._recompute_final_exposure_nav(curve, ones, ones, ones, ones, one_way_cost=0.001)
 
     drifted = 0.5 * 1.10 / 1.05
-    expected_turnover = drifted - 0.5
     assert float(out.loc[date, "gross_return"]) == pytest.approx(0.05)
-    assert float(out.loc[date, "turnover"]) == pytest.approx(expected_turnover)
-    assert float(out.loc[date, "rebalance_delta"]) == pytest.approx(-expected_turnover)
+    assert float(out.loc[date, "turnover"]) == pytest.approx(0.0)
+    assert float(out.loc[date, "rebalance_delta"]) == pytest.approx(0.0)
     assert float(out.loc[date, "buy_delta"]) == pytest.approx(0.0)
-    assert float(out.loc[date, "sell_delta"]) == pytest.approx(expected_turnover)
-    assert float(out.loc[date, "cost"]) == pytest.approx(expected_turnover * 0.001)
+    assert float(out.loc[date, "sell_delta"]) == pytest.approx(0.0)
+    assert float(out.loc[date, "cost"]) == pytest.approx(0.0)
+    assert float(out.loc[date, "final_exposure_after_overheat"]) == pytest.approx(drifted)
+
+
+def test_recompute_nav_rebalances_same_asset_when_target_vol_scale_changes():
+    module = load_bot_module()
+    date = pd.Timestamp("2026-01-02")
+    curve = pd.DataFrame(
+        {
+            "position_before": ["159915.SZ"],
+            "position": ["159915.SZ"],
+            "fraction_before": [0.5],
+            "holding_fraction": [0.5],
+            "asset_return": [0.10],
+            "gross_return": [0.05],
+            "return": [0.05],
+            "nav": [1.05],
+            "turnover": [0.0],
+            "cost": [0.0],
+        },
+        index=[date],
+    )
+    effective_scale = pd.Series(1.0, index=curve.index)
+    next_scale = pd.Series(1.2, index=curve.index)
+    ones = pd.Series(1.0, index=curve.index)
+
+    out = module._recompute_final_exposure_nav(
+        curve,
+        effective_scale,
+        next_scale,
+        ones,
+        ones,
+        one_way_cost=0.001,
+    )
+
+    drifted = 0.5 * 1.10 / 1.05
+    target = 0.5 * 1.2
+    expected_turnover = target - drifted
+    assert float(out.loc[date, "turnover"]) == pytest.approx(expected_turnover)
+    assert float(out.loc[date, "rebalance_delta"]) == pytest.approx(expected_turnover)
+    assert float(out.loc[date, "buy_delta"]) == pytest.approx(expected_turnover)
+    assert float(out.loc[date, "sell_delta"]) == pytest.approx(0.0)
+    assert float(out.loc[date, "final_exposure_after_overheat"]) == pytest.approx(target)
 
 
 def test_live_signal_without_today_bar_is_not_tradable(monkeypatch):
@@ -791,6 +923,69 @@ def test_trading_calendar_uses_local_cache_when_akshare_unavailable(monkeypatch,
     assert sessions.tolist() == [pd.Timestamp("2026-09-29"), pd.Timestamp("2026-09-30")]
 
 
+def test_trading_calendar_uses_cnfin_when_akshare_and_cache_unavailable(monkeypatch, tmp_path):
+    module = load_bot_module()
+    cache_path = tmp_path / "missing_cn_trading_days_cache.csv"
+    monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
+    monkeypatch.setattr(module, "_HAS_AKSHARE", False)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_COVERAGE_END", None)
+    calendar = pd.DatetimeIndex(pd.to_datetime(["2026-06-19", "2026-06-22"]))
+
+    def cnfin_calendar(required_start, required_end):
+        return calendar, pd.Timestamp("2026-06-22")
+
+    monkeypatch.setattr(module, "_load_cnfin_trading_calendar", cnfin_calendar, raising=False)
+
+    sessions = module._expected_cn_trading_days(
+        pd.Timestamp("2026-06-19"),
+        pd.Timestamp("2026-06-22"),
+    )
+
+    assert sessions.tolist() == [pd.Timestamp("2026-06-19"), pd.Timestamp("2026-06-22")]
+
+
+def test_cnfin_trading_calendar_loader_pages_until_required_start(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"data": {"candle": {"fields": ["min_time"], "000001.SS": self._rows}}}
+
+    first_page = [["2024-01-02", "1", "1", "1", "1", "0"]] * 2001
+    first_page[0] = ["2024-01-02", "1", "1", "1", "1", "0"]
+    first_page[-1] = ["2026-01-02", "1", "1", "1", "1", "0"]
+    second_page = [
+        ["2023-12-29", "1", "1", "1", "1", "0"],
+        ["2023-12-30", "1", "1", "1", "1", "0"],
+    ]
+
+    def fake_http_get(url, params=None, **kwargs):
+        calls.append(params)
+        return FakeResponse(first_page if len(calls) == 1 else second_page)
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+
+    calendar, coverage_end = module._load_cnfin_trading_calendar(
+        pd.Timestamp("2023-12-29"),
+        pd.Timestamp("2026-01-02"),
+    )
+
+    assert len(calls) == 2
+    assert calls[0]["end_date"] == "20260102"
+    assert calls[1]["end_date"] == "20240101"
+    assert calendar.min() == pd.Timestamp("2023-12-29")
+    assert calendar.max() == pd.Timestamp("2026-01-02")
+    assert coverage_end == pd.Timestamp("2026-01-02")
+
+
 def test_stale_calendar_cache_is_rejected_when_market_data_is_newer(monkeypatch, tmp_path):
     module = load_bot_module()
     cache_path = tmp_path / "cn_trading_days_cache.csv"
@@ -798,6 +993,12 @@ def test_stale_calendar_cache_is_rejected_when_market_data_is_newer(monkeypatch,
     monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
     monkeypatch.setattr(module, "_HAS_AKSHARE", False)
     monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (_ for _ in ()).throw(RuntimeError("cnfin unavailable")),
+        raising=False,
+    )
     daily = minimal_daily(module, dates=("2026-06-17",))
 
     with pytest.raises(RuntimeError, match="交易日历落后于行情数据"):
@@ -854,6 +1055,12 @@ def test_calendar_cache_rejects_inconsistent_coverage_metadata(monkeypatch, tmp_
     monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
     monkeypatch.setattr(module, "_HAS_AKSHARE", False)
     monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (_ for _ in ()).throw(RuntimeError("cnfin unavailable")),
+        raising=False,
+    )
 
     assert module._expected_cn_trading_days(pd.Timestamp("2026-06-17"), pd.Timestamp("2026-06-18")) is None
     assert "元数据不一致" in module._CN_TRADING_DAY_FAILURE_REASON
@@ -927,6 +1134,12 @@ def test_align_prices_rejects_stale_calendar_cache_instead_of_skipping_common_ga
     monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
     monkeypatch.setattr(module, "_HAS_AKSHARE", False)
     monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (_ for _ in ()).throw(RuntimeError("cnfin unavailable")),
+        raising=False,
+    )
     dates = pd.to_datetime(["2026-06-15", "2026-06-17"])
     prices = pd.DataFrame(1.0, index=dates, columns=list(module.ASSETS))
 
@@ -1182,11 +1395,103 @@ def test_signal_report_concludes_no_trade_without_protection_warning(monkeypatch
         now=datetime(2026, 6, 18, 10, 0),
     )
 
-    assert "原始信号是否包含调仓: **否**" in report
-    assert "当前是否需要执行: **否**" in report
+    assert "原始信号是否包含调仓" not in report
+    assert "当前是否需要执行" not in report
+    assert "逐ETF报价时间范围" not in report
+    assert "【异常提示】" not in report
     assert "信号有效，无需下单" in report
     assert "信号有效但当前不可成交" not in report
     assert "实盘保护: 信号有效" not in report
+
+
+def test_signal_report_keeps_complete_signal_body_with_compact_status(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    report = module.format_signal_report(
+        daily,
+        "unit-test",
+        live=False,
+        now=datetime(2026, 6, 18, 10, 0),
+    )
+
+    assert "### 仓位拆解" in report
+    assert "### 动量排名" in report
+    assert "### 规则状态" in report
+    assert "### 净值快照" in report
+    assert "### 调仓记录" in report
+    assert "数据是否完整" not in report
+    assert "交易所是否可以提交全部委托" not in report
+
+
+def test_signal_report_expands_only_on_abnormal_status(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-17",))
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-17", "2026-06-18", "2026-06-19"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    report = module.format_signal_report(
+        daily,
+        "unit-test",
+        live=False,
+        now=datetime(2026, 6, 19, 10, 0),
+    )
+
+    assert "### 【异常提示】" in report
+    assert "数据不可交易" in report
+    assert "预期最新交易日" in report
+    assert "实际最新交易日" in report
+
+
+def test_signal_report_keeps_score_red_lights_out_of_abnormal_section(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+    daily.loc[0, "raw_score_513520.SH"] = 6.3242
+    daily.loc[0, "score_513520.SH"] = math.nan
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    report = module.format_signal_report(
+        daily,
+        "unit-test",
+        live=False,
+        now=datetime(2026, 6, 18, 10, 0),
+    )
+
+    assert "### 【异常提示】" not in report
+    assert "### 【风控提示】" in report
+    assert "红灯" in report
+
+
+def test_signal_report_uses_post_close_unconfirmed_bar_wording(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    report = module.format_signal_report(
+        daily,
+        "unit-test",
+        live=True,
+        now=datetime(2026, 6, 18, 21, 46),
+    )
+
+    assert "当前日线bar尚未最终确认" in report
+    assert "收盘前仍可能变化" not in report
 
 
 def test_post_close_fixed_price_is_disabled_before_2026_rule_effective_date(monkeypatch):
@@ -1475,8 +1780,9 @@ def test_signal_report_keeps_trade_action_when_all_legs_can_submit_in_call_aucti
         now=datetime(2026, 6, 18, 14, 58),
     )
 
-    assert "交易所是否可以提交全部委托: **是**" in report
-    assert "交易所是否可以立即完成全部换仓: **否**" in report
+    assert "交易所是否可以提交全部委托" not in report
+    assert "交易所是否可以立即完成全部换仓" not in report
+    assert "### 【异常提示】" in report
     assert "等待集合竞价统一撮合" in report
     assert "信号有效但当前不可成交" not in report
     assert "实盘保护: 信号有效" not in report
@@ -1664,7 +1970,7 @@ def test_live_signal_report_uses_live_target_exposure_wording(monkeypatch):
     )
 
     assert "若现在收盘目标敞口" in report
-    assert "收盘后目标敞口" not in report.split("### 结论", 1)[1].split("### 仓位拆解", 1)[0]
+    assert "收盘后目标敞口" not in report.split("### 结论", 1)[1].split("### 信号摘要", 1)[0]
 
 
 def test_live_params_snapshot_shows_strategy_execution_window(monkeypatch):
@@ -1719,7 +2025,7 @@ def test_exchange_mechanical_status_fields_are_named_explicitly(monkeypatch):
         now=datetime(2026, 6, 18, 9, 20),
     )
 
-    assert "是否仅部分交易腿可即时撮合" in report
+    assert "是否仅部分交易腿可即时撮合" not in report
     assert "是否存在部分交易腿只能即时撮合" not in report
 
 
@@ -1751,8 +2057,9 @@ def test_live_report_conclusion_does_not_bypass_strategy_permission(monkeypatch,
         now=now,
     )
 
-    conclusion = report.split("### 结论", 1)[1].split("- 当前已生效持仓", 1)[0]
-    assert "是否可作为实盘动作: **否**" in report
+    conclusion = report.split("### 结论", 1)[1].split("### 【异常提示】", 1)[0]
+    assert "是否可作为实盘动作" not in report
+    assert "### 【异常提示】" in report
     assert "实时估算" in conclusion
     assert "不应下单" in conclusion
     assert "**买入" not in conclusion
@@ -2131,8 +2438,9 @@ def test_invalid_data_splits_raw_trade_from_current_execution_need(monkeypatch):
         now=datetime(2026, 6, 18, 15, 31),
     )
 
-    assert "原始信号是否包含调仓: **是**" in report
-    assert "当前是否需要执行: **否**" in report
+    assert "原始信号是否包含调仓" not in report
+    assert "当前是否需要执行" not in report
+    assert "### 【异常提示】" in report
     assert "是否需要下单: **是**" not in report
 
 
@@ -2916,6 +3224,29 @@ def test_live_force_refresh_updates_confirmed_raw_cache(monkeypatch):
     assert int(live["marker"].iloc[0]) == 1
     assert int(confirmed["marker"].iloc[0]) == 2
     assert calls == [1, 2]
+
+
+def test_live_force_refresh_reuses_same_state_cache_when_provider_refresh_fails(monkeypatch):
+    module = load_bot_module()
+    module._cached_daily.cache_clear()
+    now = datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ)
+    cached_at = datetime(2026, 6, 18, 14, 40, tzinfo=module.CN_TZ)
+    key = module._daily_cache_key("2026-06-18", "live")
+    cached_daily = pd.DataFrame({"date": [pd.Timestamp("2026-06-18")], "marker": [7]})
+    module._DAILY_CACHE[key] = (cached_at, cached_daily, "cached-live-qfq")
+
+    def fail_refresh(end_date, data_state, now):
+        raise RuntimeError("All qfq data sources failed. 159915.SZ provider down")
+
+    monkeypatch.setattr(module, "_now_bj", lambda: now)
+    monkeypatch.setattr(module, "_call_build_v11_daily", fail_refresh)
+
+    daily, source_note = module._get_daily_for_today(force_refresh=True, data_state="live")
+
+    assert daily["marker"].tolist() == [7]
+    assert "cached-live-qfq" in source_note
+    assert "refresh failed" in source_note
+    assert "159915.SZ provider down" in source_note
 
 
 def test_align_prices_forward_fills_lagging_latest_asset(monkeypatch):
