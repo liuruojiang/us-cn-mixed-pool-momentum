@@ -1239,6 +1239,39 @@ def test_weekend_signal_is_valid_but_not_actionable_now(monkeypatch):
     assert "休市" in status["execution_note"]
 
 
+def test_weekend_live_signal_accepts_calendar_covered_to_previous_session(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-26",))
+    latest_session = pd.Timestamp("2026-06-26")
+    calls = []
+
+    def expected_sessions(start, end):
+        calls.append((pd.Timestamp(start).normalize(), pd.Timestamp(end).normalize()))
+        if pd.Timestamp(end).normalize() > latest_session:
+            return None
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-25", "2026-06-26"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+    module._set_calendar_failure(
+        "交易日历落后于行情数据或当前日期，禁止生成可执行信号；"
+        "本地缓存交易日历覆盖不足：需要 2026-05-29 至 2026-06-28，实际 2019-12-05 至 2026-06-26"
+    )
+
+    status = module.signal_data_status(
+        daily,
+        live=True,
+        now=datetime(2026, 6, 28, 10, 0),
+        purpose="execution",
+    )
+
+    assert calls[-1][1] == latest_session
+    assert status["data_usable"] is True
+    assert status["signal_valid"] is True
+    assert status["tradable"] is False
+    assert status["expected_confirmed_session"] == "2026-06-26"
+    assert "休市" in status["execution_note"]
+
+
 def test_after_close_signal_is_valid_but_not_actionable_at_close_price(monkeypatch):
     module = load_bot_module()
     daily = minimal_daily(module, dates=("2026-06-18",))

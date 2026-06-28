@@ -3101,12 +3101,16 @@ def _fallback_previous_business_day(day: pd.Timestamp) -> pd.Timestamp:
 def _status_calendar_sessions(ts: datetime, latest_market_date: pd.Timestamp | None = None) -> dict[str, object]:
     today = pd.Timestamp(ts.date()).normalize()
     required_start = today - pd.Timedelta(days=30)
-    required_end = today
     latest_market = None
     if latest_market_date is not None:
         latest_market = pd.Timestamp(latest_market_date).normalize()
         required_start = min(required_start, latest_market)
-        required_end = max(required_end, latest_market)
+    if today.weekday() >= 5 and (latest_market is None or latest_market <= today):
+        required_end = latest_market if latest_market is not None else _fallback_previous_business_day(today)
+    else:
+        required_end = today
+        if latest_market is not None:
+            required_end = max(required_end, latest_market)
     calendar = _expected_cn_trading_days(required_start, required_end)
     if calendar is not None and len(calendar):
         sessions = pd.DatetimeIndex(calendar).normalize().unique().sort_values()
@@ -3995,18 +3999,27 @@ def resolve_performance_ranges(
     query: str,
     now=None,
     latest_date=None,
+    earliest_date=None,
 ) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
     now = _bj_today_naive() if now is None else _normalize_query_date(now)
     latest = now if latest_date is None else _normalize_query_date(latest_date)
+    earliest = None if earliest_date is None else _normalize_query_date(earliest_date)
     parsed = parse_all_date_ranges(query, now=now)
     if parsed:
         return [(f"{s.date()}~{e.date()}", s, e) for s, e in parsed]
-    return [
-        ("from_2020", EVAL_START, latest),
-        ("5Y", latest - pd.DateOffset(years=5), latest),
-        ("3Y", latest - pd.DateOffset(years=3), latest),
-        ("1Y", latest - pd.DateOffset(years=1), latest),
-    ]
+    ranges = []
+    if earliest is not None:
+        ranges.append(("full_sample", earliest, latest))
+    ranges.extend(
+        [
+            ("10Y", latest - pd.DateOffset(years=10), latest),
+            ("5Y", latest - pd.DateOffset(years=5), latest),
+            ("3Y", latest - pd.DateOffset(years=3), latest),
+            ("1Y", latest - pd.DateOffset(years=1), latest),
+            ("from_2020", EVAL_START, latest),
+        ]
+    )
+    return ranges
 
 
 # ════════════════════════════════════════════════════════════════
@@ -4976,8 +4989,9 @@ class SubDSixEtfV11Bot:
     def _handle_performance(self, query: str):
         daily, source_note = _get_daily_for_today(data_state="confirmed")
         daily = prepare_daily_for_performance(daily)
+        earliest = pd.Timestamp(daily["date"].iloc[0])
         latest = pd.Timestamp(daily["date"].iloc[-1])
-        ranges = resolve_performance_ranges(query, latest_date=latest)
+        ranges = resolve_performance_ranges(query, latest_date=latest, earliest_date=earliest)
         chart_range = ranges[0] if ranges else None
         with poe.start_message() as msg:
             if chart_range is not None:

@@ -9,7 +9,7 @@
 
 - `research_subd_six_etf_weighted_slope.py`：SubD 六 ETF 研究和回测核心。
 - `run_subd_six_etf_v1_1.py`：SubD V1.1 正式输出入口。
-- `analyze_subd_six_etf_v1_1_qveris_robustness.py`：QVeris 数据源复核和 V1.1 参数稳健性扫描。
+- `analyze_subd_six_etf_v1_1_qveris_robustness.py`：历史归档的 QVeris 数据源复核脚本；当前正式入口不再使用 QVeris。
 - `analyze_abcde_combo_20260509.py`：ABCDE 组合和 B60 基准对比。
 - `mnt_bot V 7.6 plus.py`：组合脚本依赖的 A/B/C 官方路径快照。
 
@@ -29,4 +29,4 @@ python .\run_subd_six_etf_v1_1.py
 python .\analyze_abcde_combo_20260509.py
 ```
 
-数据源规则见 `AGENTS.md`。QVeris 可用时优先用于 A 股行情复核，密钥只从环境变量读取。
+数据源规则见 `AGENTS.md`。当前 SubD V1.1 正式入口使用公开前复权日收盘价链路，优先 AkShare/Eastmoney qfq，并仅把 QVeris 相关材料作为历史归档证据保留。

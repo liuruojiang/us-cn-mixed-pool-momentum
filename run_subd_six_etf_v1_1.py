@@ -2,6 +2,7 @@ import argparse
 import math
 import warnings
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -26,6 +27,8 @@ OVERHEAT_DERISK_SCALE = 0.0
 ONE_WAY_COST = 0.001
 CN_BIAS_N = 60
 CN_MOM_DAY = 20
+TRADING_CALENDAR_CACHE_PATH = Path("outputs/cn_trading_days_cache.csv")
+_CN_TRADING_DAY_FAILURE_REASON = ""
 
 
 def _sanity_check_subd_contract() -> None:
@@ -112,7 +115,9 @@ def run_staged_entry(
     r2_threshold: float,
     switch_buffer: float,
 ) -> pd.DataFrame:
+    price_ffill_flags = _price_ffill_flags_for_prices(prices, list(subd.ASSETS))
     prices = prices.loc[: config.end_date].copy()
+    price_ffill_flags = price_ffill_flags.reindex(pd.DatetimeIndex(prices.index).normalize()).fillna(False).astype(bool)
     holding = "CASH"
     holding_fraction = 0.0
     pending_entry_target: str | None = None
@@ -128,6 +133,11 @@ def run_staged_entry(
     for idx, date in enumerate(prices.index):
         old_holding = holding
         old_fraction = holding_fraction
+        old_pending_entry_target = pending_entry_target
+        old_pending_entry_since = pending_entry_since
+        old_pending_entry_days = pending_entry_days
+        old_staged_initial_count = staged_initial_count
+        old_staged_fill_count = staged_fill_count
 
         scores: dict[str, float] = {}
         r2_values: dict[str, float] = {}
@@ -231,6 +241,31 @@ def run_staged_entry(
                     pending_entry_since = None
                     pending_entry_days = 0
 
+        stale_price_trade_assets: list[str] = []
+        trade_blocked_by_stale_price = False
+        blocked_trade_target: str | None = None
+        if trade_target is not None:
+            stale_price_trade_assets = _stale_price_trade_assets(
+                price_ffill_flags,
+                date,
+                old_holding,
+                old_fraction,
+                trade_target,
+                trade_fraction,
+            )
+            if stale_price_trade_assets:
+                trade_blocked_by_stale_price = True
+                blocked_trade_target = trade_target
+                trade_target = None
+                trade_fraction = old_fraction
+                pending_entry_target = old_pending_entry_target
+                pending_entry_since = old_pending_entry_since
+                pending_entry_days = old_pending_entry_days
+                staged_initial_count = old_staged_initial_count
+                staged_fill_count = old_staged_fill_count
+                staged_initial = False
+                fill_on_down_day = False
+
         if old_holding == "CASH" or old_fraction <= 1e-12 or idx == 0:
             asset_return = 0.0
             gross_return = 0.0
@@ -265,6 +300,10 @@ def run_staged_entry(
         net_return = nav / rows[-1]["nav"] - 1.0 if rows else nav - 1.0
         score_row = {f"score_{code}": scores.get(code, math.nan) for code in subd.ASSETS}
         r2_row = {f"r2_{code}": r2_values.get(code, math.nan) for code in subd.ASSETS}
+        ffill_row = {
+            f"price_ffill_{code}": _price_is_forward_filled(price_ffill_flags, date, code)
+            for code in subd.ASSETS
+        }
         rows.append(
             {
                 "date": date,
@@ -284,6 +323,9 @@ def run_staged_entry(
                 "best_candidate_score": best_score,
                 "current_score": current_score,
                 "buffer_blocked": buffer_blocked,
+                "trade_blocked_by_stale_price": trade_blocked_by_stale_price,
+                "blocked_trade_target": blocked_trade_target,
+                "stale_price_trade_assets": ",".join(stale_price_trade_assets),
                 "asset_return": asset_return,
                 "gross_return": gross_return,
                 "asset_component": asset_component,
@@ -296,6 +338,7 @@ def run_staged_entry(
                 "stop_triggered": False,
                 "staged_initial_count": staged_initial_count,
                 "staged_fill_count": staged_fill_count,
+                **ffill_row,
                 **score_row,
                 **r2_row,
                 "buffer_blocked_count": buffer_blocked_count,
@@ -310,14 +353,137 @@ def _expected_cn_trading_days(start: pd.Timestamp, end: pd.Timestamp) -> pd.Date
     if callable(helper):
         try:
             result = helper(start, end)
-            reason = str(getattr(subd, "_CN_TRADING_DAY_FAILURE_REASON", "") or "")
+            reason = _calendar_failure_reason()
             if result is None and ("交易日历落后于行情数据" in reason or "覆盖不足" in reason):
                 raise RuntimeError(reason)
-            return result
+            if result is not None:
+                return result
         except RuntimeError as exc:
             if "交易日历落后于行情数据" in str(exc) or "覆盖不足" in str(exc):
                 raise
-            return None
+    start = pd.Timestamp(start).normalize()
+    end = pd.Timestamp(end).normalize()
+    if end < start:
+        return pd.DatetimeIndex([])
+    loaded = _load_cn_trading_calendar(start, end)
+    if loaded is None:
+        return None
+    calendar, _coverage_end = loaded
+    return pd.DatetimeIndex(calendar[(calendar >= start) & (calendar <= end)])
+
+
+def _set_calendar_failure(reason: str) -> None:
+    global _CN_TRADING_DAY_FAILURE_REASON
+    _CN_TRADING_DAY_FAILURE_REASON = reason
+
+
+def _calendar_failure_reason() -> str:
+    return _CN_TRADING_DAY_FAILURE_REASON or str(getattr(subd, "_CN_TRADING_DAY_FAILURE_REASON", "") or "")
+
+
+def _normalize_trading_calendar(frame: pd.DataFrame) -> pd.DatetimeIndex:
+    if frame is None or frame.empty:
+        return pd.DatetimeIndex([])
+    candidate_columns = ("trade_date", "交易日", "calendarDate", "日期", "date")
+    column = next((name for name in candidate_columns if name in frame.columns), frame.columns[0])
+    calendar = pd.to_datetime(frame[column], errors="coerce").dropna().dt.normalize().unique()
+    return pd.DatetimeIndex(calendar).sort_values()
+
+
+def _load_cached_cn_trading_days() -> tuple[pd.DatetimeIndex, pd.Timestamp | None] | None:
+    path = Path(TRADING_CALENDAR_CACHE_PATH)
+    if not path.exists():
+        return None
+    cache = pd.read_csv(path)
+    calendar = _normalize_trading_calendar(cache)
+    if len(calendar) == 0:
+        return None
+    coverage_end = None
+    if "coverage_end" in cache.columns:
+        coverage = pd.to_datetime(cache["coverage_end"], errors="coerce").dropna()
+        if not coverage.empty:
+            coverage_end = pd.Timestamp(coverage.max()).normalize()
+    return calendar, coverage_end
+
+
+def _write_cached_cn_trading_days(calendar: pd.DatetimeIndex, source: str) -> None:
+    calendar = pd.DatetimeIndex(calendar).normalize().unique().sort_values()
+    if len(calendar) == 0:
+        return
+    try:
+        path = Path(TRADING_CALENDAR_CACHE_PATH)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(
+            {
+                "trade_date": [pd.Timestamp(day).date().isoformat() for day in calendar],
+                "coverage_end": pd.Timestamp(calendar.max()).date().isoformat(),
+                "source": source,
+            }
+        ).to_csv(path, index=False, encoding="utf-8")
+    except Exception:
+        return
+
+
+def _calendar_is_usable(
+    calendar: pd.DatetimeIndex,
+    required_start: pd.Timestamp,
+    required_end: pd.Timestamp,
+    coverage_end: pd.Timestamp | None,
+) -> bool:
+    if len(calendar) == 0:
+        return False
+    coverage = pd.Timestamp(coverage_end or calendar.max()).normalize()
+    return (
+        pd.Timestamp(calendar.min()).normalize() <= required_start
+        and coverage >= required_end
+        and pd.Timestamp(calendar.max()).normalize() >= required_end
+    )
+
+
+def _load_cn_trading_calendar(
+    required_start: pd.Timestamp,
+    required_end: pd.Timestamp,
+) -> tuple[pd.DatetimeIndex, pd.Timestamp | None] | None:
+    required_start = pd.Timestamp(required_start).normalize()
+    required_end = pd.Timestamp(required_end).normalize()
+    _set_calendar_failure("")
+    source_errors: list[str] = []
+    candidates: list[tuple[str, pd.DatetimeIndex, pd.Timestamp | None]] = []
+    ak = getattr(subd, "ak", None)
+    if ak is not None and hasattr(ak, "tool_trade_date_hist_sina"):
+        try:
+            calendar = _normalize_trading_calendar(ak.tool_trade_date_hist_sina())
+            if len(calendar) == 0:
+                raise RuntimeError("AkShare trading calendar returned no rows")
+            candidates.append(("AkShare", calendar, pd.Timestamp(calendar.max()).normalize()))
+        except Exception as exc:
+            source_errors.append(f"AkShare: {exc}")
+    try:
+        cached = _load_cached_cn_trading_days()
+        if cached is not None:
+            calendar, coverage_end = cached
+            candidates.append(("local cache", calendar, coverage_end))
+    except Exception as exc:
+        source_errors.append(f"local cache: {exc}")
+    valid_candidates = [
+        (source, calendar, coverage_end)
+        for source, calendar, coverage_end in candidates
+        if _calendar_is_usable(calendar, required_start, required_end, coverage_end)
+    ]
+    if valid_candidates:
+        source, calendar, coverage_end = max(
+            valid_candidates,
+            key=lambda item: pd.Timestamp(item[2] or item[1].max()).normalize(),
+        )
+        if source == "AkShare":
+            _write_cached_cn_trading_days(calendar, "akshare.tool_trade_date_hist_sina")
+        return calendar, coverage_end
+    for source, calendar, coverage_end in candidates:
+        source_errors.append(
+            f"{source} coverage insufficient: need {required_start.date()} to {required_end.date()}, "
+            f"got {calendar.min().date()} to {pd.Timestamp(coverage_end or calendar.max()).date()}"
+        )
+    _set_calendar_failure("交易日历不可用，无法校验历史行情完整性" + ("；" + " | ".join(source_errors[-3:]) if source_errors else ""))
     return None
 
 
@@ -329,6 +495,84 @@ def _expected_latest_from_asset_dates(latest_valid_dates: list[pd.Timestamp], fa
     if not mode.empty:
         return pd.Timestamp(mode.max())
     return pd.Timestamp(normalized.median()).normalize()
+
+
+def _price_forward_fill_flags(
+    raw_prices: pd.DataFrame,
+    aligned_prices: pd.DataFrame,
+    asset_cols: list[str] | tuple[str, ...],
+) -> pd.DataFrame:
+    asset_cols = list(asset_cols)
+    raw = raw_prices.copy()
+    raw.index = pd.DatetimeIndex(raw.index).normalize()
+    aligned = aligned_prices.copy()
+    aligned.index = pd.DatetimeIndex(aligned.index).normalize()
+    raw = raw.reindex(aligned.index)
+    flags = pd.DataFrame(False, index=aligned.index, columns=asset_cols)
+    for code in asset_cols:
+        flags[code] = aligned[code].notna() & raw[code].isna()
+    return flags.astype(bool)
+
+
+def _price_ffill_flags_for_prices(
+    prices: pd.DataFrame,
+    asset_cols: list[str] | tuple[str, ...],
+) -> pd.DataFrame:
+    asset_cols = list(asset_cols)
+    normalized_index = pd.DatetimeIndex(prices.index).normalize()
+    flags = prices.attrs.get("price_ffill_flags")
+    if isinstance(flags, pd.DataFrame):
+        out = flags.copy()
+        out.index = pd.DatetimeIndex(out.index).normalize()
+        out = out.reindex(normalized_index).fillna(False)
+        for code in asset_cols:
+            if code not in out.columns:
+                out[code] = False
+        return out[asset_cols].astype(bool)
+    return pd.DataFrame(False, index=normalized_index, columns=asset_cols)
+
+
+def _price_is_forward_filled(flags: pd.DataFrame, date: pd.Timestamp, code: str) -> bool:
+    normalized = pd.Timestamp(date).normalize()
+    return bool(code in flags.columns and normalized in flags.index and flags.at[normalized, code])
+
+
+def _trade_leg_assets(
+    old_holding: str,
+    old_fraction: float,
+    trade_target: str,
+    trade_fraction: float,
+) -> list[str]:
+    assets: list[str] = []
+    eps = 1e-12
+    trade_fraction = float(trade_fraction)
+    if old_holding == trade_target:
+        delta = trade_fraction - float(old_fraction)
+        if delta < -eps and old_holding in subd.ASSETS:
+            assets.append(old_holding)
+        elif delta > eps and trade_target in subd.ASSETS:
+            assets.append(trade_target)
+    else:
+        if old_holding in subd.ASSETS and old_fraction > eps:
+            assets.append(old_holding)
+        if trade_target in subd.ASSETS and trade_fraction > eps and trade_target not in assets:
+            assets.append(trade_target)
+    return assets
+
+
+def _stale_price_trade_assets(
+    flags: pd.DataFrame,
+    date: pd.Timestamp,
+    old_holding: str,
+    old_fraction: float,
+    trade_target: str,
+    trade_fraction: float,
+) -> list[str]:
+    return [
+        code
+        for code in _trade_leg_assets(old_holding, old_fraction, trade_target, trade_fraction)
+        if _price_is_forward_filled(flags, date, code)
+    ]
 
 
 def align_prices_to_common_valid_date(
@@ -348,32 +592,30 @@ def align_prices_to_common_valid_date(
         raise ValueError(f"Price index must be unique; first duplicate={first}")
     if not prices.index.is_monotonic_increasing:
         raise ValueError("Price index must be strictly increasing")
+    aligned_prices = prices.copy()
+    rows_with_any_asset_price = prices[asset_cols].notna().any(axis=1)
     last_by_asset: dict[str, pd.Timestamp] = {}
     for col in asset_cols:
-        series = pd.to_numeric(prices[col], errors="coerce")
+        series = pd.to_numeric(aligned_prices[col], errors="coerce")
         finite = np.isfinite(series.to_numpy(dtype=float))
         invalid = series.notna() & (~finite | (series <= 0))
         if invalid.any():
             first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
             raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
-        valid_dates = prices.index[series.notna()]
+        valid_dates = aligned_prices.index[series.notna()]
         if len(valid_dates):
-            first_valid = pd.Timestamp(valid_dates.min())
-            last_valid = pd.Timestamp(valid_dates.max())
-            internal = series.loc[first_valid:last_valid].isna()
-            if internal.any():
-                first_missing = pd.Timestamp(internal.index[internal][0]).date().isoformat()
-                raise ValueError(f"{col} has internal missing close after start at {first_missing}")
+            filled = series.ffill()
+            aligned_prices.loc[rows_with_any_asset_price, col] = filled.loc[rows_with_any_asset_price]
         last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
-    valid_all = prices[asset_cols].notna().all(axis=1)
+    valid_all = aligned_prices[asset_cols].notna().all(axis=1)
     if not valid_all.any():
         raise ValueError("No date has valid close prices for all assets")
-    common_last = pd.Timestamp(prices.index[valid_all].max())
-    common_valid_dates = pd.DatetimeIndex(prices.index[valid_all]).normalize().unique().sort_values()
+    common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
+    common_valid_dates = pd.DatetimeIndex(aligned_prices.index[valid_all]).normalize().unique().sort_values()
     first_common = pd.Timestamp(common_valid_dates.min())
     expected_sessions = _expected_cn_trading_days(first_common, common_last)
     if expected_sessions is None:
-        reason = str(getattr(subd, "_CN_TRADING_DAY_FAILURE_REASON", "") or "")
+        reason = _calendar_failure_reason()
         if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
             raise RuntimeError(reason)
         if calendar_validation_mode == "required":
@@ -407,7 +649,9 @@ def align_prices_to_common_valid_date(
             f"Latest close dates are not aligned to expected {expected_latest.date().isoformat()}: "
             f"{', '.join(stale)}"
         )
-    return prices.loc[:common_last].copy(), common_last, last_by_asset
+    out = aligned_prices.loc[:common_last].copy()
+    out.attrs["price_ffill_flags"] = _price_forward_fill_flags(prices, out, asset_cols)
+    return out, common_last, last_by_asset
 
 
 def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series:
@@ -1040,6 +1284,27 @@ def trading_day_window_start(index: pd.Index, end: pd.Timestamp, trading_days: i
     return pd.Timestamp(eligible[start_pos])
 
 
+def build_performance_windows(
+    index: pd.Index,
+    common_last: pd.Timestamp,
+    eval_start: pd.Timestamp,
+) -> dict[str, pd.Timestamp]:
+    ordered = pd.DatetimeIndex(index).sort_values()
+    eligible = ordered[ordered <= pd.Timestamp(common_last)]
+    if eligible.empty:
+        raise ValueError(f"No trading dates on or before {common_last}")
+    windows: dict[str, pd.Timestamp] = {
+        "full_sample": pd.Timestamp(eligible[0]),
+        "10Y": trading_day_window_start(eligible, common_last, 10 * subd.TRADING_DAYS),
+        "5Y": trading_day_window_start(eligible, common_last, 5 * subd.TRADING_DAYS),
+        "3Y": trading_day_window_start(eligible, common_last, 3 * subd.TRADING_DAYS),
+        "1Y": trading_day_window_start(eligible, common_last, subd.TRADING_DAYS),
+    }
+    if pd.Timestamp(eval_start) <= pd.Timestamp(common_last):
+        windows["from_2020"] = pd.Timestamp(eval_start)
+    return windows
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Sub-D six ETF V1.1 backtest.")
     parser.add_argument("--start-date", default=START_DATE.date().isoformat())
@@ -1108,12 +1373,7 @@ def main() -> None:
     prices = prices.loc[prices.index >= config.start_date]
     prices, common_last, _last_by_asset = align_prices_to_common_valid_date(prices, list(subd.ASSETS))
     curves = build_curves(prices, config)
-    windows = {
-        "from_2020": eval_start,
-        "5Y": trading_day_window_start(prices.index, common_last, 5 * subd.TRADING_DAYS),
-        "3Y": trading_day_window_start(prices.index, common_last, 3 * subd.TRADING_DAYS),
-        "1Y": trading_day_window_start(prices.index, common_last, subd.TRADING_DAYS),
-    }
+    windows = build_performance_windows(prices.index, common_last, eval_start)
     summary = pd.DataFrame([summarize(curve, start, label) for curve in curves for label, start in windows.items()])
 
     prefix = f"subd_six_etf_{config.output_tag}"
