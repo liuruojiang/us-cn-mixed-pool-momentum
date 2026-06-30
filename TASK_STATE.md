@@ -23,6 +23,7 @@ SubD six-ETF V1.1 formal runner and Poe live-signal hardening after the 2026-06-
 - Live signal requests must force a fresh live build; confirmed signal requests may use the confirmed cache.
 - A-share ETF execution timing is an explicit strategy assumption: realtime signal before close, same-day close execution. Do not relabel this as lookahead without changing the strategy premise.
 - QVeris is retired from the current formal path. Keep QVeris scripts/docs only as historical archive evidence.
+- The public historical close chain is AkShare/Eastmoney qfq, then validated Tencent fqkline `qfqday/day` with a continuity guard, then Eastmoney HTTP qfq.
 - The formal runner forward-fills single-asset suspension/missing-close dates for NAV continuity, records `price_ffill_*`, and blocks same-day trade legs that depend on a forward-filled price.
 - User-facing performance tables must include `full_sample`, `10Y`, `5Y`, `3Y`, and `1Y`; `from_2020` can remain as an extra review window.
 
@@ -38,7 +39,7 @@ SubD six-ETF V1.1 formal runner and Poe live-signal hardening after the 2026-06-
 
 - Official raw/reference previous-close and exchange limit-up/limit-down fields are still not fully sourced; current live price bands are a fail-closed proxy based on the price matrix. This is separate from the unified成交成本 assumption.
 - QDII same-day EOD vendor lag can make 15:30+ confirmed signals unavailable; this is expected conservative behavior until a stronger final-close source is added.
-- CNFin/Tencent historical fallback code was removed rather than promoted; add them back only with independent validation of prices, dates, and rows.
+- CNFin historical fallback remains removed. Tencent fqkline is promoted only for the validated `qfqday/day` historical close path; keep any raw CNFin/Tencent fallback out unless independently revalidated.
 - `analyze_abcde_combo_20260509.py` still points at older fixed sleeve artifacts; refresh it separately before treating combo output as current formal evidence.
 
 ## Verification Commands

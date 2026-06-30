@@ -29,4 +29,4 @@ python .\run_subd_six_etf_v1_1.py
 python .\analyze_abcde_combo_20260509.py
 ```
 
-数据源规则见 `AGENTS.md`。当前 SubD V1.1 正式入口使用公开前复权日收盘价链路，优先 AkShare/Eastmoney qfq，并仅把 QVeris 相关材料作为历史归档证据保留。
+数据源规则见 `AGENTS.md`。当前 SubD V1.1 正式入口使用公开前复权/连续日收盘价链路，优先 AkShare/Eastmoney qfq；当 Eastmoney qfq 不可用时可回退到已验证的 Tencent fqkline `qfqday/day`（带连续性自检），并仅把 QVeris 相关材料作为历史归档证据保留。

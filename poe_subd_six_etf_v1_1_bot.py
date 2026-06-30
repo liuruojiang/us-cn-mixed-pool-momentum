@@ -165,9 +165,13 @@ ADJUSTMENT_TOTAL_RETURN = "total-return/adjusted-close"
 QFQ_ADJUSTMENT_ALLOWLIST = {ADJUSTMENT_QFQ}
 SOURCE_DETAIL_AKSHARE_QFQ = "adjust=qfq"
 SOURCE_DETAIL_EASTMONEY_FQT1 = "fqt=1"
+SOURCE_DETAIL_TENCENT_QFQ = "qfqday/day"
+TENCENT_FQKLINE_PAGE_SIZE = 640
+MAX_ADJUSTED_DAILY_ABS_RETURN = 0.35
 APPROVED_QFQ_HISTORICAL_SOURCES = {
     ("akshare.fund_etf_hist_em daily close", SOURCE_DETAIL_AKSHARE_QFQ),
     ("Eastmoney push2his kline", SOURCE_DETAIL_EASTMONEY_FQT1),
+    ("Tencent fqkline", SOURCE_DETAIL_TENCENT_QFQ),
 }
 
 
@@ -213,6 +217,11 @@ def _eastmoney_market_id(code: str) -> str:
 
 def _eastmoney_symbol(code: str) -> str:
     return code.split(".", 1)[0]
+
+
+def _tencent_fq_symbol(code: str) -> str:
+    ticker, suffix = code.split(".")
+    return f"{'sz' if suffix == 'SZ' else 'sh'}{ticker}"
 
 
 HTTP_HEADERS = {
@@ -343,6 +352,84 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close["date"] = pd.to_datetime(close["date"])
     close = close.set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end_date]
+    close.name = code
+    return close
+
+
+def _validate_adjusted_close_continuity(code: str, close: pd.Series, source: str) -> None:
+    returns = close.dropna().pct_change().abs().dropna()
+    if returns.empty:
+        return
+    bad = returns[returns > MAX_ADJUSTED_DAILY_ABS_RETURN]
+    if bad.empty:
+        return
+    first_date = pd.Timestamp(bad.index[0]).date().isoformat()
+    raise RuntimeError(
+        f"{source} adjusted close continuity check failed for {code}: "
+        f"{first_date} abs_return={float(bad.iloc[0]):.2%}"
+    )
+
+
+def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
+    """Fetch Tencent fqkline close using qfqday, with day accepted only if continuous."""
+    url = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
+    symbol = _tencent_fq_symbol(code)
+    rows: list[list[str]] = []
+    current_end = pd.Timestamp(end_date).normalize()
+    last_error = None
+    page_size = int(TENCENT_FQKLINE_PAGE_SIZE)
+    for _page in range(16):
+        page_rows: list[list[str]] | None = None
+        params = {
+            "param": f"{symbol},day,{START_DATE.date().isoformat()},{current_end.date().isoformat()},{page_size},qfq",
+        }
+        for attempt in range(1, 4):
+            try:
+                resp = _http_get(url, params=params, timeout=20, headers=HTTP_HEADERS)
+                resp.raise_for_status()
+                payload = resp.json()
+                data = payload.get("data") or {}
+                if not isinstance(data, dict):
+                    raise RuntimeError(f"Tencent returned non-object data for {code}: {payload.get('msg', '')}")
+                node = data.get(symbol) or {}
+                page_rows = node.get("qfqday") or node.get("day") or []
+                if page_rows:
+                    break
+            except Exception as exc:
+                last_error = exc
+            time.sleep(0.5 * attempt)
+        if not page_rows:
+            if not rows:
+                raise RuntimeError(f"Tencent fqkline qfq returned no data for {code}; last_error={last_error}")
+            break
+        rows = page_rows + rows
+        first_date = pd.Timestamp(page_rows[0][0]).normalize()
+        if len(page_rows) < page_size or first_date <= START_DATE:
+            break
+        next_end = first_date - pd.Timedelta(days=1)
+        if next_end >= current_end or next_end < START_DATE:
+            break
+        current_end = next_end
+        time.sleep(0.2)
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        raise RuntimeError(f"Tencent fqkline qfq normalized to empty for {code}")
+    col_names = ["date", "open", "close", "high", "low", "volume"]
+    df = df.iloc[:, :len(col_names)]
+    df.columns = col_names
+    close = df[["date", "close"]].copy()
+    close["date"] = pd.to_datetime(close["date"])
+    close = (
+        close.drop_duplicates(subset=["date"], keep="last")
+        .set_index("date")["close"]
+        .astype(float)
+        .sort_index()
+    )
+    close = close.loc[START_DATE:end_date]
+    if close.dropna().empty:
+        raise RuntimeError(f"Tencent fqkline qfq returned empty close series for {code}")
+    _validate_adjusted_close_continuity(code, close, "Tencent fqkline")
     close.name = code
     return close
 
@@ -928,6 +1015,12 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
                 ADJUSTMENT_QFQ,
                 SOURCE_DETAIL_AKSHARE_QFQ,
                 _load_akshare_eastmoney_qfq_one_close,
+            ),
+            (
+                "Tencent fqkline",
+                ADJUSTMENT_QFQ,
+                SOURCE_DETAIL_TENCENT_QFQ,
+                _load_tencent_qfq_one_close,
             ),
             (
                 "Eastmoney push2his kline",
@@ -5128,7 +5221,7 @@ class SubDSixEtfV11Bot:
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}只ETF** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
-            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Eastmoney HTTP qfq** | 历史回测统一使用前复权日收盘价，不静默混入raw源；Tencent/CNFin历史fallback须完成独立验证后再接入 |\n")
+            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Tencent fqkline qfq/day -> Eastmoney HTTP qfq** | 历史回测统一使用前复权/连续日收盘价；Tencent day 仅在连续性自检通过时使用，不静默混入raw断点源；CNFin历史fallback仍未接入 |\n")
             msg.write(f"| Live price limit by ETF | **{_live_price_limit_summary()}** | {LIVE_PRICE_LIMIT_DESCRIPTION} |\n")
             msg.write(f"| Live history today cross-check | **>{LIVE_PRICE_HISTORY_TODAY_MAX_DIFF:.0%} => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |\n")
             if daily is not None:

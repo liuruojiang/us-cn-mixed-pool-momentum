@@ -17,11 +17,9 @@ RESEARCH_PATH = ROOT / "research_subd_six_etf_weighted_slope.py"
 OBSOLETE_POE_HELPERS = (
     "_sina_symbol",
     "_tencent_symbol",
-    "_tencent_fq_symbol",
     "_load_sina_close",
     "_load_cnfin_one_close",
     "_load_tencent_one_close",
-    "_load_tencent_qfq_one_close",
     "_load_cnfin_close",
     "_load_tencent_close",
     "_load_eastmoney_close",
@@ -137,13 +135,13 @@ def test_public_loader_rejects_raw_fallback_when_qfq_sources_fail(monkeypatch):
 
     monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
     monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_qfq, raising=False)
 
     with pytest.raises(RuntimeError, match="qfq"):
         module._load_public_close_with_per_code_fallback(["159915.SZ"], pd.Timestamp("2026-01-02"))
 
     assert not hasattr(module, "_load_cnfin_one_close")
     assert not hasattr(module, "_load_tencent_one_close")
-    assert not hasattr(module, "_load_tencent_qfq_one_close")
 
 
 def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
@@ -157,6 +155,7 @@ def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
         return pd.Series([1.0, 1.1], index=idx, name=code)
 
     monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_akshare)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_akshare)
     monkeypatch.setattr(module, "_load_eastmoney_one_close", eastmoney_qfq)
 
     prices, sources = module._load_public_close_with_per_code_fallback(
@@ -168,13 +167,92 @@ def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
     assert sources.loc[0, "source_detail"] == "fqt=1"
 
 
-def test_tencent_historical_fallback_is_not_in_poe_production_path():
+def test_tencent_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
     module = load_bot_module()
-    source = BOT_PATH.read_text(encoding="utf-8")
 
-    assert not hasattr(module, "_load_tencent_qfq_one_close")
-    assert "Tencent fqkline" not in source
-    assert "qfqday" not in source
+    def fail_qfq(code, end_date):
+        raise RuntimeError(f"provider unavailable for {code}")
+
+    def tencent_qfq(code, end_date):
+        idx = pd.to_datetime(["2026-01-01", "2026-01-02"])
+        return pd.Series([1.0, 1.1], index=idx, name=code)
+
+    monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", tencent_qfq, raising=False)
+
+    prices, sources = module._load_public_close_with_per_code_fallback(
+        ["159915.SZ"], pd.Timestamp("2026-01-02")
+    )
+
+    assert prices.columns.tolist() == ["159915.SZ"]
+    assert sources.loc[0, "source"] == "Tencent fqkline"
+    assert sources.loc[0, "adjustment"] == module.ADJUSTMENT_QFQ
+    assert sources.loc[0, "source_detail"] == module.SOURCE_DETAIL_TENCENT_QFQ
+
+
+def test_tencent_qfq_loader_pages_until_full_history(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"code": 0, "msg": "", "data": {"sz159915": {"qfqday": self._rows}}}
+
+    first_page = [
+        ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"],
+        ["2026-01-02", "1.15", "1.2", "1.25", "1.1", "2000"],
+    ]
+    second_page = [
+        ["2023-12-29", "0.9", "1.0", "1.1", "0.8", "900"],
+    ]
+
+    def fake_http_get(url, params=None, **kwargs):
+        calls.append(params["param"])
+        return FakeResponse(first_page if len(calls) == 1 else second_page)
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+    monkeypatch.setattr(module, "TENCENT_FQKLINE_PAGE_SIZE", 2, raising=False)
+
+    close = module._load_tencent_qfq_one_close("159915.SZ", pd.Timestamp("2026-01-02"))
+
+    assert len(calls) == 2
+    assert "sz159915,day,2010-01-01,2026-01-02,2,qfq" in calls[0]
+    assert "sz159915,day,2010-01-01,2024-01-01,2,qfq" in calls[1]
+    assert close.index.min() == pd.Timestamp("2023-12-29")
+    assert close.index.max() == pd.Timestamp("2026-01-02")
+    assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(1.2)
+
+
+def test_tencent_qfq_loader_accepts_day_key_when_qfqday_missing(monkeypatch):
+    module = load_bot_module()
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "code": 0,
+                "msg": "",
+                "data": {
+                    "sh513030": {
+                        "day": [["2026-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]]
+                    }
+                },
+            }
+
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: FakeResponse())
+
+    close = module._load_tencent_qfq_one_close("513030.SH", pd.Timestamp("2026-01-02"))
+
+    assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(1.1)
 
 
 def test_poe_bot_obsolete_dead_helpers_are_not_reintroduced():
