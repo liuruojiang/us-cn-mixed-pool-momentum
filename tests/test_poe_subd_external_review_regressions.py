@@ -17,9 +17,11 @@ RESEARCH_PATH = ROOT / "research_subd_six_etf_weighted_slope.py"
 OBSOLETE_POE_HELPERS = (
     "_sina_symbol",
     "_tencent_symbol",
+    "_tencent_fq_symbol",
     "_load_sina_close",
     "_load_cnfin_one_close",
     "_load_tencent_one_close",
+    "_load_tencent_qfq_one_close",
     "_load_cnfin_close",
     "_load_tencent_close",
     "_load_eastmoney_close",
@@ -109,6 +111,10 @@ def fill_live_quote_pairs(module, daily, row_idx=0, quote_time="2026-06-18 14:54
         daily.loc[row_idx, f"quote_time_{code}"] = quote_time
         daily.loc[row_idx, f"quote_source_{code}"] = "Eastmoney push2"
         daily.loc[row_idx, f"source_execution_eligible_{code}"] = True
+        daily.loc[row_idx, f"quote_volume_{code}"] = 1000 + offset
+        daily.loc[row_idx, f"quote_amount_{code}"] = price * (1000 + offset)
+        daily.loc[row_idx, f"quote_limit_down_{code}"] = round(price * 0.9, 3)
+        daily.loc[row_idx, f"quote_limit_up_{code}"] = round(price * 1.1, 3)
         daily.loc[row_idx, f"signal_price_{code}"] = price
     return daily
 
@@ -131,13 +137,13 @@ def test_public_loader_rejects_raw_fallback_when_qfq_sources_fail(monkeypatch):
 
     monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
     monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
-    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_qfq, raising=False)
 
     with pytest.raises(RuntimeError, match="qfq"):
         module._load_public_close_with_per_code_fallback(["159915.SZ"], pd.Timestamp("2026-01-02"))
 
     assert not hasattr(module, "_load_cnfin_one_close")
     assert not hasattr(module, "_load_tencent_one_close")
+    assert not hasattr(module, "_load_tencent_qfq_one_close")
 
 
 def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
@@ -151,7 +157,6 @@ def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
         return pd.Series([1.0, 1.1], index=idx, name=code)
 
     monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_akshare)
-    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_akshare)
     monkeypatch.setattr(module, "_load_eastmoney_one_close", eastmoney_qfq)
 
     prices, sources = module._load_public_close_with_per_code_fallback(
@@ -163,93 +168,13 @@ def test_eastmoney_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
     assert sources.loc[0, "source_detail"] == "fqt=1"
 
 
-def test_tencent_qfq_fallback_uses_canonical_adjustment_detail(monkeypatch):
+def test_tencent_historical_fallback_is_not_in_poe_production_path():
     module = load_bot_module()
+    source = BOT_PATH.read_text(encoding="utf-8")
 
-    def fail_qfq(code, end_date):
-        raise RuntimeError(f"provider unavailable for {code}")
-
-    def tencent_qfq(code, end_date):
-        idx = pd.to_datetime(["2026-01-01", "2026-01-02"])
-        return pd.Series([1.0, 1.1], index=idx, name=code)
-
-    monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
-    monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
-    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", tencent_qfq, raising=False)
-
-    prices, sources = module._load_public_close_with_per_code_fallback(
-        ["159915.SZ"], pd.Timestamp("2026-01-02")
-    )
-
-    assert prices.columns.tolist() == ["159915.SZ"]
-    assert sources.loc[0, "source"] == "Tencent fqkline"
-    assert sources.loc[0, "adjustment"] == module.ADJUSTMENT_QFQ
-    assert sources.loc[0, "source_detail"] == "qfqday"
-
-
-def test_tencent_qfq_loader_pages_until_full_history(monkeypatch):
-    module = load_bot_module()
-    calls = []
-
-    class FakeResponse:
-        def __init__(self, rows):
-            self._rows = rows
-
-        def raise_for_status(self):
-            return None
-
-        def json(self):
-            return {"code": 0, "msg": "", "data": {"sz159915": {"qfqday": self._rows}}}
-
-    first_page = [
-        ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"],
-    ] * 640
-    first_page[0] = ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]
-    first_page[-1] = ["2026-01-02", "2.0", "2.1", "2.2", "1.9", "2000"]
-    second_page = [
-        ["2023-12-29", "0.9", "1.0", "1.1", "0.8", "900"],
-        ["2023-12-30", "1.0", "1.05", "1.1", "0.9", "950"],
-    ]
-
-    def fake_http_get(url, params=None, **kwargs):
-        calls.append(params["param"])
-        return FakeResponse(first_page if len(calls) == 1 else second_page)
-
-    monkeypatch.setattr(module, "_http_get", fake_http_get)
-
-    close = module._load_tencent_qfq_one_close("159915.SZ", pd.Timestamp("2026-01-02"))
-
-    assert len(calls) == 2
-    assert "sz159915,day,2010-01-01,2026-01-02,640,qfq" in calls[0]
-    assert "sz159915,day,2010-01-01,2024-01-01,640,qfq" in calls[1]
-    assert close.index.min() == pd.Timestamp("2023-12-29")
-    assert close.index.max() == pd.Timestamp("2026-01-02")
-    assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(2.1)
-
-
-def test_tencent_qfq_loader_accepts_day_key_when_qfqday_missing(monkeypatch):
-    module = load_bot_module()
-
-    class FakeResponse:
-        def raise_for_status(self):
-            return None
-
-        def json(self):
-            return {
-                "code": 0,
-                "msg": "",
-                "data": {
-                    "sh513030": {
-                        "day": [["2026-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]]
-                    }
-                },
-            }
-
-    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: FakeResponse())
-
-    close = module._load_tencent_qfq_one_close("513030.SH", pd.Timestamp("2026-01-02"))
-
-    assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(1.1)
+    assert not hasattr(module, "_load_tencent_qfq_one_close")
+    assert "Tencent fqkline" not in source
+    assert "qfqday" not in source
 
 
 def test_poe_bot_obsolete_dead_helpers_are_not_reintroduced():
@@ -585,6 +510,138 @@ def test_performance_rebases_window_start_before_compounding_returns():
     assert perf["overheat_days"] == 1
 
 
+def test_performance_handler_reports_na_reason_for_failed_mandatory_windows(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09"))
+
+    class CaptureMessage:
+        def __init__(self):
+            self.parts = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def write(self, value):
+            self.parts.append(str(value))
+
+        def attach_file(self, *args, **kwargs):
+            return None
+
+    msg = CaptureMessage()
+
+    def fail_calc(daily_arg, start, end):
+        raise RuntimeError("window too short")
+
+    monkeypatch.setattr(module, "_get_daily_for_today", lambda data_state="confirmed": (daily, "unit-source"))
+    monkeypatch.setattr(module, "_write_nav_curve", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module, "calc_performance", fail_calc)
+    monkeypatch.setattr(module.poe, "start_message", lambda: msg, raising=False)
+
+    module.SubDSixEtfV11Bot()._handle_performance("performance")
+
+    text = "".join(msg.parts)
+    assert "N/A: window too short" in text
+    assert "| full_sample | N/A:" in text
+
+
+def test_custom_performance_query_keeps_mandatory_windows():
+    module = load_bot_module()
+
+    ranges = module.resolve_performance_ranges(
+        "调仓记录 过去两个月",
+        now=datetime(2026, 6, 18, 10, 0, tzinfo=module.CN_TZ),
+        latest_date=pd.Timestamp("2026-06-18"),
+        earliest_date=pd.Timestamp("2020-01-02"),
+    )
+
+    labels = [label for label, _start, _end in ranges]
+    assert labels[0] == "2026-04-18~2026-06-18"
+    for required in ("full_sample", "10Y", "5Y", "3Y", "1Y"):
+        assert required in labels
+
+
+def test_performance_handler_reports_na_when_mandatory_window_history_is_short(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09"))
+
+    class CaptureMessage:
+        def __init__(self):
+            self.parts = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def write(self, value):
+            self.parts.append(str(value))
+
+        def attach_file(self, *args, **kwargs):
+            return None
+
+    msg = CaptureMessage()
+
+    monkeypatch.setattr(module, "_get_daily_for_today", lambda data_state="confirmed": (daily, "unit-source"))
+    monkeypatch.setattr(module, "_write_nav_curve", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.poe, "start_message", lambda: msg, raising=False)
+
+    module.SubDSixEtfV11Bot()._handle_performance("performance")
+
+    text = "".join(msg.parts)
+    assert "| 10Y | N/A: insufficient history" in text
+    assert "| 5Y | N/A: insufficient history" in text
+    assert "| 3Y | N/A: insufficient history" in text
+    assert "| 1Y | N/A: insufficient history" in text
+
+
+def test_performance_rejects_missing_return_inside_window():
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-01-01", "2026-01-02", "2026-01-05"))
+    daily["return"] = [0.01, math.nan, 0.02]
+
+    with pytest.raises(module.poe.BotError, match="missing return"):
+        module.calc_performance(daily, pd.Timestamp("2026-01-01"), pd.Timestamp("2026-01-05"))
+
+
+def test_performance_handler_reports_yearly_and_trade_record_failures(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09", "2026-06-10"))
+
+    class CaptureMessage:
+        def __init__(self):
+            self.parts = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def write(self, value):
+            self.parts.append(str(value))
+
+        def attach_file(self, *args, **kwargs):
+            return None
+
+    msg = CaptureMessage()
+
+    monkeypatch.setattr(module, "_get_daily_for_today", lambda data_state="confirmed": (daily, "unit-source"))
+    monkeypatch.setattr(module, "_write_nav_curve", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module, "calc_yearly_performance", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("yearly broken")))
+    monkeypatch.setattr(module, "format_trade_records_table", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("records broken")))
+    monkeypatch.setattr(module.poe, "start_message", lambda: msg, raising=False)
+
+    module.SubDSixEtfV11Bot()._handle_performance("performance")
+
+    text = "".join(msg.parts)
+    assert "N/A: yearly broken" in text
+    assert "N/A: records broken" in text
+
+
 def test_force_refresh_replaces_performance_cache(monkeypatch):
     module = load_bot_module()
     calls = []
@@ -604,6 +661,24 @@ def test_force_refresh_replaces_performance_cache(monkeypatch):
     assert int(first["marker"].iloc[0]) == 1
     assert int(refreshed["marker"].iloc[0]) == 2
     assert int(again["marker"].iloc[0]) == 2
+
+
+def test_call_build_v11_daily_does_not_swallow_internal_unexpected_keyword_typeerror(monkeypatch):
+    module = load_bot_module()
+
+    def fake_build(end_date=None, data_state="confirmed", now=None):
+        if data_state == "live":
+            raise TypeError("unexpected keyword inside provider parser")
+        return pd.DataFrame({"marker": ["legacy-fallback"]}), "legacy"
+
+    monkeypatch.setattr(module, "_build_v11_daily", fake_build)
+
+    with pytest.raises(TypeError, match="inside provider parser"):
+        module._call_build_v11_daily(
+            pd.Timestamp("2026-06-18"),
+            "live",
+            datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ),
+        )
 
 
 def test_performance_preparation_drops_intraday_today_bar():
@@ -1696,6 +1771,79 @@ def test_verified_close_price_still_does_not_enable_post_close_without_feature_f
     assert "鍏抽棴" in status["execution_note"] or "关闭" in status["execution_note"]
 
 
+def test_synthesized_confirmed_daily_close_cannot_enable_post_close_fixed_price(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-07-06",))
+    daily.loc[0, "actual_position_before"] = "518880.SH"
+    daily.loc[0, "actual_position_next"] = "159915.SZ"
+    daily.loc[0, "sell_delta"] = 0.2
+    daily.loc[0, "buy_delta"] = 0.2
+    for offset, code in enumerate(module.ASSETS):
+        daily.loc[0, f"signal_price_{code}"] = 1.0 + offset / 100.0
+
+    last_by_asset = {code: pd.Timestamp("2026-07-06") for code in module.ASSETS}
+    daily = module._attach_confirmed_final_close_metadata(
+        daily,
+        last_by_asset=last_by_asset,
+        now=datetime(2026, 7, 6, 15, 31),
+    )
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-07-06"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+    monkeypatch.setattr(module, "POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED", True)
+
+    status = module.signal_data_status(
+        daily,
+        live=False,
+        now=datetime(2026, 7, 6, 15, 10),
+        purpose="execution",
+    )
+
+    assert status["official_close_ready"] is True
+    assert status["final_close_execution_verified"] is False
+    assert status["model_execution_price_available"] is False
+    assert status["post_close_actionable_now"] is False
+    assert status["action_required_now"] is False
+    assert status["actionable_now"] is False
+    assert all(not leg["can_use_post_close_fixed_price"] for leg in status["execution_legs"])
+
+
+def test_explicitly_execution_verified_final_close_can_enable_post_close_fixed_price(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-07-06",))
+    daily.loc[0, "actual_position_before"] = "CASH"
+    daily.loc[0, "actual_position_next"] = "159915.SZ"
+    daily.loc[0, "sell_delta"] = 0.0
+    daily.loc[0, "buy_delta"] = 0.2
+    fill_final_quote_pairs(module, daily, row_idx=0, quote_time="2026-07-06 15:05:00")
+    daily.loc[0, "source_final_close_execution_verified"] = True
+    for code in module.ASSETS:
+        daily.loc[0, f"final_close_execution_verified_{code}"] = True
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-07-06"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+    monkeypatch.setattr(module, "POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED", True)
+
+    status = module.signal_data_status(
+        daily,
+        live=False,
+        now=datetime(2026, 7, 6, 15, 10),
+        purpose="execution",
+    )
+
+    assert status["official_close_ready"] is True
+    assert status["final_close_execution_verified"] is True
+    assert status["model_execution_price_available"] is True
+    assert status["post_close_actionable_now"] is True
+    assert status["action_required_now"] is True
+    assert status["actionable_now"] is True
+    assert all(leg["can_use_post_close_fixed_price"] for leg in status["execution_legs"])
+
+
 def test_execution_session_status_requires_exchange_and_security_type():
     module = load_bot_module()
 
@@ -1799,6 +1947,7 @@ def test_signal_report_keeps_trade_action_when_all_legs_can_submit_in_call_aucti
     daily.loc[0, "actual_position_next"] = "159915.SZ"
     daily.loc[0, "sell_delta"] = 0.2
     daily.loc[0, "buy_delta"] = 0.2
+    daily.loc[0, "sell_available_518880.SH"] = True
     fill_live_quote_pairs(module, daily, quote_time="2026-06-18 14:57:30")
 
     def expected_sessions(start, end):
@@ -2219,6 +2368,128 @@ def test_live_fresh_quote_pairs_can_pass_snapshot_validation(monkeypatch):
     assert status["tradable"] is True
 
 
+def test_live_snapshot_zero_volume_is_monitor_only(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+    daily.loc[0, "actual_position_before"] = "CASH"
+    daily.loc[0, "actual_position_next"] = "159915.SZ"
+    daily.loc[0, "buy_delta"] = 0.2
+    fill_live_quote_pairs(module, daily, quote_time="2026-06-18 14:54:30")
+    daily.loc[0, "quote_volume_159915.SZ"] = 0
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    status = module.signal_data_status(
+        daily,
+        live=True,
+        now=datetime(2026, 6, 18, 14, 55),
+        purpose="execution",
+    )
+
+    assert "159915.SZ" in status["non_executable_quote_assets"]
+    assert status["live_snapshot_fresh"] is False
+    assert status["tradable"] is False
+
+
+def test_live_buy_leg_at_limit_up_is_not_tradable(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+    daily.loc[0, "actual_position_before"] = "CASH"
+    daily.loc[0, "actual_position_next"] = "159915.SZ"
+    daily.loc[0, "buy_delta"] = 0.2
+    fill_live_quote_pairs(module, daily, quote_time="2026-06-18 14:54:30")
+    daily.loc[0, "quote_price_159915.SZ"] = 1.2
+    daily.loc[0, "signal_price_159915.SZ"] = 1.2
+    daily.loc[0, "quote_limit_up_159915.SZ"] = 1.2
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    status = module.signal_data_status(
+        daily,
+        live=True,
+        now=datetime(2026, 6, 18, 14, 55),
+        purpose="execution",
+    )
+
+    leg = status["execution_legs"][0]
+    assert leg["side"] == "BUY"
+    assert leg["can_submit_order_now"] is False
+    assert leg["can_match_immediately"] is False
+    assert "buy_at_limit_up" in leg["execution_block_reasons"]
+    assert "159915.SZ" in status["limit_blocked_trade_assets"]
+    assert status["tradable"] is False
+
+
+def test_live_sell_leg_at_limit_down_is_not_tradable_even_when_sell_available(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+    daily.loc[0, "actual_position_before"] = "159941.SZ"
+    daily.loc[0, "actual_position_next"] = "CASH"
+    daily.loc[0, "sell_delta"] = 0.2
+    daily.loc[0, "buy_delta"] = 0.0
+    daily.loc[0, "sell_available_159941.SZ"] = True
+    fill_live_quote_pairs(module, daily, quote_time="2026-06-18 14:54:30")
+    daily.loc[0, "quote_price_159941.SZ"] = 0.9
+    daily.loc[0, "signal_price_159941.SZ"] = 0.9
+    daily.loc[0, "quote_limit_down_159941.SZ"] = 0.9
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    status = module.signal_data_status(
+        daily,
+        live=True,
+        now=datetime(2026, 6, 18, 14, 55),
+        purpose="execution",
+    )
+
+    leg = status["execution_legs"][0]
+    assert leg["side"] == "SELL"
+    assert leg["can_submit_order_now"] is False
+    assert leg["can_match_immediately"] is False
+    assert "sell_at_limit_down" in leg["execution_block_reasons"]
+    assert "159941.SZ" in status["limit_blocked_trade_assets"]
+    assert status["tradable"] is False
+
+
+def test_live_sell_leg_requires_verified_sell_available_quantity(monkeypatch):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-18",))
+    daily.loc[0, "actual_position_before"] = "159941.SZ"
+    daily.loc[0, "actual_position_next"] = "CASH"
+    daily.loc[0, "sell_delta"] = 0.2
+    daily.loc[0, "buy_delta"] = 0.0
+    fill_live_quote_pairs(module, daily, quote_time="2026-06-18 14:54:30")
+
+    def expected_sessions(start, end):
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-18"]))
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
+
+    status = module.signal_data_status(
+        daily,
+        live=True,
+        now=datetime(2026, 6, 18, 14, 55),
+        purpose="execution",
+    )
+
+    leg = status["execution_legs"][0]
+    assert leg["side"] == "SELL"
+    assert leg["can_submit_order_now"] is False
+    assert leg["can_match_immediately"] is False
+    assert "sell_available_not_verified" in leg["execution_block_reasons"]
+    assert "159941.SZ" in status["sell_unavailable_trade_assets"]
+    assert status["tradable"] is False
+
+
 def test_stale_same_day_quote_times_are_listed_as_stale_assets(monkeypatch):
     module = load_bot_module()
     daily = minimal_daily(module, dates=("2026-06-18",))
@@ -2538,6 +2809,8 @@ def _eastmoney_diff_rows(module, codes, price_start=2.0, quote_time=None):
         {
             "f12": code.split(".", 1)[0],
             "f2": price_start + offset / 10.0,
+            "f5": 1000 + offset,
+            "f6": (price_start + offset / 10.0) * (1000 + offset),
             "f124": quote_epoch,
             "f297": int(quote_time.strftime("%Y%m%d")),
         }
@@ -3186,9 +3459,11 @@ def test_resolve_performance_ranges_uses_beijing_today_when_now_missing(monkeypa
     module = load_bot_module()
     monkeypatch.setattr(module, "_now_bj", lambda: datetime(2026, 6, 18, 10, 0, tzinfo=module.CN_TZ))
 
-    ranges = module.resolve_performance_ranges("近1个月")
+    ranges = module.resolve_performance_ranges("近1个月", earliest_date=pd.Timestamp("2020-01-02"))
 
-    assert ranges == [("2026-05-18~2026-06-18", pd.Timestamp("2026-05-18"), pd.Timestamp("2026-06-18"))]
+    assert ranges[0] == ("2026-05-18~2026-06-18", pd.Timestamp("2026-05-18"), pd.Timestamp("2026-06-18"))
+    labels = [label for label, _start, _end in ranges]
+    assert labels[1:6] == ["full_sample", "10Y", "5Y", "3Y", "1Y"]
 
 
 def test_parse_explicit_reverse_year_month_range_rejected():
@@ -3314,6 +3589,26 @@ def test_qfq_source_validation_rejects_qfq_raw_label():
     )
 
     with pytest.raises(RuntimeError, match="Non-qfq"):
+        module._validate_qfq_sources(sources)
+
+
+def test_qfq_source_validation_rejects_unapproved_source_even_if_labeled_qfq():
+    module = load_bot_module()
+    sources = pd.DataFrame(
+        [
+            {
+                "code": "159915.SZ",
+                "source": "CNFin renamed fallback",
+                "adjustment": module.ADJUSTMENT_QFQ,
+                "source_detail": "fqt=1",
+                "first": "2026-01-01",
+                "last": "2026-01-02",
+                "rows": 2,
+            }
+        ]
+    )
+
+    with pytest.raises(RuntimeError, match="Unapproved qfq historical source"):
         module._validate_qfq_sources(sources)
 
 
@@ -3691,6 +3986,41 @@ def test_price_limit_accepts_exchange_tick_rounded_limit_price():
     )
 
     assert out.loc[pd.Timestamp("2026-06-18"), target_code] == pytest.approx(1.107)
+
+
+def test_live_quote_metadata_derives_limit_bounds_from_prev_close():
+    module = load_bot_module()
+    codes = list(module.ASSETS)
+    prices = _reference_prices_for_live_quality(module)
+    target_code = "159941.SZ"
+    target_idx = codes.index(target_code)
+    prices.loc[pd.Timestamp("2026-06-17"), target_code] = 1.006
+    quote_prices = prices.iloc[-1].tolist()
+    quote_prices[target_idx] = 1.107
+    quotes = pd.DataFrame(
+        {
+            "code": codes,
+            "price": quote_prices,
+            "quote_time": ["2026-06-18 14:54:30+0800"] * len(codes),
+            "source": ["Eastmoney push2"] * len(codes),
+            "source_execution_eligible": [True] * len(codes),
+            "prev_close": [
+                prices.loc[pd.Timestamp("2026-06-17"), code]
+                for code in codes
+            ],
+            "volume": [1000] * len(codes),
+            "amount": [2000] * len(codes),
+        }
+    )
+
+    _out, metadata = module._apply_live_quotes_to_prices(
+        prices,
+        quotes,
+        now=datetime(2026, 6, 18, 14, 55),
+    )
+
+    assert metadata[target_code]["quote_limit_up"] == pytest.approx(1.107)
+    assert metadata[target_code]["quote_limit_down"] == pytest.approx(0.905)
 
 
 def test_price_limit_rejects_quote_above_tick_rounded_limit_price():

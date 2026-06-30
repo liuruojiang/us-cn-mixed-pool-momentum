@@ -162,10 +162,13 @@ DAILY_CACHE_TTL = timedelta(minutes=5)
 TRADING_CALENDAR_CACHE_PATH = Path("outputs/cn_trading_days_cache.csv")
 ADJUSTMENT_QFQ = "qfq/front-adjusted"
 ADJUSTMENT_TOTAL_RETURN = "total-return/adjusted-close"
-QFQ_ADJUSTMENT_ALLOWLIST = {ADJUSTMENT_QFQ, ADJUSTMENT_TOTAL_RETURN}
+QFQ_ADJUSTMENT_ALLOWLIST = {ADJUSTMENT_QFQ}
 SOURCE_DETAIL_AKSHARE_QFQ = "adjust=qfq"
 SOURCE_DETAIL_EASTMONEY_FQT1 = "fqt=1"
-SOURCE_DETAIL_TENCENT_QFQ = "qfqday"
+APPROVED_QFQ_HISTORICAL_SOURCES = {
+    ("akshare.fund_etf_hist_em daily close", SOURCE_DETAIL_AKSHARE_QFQ),
+    ("Eastmoney push2his kline", SOURCE_DETAIL_EASTMONEY_FQT1),
+}
 
 
 # ════════════════════════════════════════════════════════════════
@@ -210,11 +213,6 @@ def _eastmoney_market_id(code: str) -> str:
 
 def _eastmoney_symbol(code: str) -> str:
     return code.split(".", 1)[0]
-
-
-def _tencent_fq_symbol(code: str) -> str:
-    ticker, suffix = code.split(".")
-    return f"{'sz' if suffix == 'SZ' else 'sh'}{ticker}"
 
 
 HTTP_HEADERS = {
@@ -263,6 +261,18 @@ def _validate_qfq_sources(sources: pd.DataFrame) -> None:
             for row in bad[["code", "source", "adjustment"]].itertuples(index=False)
         )
         raise RuntimeError(f"Non-qfq data source rejected: {details}")
+    unapproved: list[str] = []
+    for row in sources.itertuples(index=False):
+        source = str(getattr(row, "source", "") or "").strip()
+        detail = str(getattr(row, "source_detail", "") or "").strip()
+        if (source, detail) not in APPROVED_QFQ_HISTORICAL_SOURCES:
+            code = str(getattr(row, "code", "") or "").strip()
+            unapproved.append(f"{code}:{source}[{detail}]")
+    if unapproved:
+        raise RuntimeError(
+            "Unapproved qfq historical source rejected: "
+            + ", ".join(unapproved[:6])
+        )
 
 
 def _load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
@@ -337,58 +347,6 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     return close
 
 
-def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
-    """Fallback: fetch historical daily close from Tencent fqkline (qfqday)."""
-    url = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
-    symbol = _tencent_fq_symbol(code)
-    rows: list[list[str]] = []
-    current_end = pd.Timestamp(end_date).normalize()
-    last_error = None
-    for _page in range(10):
-        page_rows = None
-        params = {
-            "param": f"{symbol},day,2010-01-01,{current_end.date().isoformat()},640,qfq",
-        }
-        for attempt in range(1, 4):
-            try:
-                resp = _http_get(url, params=params, timeout=20, headers=HTTP_HEADERS)
-                resp.raise_for_status()
-                payload = resp.json()
-                data = payload.get("data") or {}
-                if not isinstance(data, dict):
-                    raise RuntimeError(f"Tencent returned non-object data for {code}: {payload.get('msg', '')}")
-                node = data.get(symbol) or {}
-                page_rows = node.get("qfqday") or node.get("day") or []
-                if page_rows:
-                    break
-            except Exception as exc:
-                last_error = exc
-            time.sleep(0.5 * attempt)
-        if not page_rows:
-            if not rows:
-                raise RuntimeError(f"Tencent fqkline qfq returned no data for {code}; last_error={last_error}")
-            break
-        rows = page_rows + rows
-        first_date = pd.Timestamp(page_rows[0][0]).normalize()
-        if len(page_rows) < 640 or first_date <= START_DATE:
-            break
-        current_end = first_date - pd.Timedelta(days=1)
-        if current_end < START_DATE:
-            break
-        time.sleep(0.2)
-    df = pd.DataFrame(rows)
-    col_names = ["date", "open", "close", "high", "low", "volume"]
-    df = df.iloc[:, :len(col_names)]
-    df.columns = col_names
-    close = df[["date", "close"]].copy()
-    close["date"] = pd.to_datetime(close["date"])
-    close = close.drop_duplicates(subset=["date"], keep="last")
-    close = close.set_index("date")["close"].astype(float).sort_index()
-    close = close.loc[:end_date]
-    close.name = code
-    return close
-
-
 def _eastmoney_quote_time(value: object) -> str:
     ts = int(float(value))
     return datetime.fromtimestamp(ts, CN_TZ).strftime("%Y-%m-%d %H:%M:%S%z")
@@ -403,6 +361,8 @@ LIVE_QUOTE_COLUMNS = [
     "prev_close",
     "limit_down",
     "limit_up",
+    "volume",
+    "amount",
 ]
 LIVE_EXECUTION_ELIGIBLE_SOURCES = {"Eastmoney push2"}
 EASTMONEY_LIVE_ENDPOINTS = (
@@ -470,6 +430,11 @@ def _optional_positive_float(value: object) -> float:
     return number if math.isfinite(number) and number > 0 else math.nan
 
 
+def _optional_nonnegative_float(value: object) -> float:
+    number = _float(value, default=math.nan)
+    return number if math.isfinite(number) and number >= 0 else math.nan
+
+
 def _decimal_from_number(value: object) -> Decimal | None:
     number = _optional_positive_float(value)
     if not math.isfinite(number):
@@ -522,6 +487,12 @@ def _normalize_price_limit_fields(
     previous = _optional_positive_float(prev_close)
     lower = _optional_positive_float(limit_down)
     upper = _optional_positive_float(limit_up)
+    if math.isfinite(previous) and not (math.isfinite(lower) and math.isfinite(upper)):
+        derived_lower, derived_upper = _price_limit_bounds_from_prev_close(code, previous)
+        if not math.isfinite(lower):
+            lower = derived_lower
+        if not math.isfinite(upper):
+            upper = derived_upper
     return previous, lower, upper
 
 
@@ -586,6 +557,8 @@ def _normalize_live_quote_rows(
             invalid.append(f"{code}:quote_date")
             continue
         prev_close, limit_down, limit_up = _normalize_price_limit_fields(code, item.get("f18", math.nan))
+        volume = _optional_nonnegative_float(item.get("f5", math.nan))
+        amount = _optional_nonnegative_float(item.get("f6", math.nan))
         parsed_by_code[code] = {
             "code": code,
             "price": price,
@@ -595,6 +568,8 @@ def _normalize_live_quote_rows(
             "prev_close": prev_close,
             "limit_down": limit_down,
             "limit_up": limit_up,
+            "volume": volume,
+            "amount": amount,
         }
 
     duplicates = {code for code, count in seen_counts.items() if count > 1}
@@ -666,6 +641,8 @@ def _normalize_live_quote_frame(
             getattr(row, "limit_down", math.nan),
             getattr(row, "limit_up", math.nan),
         )
+        volume = _optional_nonnegative_float(getattr(row, "volume", math.nan))
+        amount = _optional_nonnegative_float(getattr(row, "amount", math.nan))
         parsed_by_code[code] = {
             "code": code,
             "price": price,
@@ -675,6 +652,8 @@ def _normalize_live_quote_frame(
             "prev_close": prev_close,
             "limit_down": limit_down,
             "limit_up": limit_up,
+            "volume": volume,
+            "amount": amount,
         }
 
     duplicates = {code for code, count in seen_counts.items() if count > 1}
@@ -875,7 +854,7 @@ def load_live_quotes(
     params = {
         "fltt": "2",
         "invt": "2",
-        "fields": "f12,f14,f2,f18,f124",
+        "fields": "f12,f14,f2,f5,f6,f18,f124",
         "secids": ",".join(_eastmoney_market_id(code) for code in codes),
     }
     errors: list[str] = []
@@ -951,12 +930,6 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
                 _load_akshare_eastmoney_qfq_one_close,
             ),
             (
-                "Tencent fqkline",
-                ADJUSTMENT_QFQ,
-                SOURCE_DETAIL_TENCENT_QFQ,
-                _load_tencent_qfq_one_close,
-            ),
-            (
                 "Eastmoney push2his kline",
                 ADJUSTMENT_QFQ,
                 SOURCE_DETAIL_EASTMONEY_FQT1,
@@ -1028,6 +1001,11 @@ def _apply_live_quotes_to_prices(
             "quote_date": pd.Timestamp(quote_ts.date()).normalize(),
             "quote_source": source,
             "source_execution_eligible": bool(getattr(row, "source_execution_eligible", False)),
+            "quote_prev_close": _optional_positive_float(getattr(row, "prev_close", math.nan)),
+            "quote_limit_down": _optional_positive_float(getattr(row, "limit_down", math.nan)),
+            "quote_limit_up": _optional_positive_float(getattr(row, "limit_up", math.nan)),
+            "quote_volume": _optional_nonnegative_float(getattr(row, "volume", math.nan)),
+            "quote_amount": _optional_nonnegative_float(getattr(row, "amount", math.nan)),
         }
     if today not in out.index:
         out.loc[today, list(ASSETS)] = np.nan
@@ -1099,6 +1077,11 @@ def _attach_live_quote_metadata(
         out.loc[mask, f"quote_time_{code}"] = metadata.get("quote_time")
         out.loc[mask, f"quote_source_{code}"] = metadata.get("quote_source")
         out.loc[mask, f"source_execution_eligible_{code}"] = metadata.get("source_execution_eligible")
+        out.loc[mask, f"quote_prev_close_{code}"] = metadata.get("quote_prev_close")
+        out.loc[mask, f"quote_limit_down_{code}"] = metadata.get("quote_limit_down")
+        out.loc[mask, f"quote_limit_up_{code}"] = metadata.get("quote_limit_up")
+        out.loc[mask, f"quote_volume_{code}"] = metadata.get("quote_volume")
+        out.loc[mask, f"quote_amount_{code}"] = metadata.get("quote_amount")
     return out
 
 
@@ -1154,10 +1137,13 @@ def _attach_confirmed_final_close_metadata(
         out.loc[mask, f"final_price_{code}"] = pd.to_numeric(out.loc[mask, signal_col], errors="coerce")
         out.loc[mask, f"final_time_{code}"] = final_time
         out.loc[mask, f"bar_final_{code}"] = True
+        out.loc[mask, f"final_close_source_{code}"] = "historical_daily_bar"
+        out.loc[mask, f"final_close_execution_verified_{code}"] = False
     all_final = True
     for code in ASSETS:
         all_final = all_final and _explicit_bool_value(out.loc[mask, f"bar_final_{code}"].iloc[0], False)
     out.loc[mask, "source_bar_is_final"] = all_final
+    out.loc[mask, "source_final_close_execution_verified"] = False
     if all_final:
         out.loc[mask, "source_quote_time"] = final_time
     return out
@@ -2629,12 +2615,14 @@ def _call_build_v11_daily(
     data_state: str,
     now: datetime,
 ) -> tuple[pd.DataFrame, str]:
-    try:
-        return _build_v11_daily(end_date=end_date, data_state=data_state, now=now)
-    except TypeError as exc:
-        if "unexpected keyword" not in str(exc):
-            raise
-        return _build_v11_daily(end_date=end_date)
+    params = inspect.signature(_build_v11_daily).parameters
+    accepts_kwargs = any(param.kind == param.VAR_KEYWORD for param in params.values())
+    kwargs: dict[str, object] = {"end_date": end_date}
+    if accepts_kwargs or "data_state" in params:
+        kwargs["data_state"] = data_state
+    if accepts_kwargs or "now" in params:
+        kwargs["now"] = now
+    return _build_v11_daily(**kwargs)
 
 
 _PERFORMANCE_RESPONSE_RENDERED = False
@@ -2837,6 +2825,43 @@ def _row_verified_final_close(row: pd.Series, now: datetime | None = None) -> bo
     return True
 
 
+def _row_final_close_execution_verified(row: pd.Series) -> bool:
+    if not _row_bool_value(row, "source_final_close_execution_verified", False):
+        return False
+    return all(
+        _row_bool_value(row, f"final_close_execution_verified_{code}", False)
+        for code in ASSETS
+    )
+
+
+def _row_live_quote_trade_state_verified(row: pd.Series, code: str) -> bool:
+    volume = _row_float_value(row, f"quote_volume_{code}", math.nan)
+    amount = _row_float_value(row, f"quote_amount_{code}", math.nan)
+    return bool(
+        math.isfinite(volume)
+        and volume > 0
+        and math.isfinite(amount)
+        and amount > 0
+    )
+
+
+def _leg_execution_block_reasons(row: pd.Series, side: str, asset: str) -> list[str]:
+    reasons: list[str] = []
+    side = str(side or "").upper()
+    if side == "SELL" and not _row_bool_value(row, f"sell_available_{asset}", False):
+        reasons.append("sell_available_not_verified")
+    quote_price = _row_float_value(row, f"quote_price_{asset}", math.nan)
+    limit_down = _row_float_value(row, f"quote_limit_down_{asset}", math.nan)
+    limit_up = _row_float_value(row, f"quote_limit_up_{asset}", math.nan)
+    if side == "BUY" and math.isfinite(quote_price) and math.isfinite(limit_up):
+        if quote_price >= limit_up - LIVE_PRICE_LIMIT_TOLERANCE:
+            reasons.append("buy_at_limit_up")
+    if side == "SELL" and math.isfinite(quote_price) and math.isfinite(limit_down):
+        if quote_price <= limit_down + LIVE_PRICE_LIMIT_TOLERANCE:
+            reasons.append("sell_at_limit_down")
+    return reasons
+
+
 def _row_uses_unconfirmed_bar(row: pd.Series, now: datetime | None = None) -> bool:
     ts = _as_bj_datetime(now)
     row_date = pd.Timestamp(row.get("date")).normalize()
@@ -2853,6 +2878,7 @@ def _live_snapshot_freshness(row: pd.Series, now: datetime | None = None) -> dic
     stale_assets: list[str] = []
     price_mismatch_assets: list[str] = []
     source_ineligible_assets: list[str] = []
+    non_executable_quote_assets: list[str] = []
     for code in ASSETS:
         quote_ts = _parse_quote_time(row.get(f"quote_time_{code}", None))
         quote_price = _row_float_value(row, f"quote_price_{code}", math.nan)
@@ -2879,6 +2905,8 @@ def _live_snapshot_freshness(row: pd.Series, now: datetime | None = None) -> dic
             row.get(f"source_execution_eligible_{code}", False),
         ):
             source_ineligible_assets.append(code)
+        if not _row_live_quote_trade_state_verified(row, code):
+            non_executable_quote_assets.append(code)
     if len(quote_times) == len(ASSETS):
         min_quote_time = min(quote_times.values())
         max_quote_time = max(quote_times.values())
@@ -2908,6 +2936,7 @@ def _live_snapshot_freshness(row: pd.Series, now: datetime | None = None) -> dic
         and price_matrix_uses_live_quotes
         and not stale_assets
         and not source_ineligible_assets
+        and not non_executable_quote_assets
         and max_quote_age is not None
         and max_quote_skew is not None
         and max_quote_age <= LIVE_QUOTE_MAX_AGE
@@ -2930,8 +2959,11 @@ def _live_snapshot_freshness(row: pd.Series, now: datetime | None = None) -> dic
         "stale_quote_assets": stale_assets,
         "price_mismatch_assets": price_mismatch_assets,
         "source_ineligible_assets": source_ineligible_assets,
+        "non_executable_quote_assets": non_executable_quote_assets,
         "all_quote_sources_execution_eligible": bool(
-            all_quote_price_time_pairs_valid and not source_ineligible_assets
+            all_quote_price_time_pairs_valid
+            and not source_ineligible_assets
+            and not non_executable_quote_assets
         ),
     }
 
@@ -2943,6 +2975,7 @@ def _execution_leg_status(
     is_trading_day: bool,
     signal_price_is_available: bool,
     execution_enabled: bool,
+    row: pd.Series | None = None,
 ) -> dict[str, object]:
     exchange = _asset_exchange(asset)
     security_type = _security_type_for_asset(asset)
@@ -2960,22 +2993,31 @@ def _execution_leg_status(
         "OPEN_PM",
         "CLOSE_CALL_ACCEPT",
     }
+    block_reasons = (
+        _leg_execution_block_reasons(row, side, asset)
+        if execution_enabled and row is not None
+        else []
+    )
+    blocked = bool(block_reasons)
     can_use_post_close_fixed_price = bool(
         execution_enabled
         and POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED
         and execution_session == "POST_CLOSE"
         and signal_price_is_available
+        and not blocked
     )
     exchange_can_submit_order_now = bool(can_submit_in_session or can_use_post_close_fixed_price)
     can_submit_order_now = bool(
         execution_enabled
         and exchange_can_submit_order_now
+        and not blocked
     )
     can_match_immediately = bool(
         execution_enabled
         and exchange_can_match_immediately
+        and not blocked
     )
-    return {
+    result = {
         "side": side,
         "asset": asset,
         "exchange": exchange,
@@ -2988,6 +3030,9 @@ def _execution_leg_status(
         "signal_price_is_available": bool(signal_price_is_available),
         "execution_session": execution_session,
     }
+    if block_reasons:
+        result["execution_block_reasons"] = block_reasons
+    return result
 
 
 def _execution_legs_status(
@@ -3022,6 +3067,7 @@ def _execution_legs_status(
                 is_trading_day,
                 signal_price_is_available,
                 execution_enabled,
+                row,
             )
         )
     if buy_delta > 1e-12 and actual_next != "CASH":
@@ -3033,6 +3079,7 @@ def _execution_legs_status(
                 is_trading_day,
                 signal_price_is_available,
                 execution_enabled,
+                row,
             )
         )
     return legs
@@ -3244,6 +3291,9 @@ def signal_data_status(
     all_trade_legs_have_current_prices = not stale_price_trade_assets
     source_bar_is_final = _row_bool_value(latest_row, "source_bar_is_final", False)
     verified_final_close = _row_verified_final_close(latest_row, ts)
+    final_close_execution_verified = bool(
+        verified_final_close and _row_final_close_execution_verified(latest_row)
+    )
     uses_unconfirmed = _row_uses_unconfirmed_bar(latest_row, ts)
     live_snapshot = _live_snapshot_freshness(latest_row, ts)
     quote_ts = _parse_quote_time(latest_row.get("source_quote_time", None))
@@ -3251,6 +3301,12 @@ def signal_data_status(
     live_snapshot_fresh = bool(live_snapshot["live_snapshot_fresh"])
     official_close_ready = verified_final_close
     signal_uses_today_close = bool(latest == today and official_close_ready)
+    post_close_signal_price_available = bool(
+        signal_uses_today_close and final_close_execution_verified
+    )
+    non_live_execution_price_available = bool(
+        POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED and post_close_signal_price_available
+    )
     data_usable = True
     signal_valid = True
     if purpose == "execution" and not calendar_available:
@@ -3287,7 +3343,7 @@ def signal_data_status(
         and data_usable
         and signal_is_current_session
         and all_trade_legs_have_current_prices
-        and ((not live and official_close_ready) or (live and live_snapshot_fresh))
+        and ((not live and non_live_execution_price_available) or (live and live_snapshot_fresh))
     )
     execution_enabled = bool(
         purpose == "execution"
@@ -3300,7 +3356,7 @@ def signal_data_status(
         daily,
         ts,
         expected_today_session,
-        signal_price_is_available=signal_uses_today_close,
+        signal_price_is_available=post_close_signal_price_available,
         execution_enabled=execution_enabled,
     )
     fallback_execution_session = _execution_session_status(
@@ -3346,6 +3402,23 @@ def signal_data_status(
     all_legs_can_use_post_close_fixed_price = bool(
         raw_signal_has_trade and all(bool(leg["can_use_post_close_fixed_price"]) for leg in execution_legs)
     )
+    limit_blocked_trade_assets = sorted(
+        {
+            str(leg["asset"])
+            for leg in execution_legs
+            if any(
+                reason in {"buy_at_limit_up", "sell_at_limit_down"}
+                for reason in leg.get("execution_block_reasons", [])
+            )
+        }
+    )
+    sell_unavailable_trade_assets = sorted(
+        {
+            str(leg["asset"])
+            for leg in execution_legs
+            if "sell_available_not_verified" in leg.get("execution_block_reasons", [])
+        }
+    )
     partially_executable = bool(
         raw_signal_has_trade
         and exchange_some_legs_can_match_immediately
@@ -3382,7 +3455,7 @@ def signal_data_status(
         and raw_signal_has_trade
         and not delayed_execution
         and ((not live) or (strategy_execution_window_open and live_snapshot_fresh))
-        and (exchange_all_legs_can_submit or post_close_actionable_now)
+        and (all_legs_can_submit or post_close_actionable_now)
     )
     action_required_now = bool(
         raw_signal_has_trade
@@ -3428,10 +3501,25 @@ def signal_data_status(
         actionable_now = False
         strategy_actionable_now = False
         execution_note = "实时估算信号，仅供监控；实时行情来源尚未获得执行许可。"
+    elif live and live_snapshot["non_executable_quote_assets"]:
+        actionable_now = False
+        strategy_actionable_now = False
+        assets_text = ", ".join(live_snapshot["non_executable_quote_assets"])
+        execution_note = f"实时估算信号，仅供监控；成交量/成交额未通过执行校验: {assets_text}"
     elif live and not live_snapshot_fresh:
         actionable_now = False
         strategy_actionable_now = False
         execution_note = "实时估算信号，仅供监控；全部ETF实时行情快照未通过新鲜度校验。"
+    elif limit_blocked_trade_assets:
+        actionable_now = False
+        strategy_actionable_now = False
+        assets_text = ", ".join(limit_blocked_trade_assets)
+        execution_note = f"调仓腿触及方向性涨跌停限制，当前不按可立即执行处理: {assets_text}"
+    elif sell_unavailable_trade_assets:
+        actionable_now = False
+        strategy_actionable_now = False
+        assets_text = ", ".join(sell_unavailable_trade_assets)
+        execution_note = f"卖出腿缺少券商可卖数量/T+1校验，当前不按可执行处理: {assets_text}"
     elif continuous_actionable_now:
         execution_note = "当前全部交易腿均处于连续竞价可即时撮合状态；仍需按实时价格、账户持仓和最小成交额复核。"
     elif post_close_actionable_now:
@@ -3459,6 +3547,7 @@ def signal_data_status(
         "official_close_ready": official_close_ready,
         "source_quote_time": source_quote_time,
         "source_bar_is_final": source_bar_is_final,
+        "final_close_execution_verified": final_close_execution_verified,
         "all_asset_quotes_fresh": live_snapshot["all_asset_quotes_fresh"],
         "live_snapshot_fresh": live_snapshot_fresh,
         "all_quote_price_time_pairs_valid": live_snapshot["all_quote_price_time_pairs_valid"],
@@ -3471,7 +3560,10 @@ def signal_data_status(
         "stale_quote_assets": live_snapshot["stale_quote_assets"],
         "price_mismatch_assets": live_snapshot["price_mismatch_assets"],
         "source_ineligible_assets": live_snapshot["source_ineligible_assets"],
+        "non_executable_quote_assets": live_snapshot["non_executable_quote_assets"],
         "stale_price_trade_assets": stale_price_trade_assets,
+        "limit_blocked_trade_assets": limit_blocked_trade_assets,
+        "sell_unavailable_trade_assets": sell_unavailable_trade_assets,
         "all_trade_legs_have_current_prices": all_trade_legs_have_current_prices,
         "all_quote_sources_execution_eligible": live_snapshot["all_quote_sources_execution_eligible"],
         "signal_uses_today_close": signal_uses_today_close,
@@ -3651,13 +3743,26 @@ def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
 
 def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
     if "return" in sub.columns:
-        ret = pd.to_numeric(sub["return"], errors="coerce").fillna(0.0)
+        ret = pd.to_numeric(sub["return"], errors="coerce")
+        if len(ret) > 1 and ret.iloc[1:].isna().any():
+            missing_dates = ", ".join(
+                pd.Timestamp(value).date().isoformat()
+                for value in sub.loc[ret.isna(), "date"].iloc[:6]
+            )
+            raise poe.BotError(f"missing return inside performance window: {missing_dates}")
+        ret = ret.fillna(0.0)
         out = pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
         if not out.empty:
             out.iloc[0] = 0.0
         return out
     nav = pd.to_numeric(sub["nav"], errors="coerce").astype(float)
-    return nav.pct_change().fillna(0.0)
+    if nav.isna().any():
+        missing_dates = ", ".join(
+            pd.Timestamp(value).date().isoformat()
+            for value in sub.loc[nav.isna(), "date"].iloc[:6]
+        )
+        raise poe.BotError(f"missing nav inside performance window: {missing_dates}")
+    return nav.pct_change(fill_method=None).fillna(0.0)
 
 
 def _wealth_from_returns(ret: pd.Series) -> pd.Series:
@@ -3995,19 +4100,14 @@ def classify_query(text: str) -> str:
     return "signal"
 
 
-def resolve_performance_ranges(
-    query: str,
-    now=None,
-    latest_date=None,
-    earliest_date=None,
+MANDATORY_PERFORMANCE_LABELS = {"full_sample", "10Y", "5Y", "3Y", "1Y"}
+
+
+def _default_performance_ranges(
+    latest: pd.Timestamp,
+    earliest: pd.Timestamp | None = None,
 ) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
-    now = _bj_today_naive() if now is None else _normalize_query_date(now)
-    latest = now if latest_date is None else _normalize_query_date(latest_date)
-    earliest = None if earliest_date is None else _normalize_query_date(earliest_date)
-    parsed = parse_all_date_ranges(query, now=now)
-    if parsed:
-        return [(f"{s.date()}~{e.date()}", s, e) for s, e in parsed]
-    ranges = []
+    ranges: list[tuple[str, pd.Timestamp, pd.Timestamp]] = []
     if earliest is not None:
         ranges.append(("full_sample", earliest, latest))
     ranges.extend(
@@ -4020,6 +4120,46 @@ def resolve_performance_ranges(
         ]
     )
     return ranges
+
+
+def resolve_performance_ranges(
+    query: str,
+    now=None,
+    latest_date=None,
+    earliest_date=None,
+) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
+    now = _bj_today_naive() if now is None else _normalize_query_date(now)
+    latest = now if latest_date is None else _normalize_query_date(latest_date)
+    earliest = None if earliest_date is None else _normalize_query_date(earliest_date)
+    parsed = parse_all_date_ranges(query, now=now)
+    ranges: list[tuple[str, pd.Timestamp, pd.Timestamp]] = []
+    if parsed:
+        ranges.extend((f"{s.date()}~{e.date()}", s, e) for s, e in parsed)
+    seen = {(label, pd.Timestamp(start).normalize(), pd.Timestamp(end).normalize()) for label, start, end in ranges}
+    for item in _default_performance_ranges(latest, earliest):
+        key = (item[0], pd.Timestamp(item[1]).normalize(), pd.Timestamp(item[2]).normalize())
+        if key not in seen:
+            ranges.append(item)
+            seen.add(key)
+    return ranges
+
+
+def _exception_na_reason(exc: Exception) -> str:
+    reason = str(exc).strip() or exc.__class__.__name__
+    return reason.replace("|", "/")[:120]
+
+
+def _mandatory_window_na_reason(
+    label: str,
+    start: pd.Timestamp,
+    earliest: pd.Timestamp,
+) -> str | None:
+    if label in {"10Y", "5Y", "3Y", "1Y"} and earliest > pd.Timestamp(start).normalize():
+        return (
+            f"insufficient history: first available {earliest.date().isoformat()} "
+            f"after required {pd.Timestamp(start).date().isoformat()}"
+        )
+    return None
 
 
 # ════════════════════════════════════════════════════════════════
@@ -4442,6 +4582,11 @@ def _signal_exception_lines(
             f"{leg['execution_session']}，"
             f"可申报={'是' if leg['can_submit_order_now'] else '否'}，"
             f"可即时撮合={'是' if leg['can_match_immediately'] else '否'}"
+            + (
+                f"，阻断={','.join(leg['execution_block_reasons'])}"
+                if leg.get("execution_block_reasons")
+                else ""
+            )
             for leg in data_status["execution_legs"]
         )
         lines.append(f"- 分腿状态: {leg_text}")
@@ -4755,6 +4900,11 @@ def format_live_params_snapshot(
             f"交易所可即时撮合={'是' if leg['exchange_can_match_immediately'] else '否'}，"
             f"执行许可后可申报={'是' if leg['can_submit_order_now'] else '否'}，"
             f"盘后固定价={'是' if leg['can_use_post_close_fixed_price'] else '否'}"
+            + (
+                f"，阻断={','.join(leg['execution_block_reasons'])}"
+                if leg.get("execution_block_reasons")
+                else ""
+            )
             for leg in data_status["execution_legs"]
         )
         lines.append(f"- 分腿执行状态: {leg_text}")
@@ -4978,7 +5128,7 @@ class SubDSixEtfV11Bot:
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}只ETF** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
-            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Tencent fqkline qfq -> Eastmoney HTTP qfq** | 历史回测统一使用前复权日收盘价，不静默混入raw源 |\n")
+            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Eastmoney HTTP qfq** | 历史回测统一使用前复权日收盘价，不静默混入raw源；Tencent/CNFin历史fallback须完成独立验证后再接入 |\n")
             msg.write(f"| Live price limit by ETF | **{_live_price_limit_summary()}** | {LIVE_PRICE_LIMIT_DESCRIPTION} |\n")
             msg.write(f"| Live history today cross-check | **>{LIVE_PRICE_HISTORY_TODAY_MAX_DIFF:.0%} => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |\n")
             if daily is not None:
@@ -5008,6 +5158,9 @@ class SubDSixEtfV11Bot:
             first_chart_range = None
             for label, start, end in ranges:
                 try:
+                    na_reason = _mandatory_window_na_reason(label, start, earliest)
+                    if na_reason is not None:
+                        raise poe.BotError(na_reason)
                     m = calc_performance(daily, start, end)
                     if first_chart_range is None:
                         first_chart_range = (label, start, end)
@@ -5018,8 +5171,12 @@ class SubDSixEtfV11Bot:
                         f"{_fmt_num(m['sharpe'], 2)} | {m['trades']} | "
                         f"{_fmt_pct(m['avg_final_exposure'])} | {m['zero_exposure_days']} | {m['cash_days']} |\n"
                     )
-                except Exception:
-                    msg.write(f"| {label} | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 | \u2014 |\n")
+                except Exception as exc:
+                    reason = _exception_na_reason(exc)
+                    msg.write(
+                        f"| {label} | N/A: {reason} | N/A | N/A | N/A | N/A | "
+                        "N/A | N/A | N/A | N/A | N/A | N/A |\n"
+                    )
             if first_chart_range is not None:
                 try:
                     label, start, end = first_chart_range
@@ -5029,21 +5186,28 @@ class SubDSixEtfV11Bot:
                     if yearly_table:
                         msg.write(yearly_table)
                         msg.write("\n")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    msg.write("\n### 年度收益\n\n")
+                    msg.write(f"N/A: {_exception_na_reason(exc)}\n\n")
                 try:
                     label, start, end = first_chart_range
-                    msg.write(format_trade_records_table(daily, limit=20, start=start, end=end))
+                    trade_table = format_trade_records_table(daily, limit=20, start=start, end=end)
+                    msg.write(trade_table)
+                except Exception as exc:
+                    msg.write("\n### 调仓记录\n\n")
+                    msg.write(f"N/A: {_exception_na_reason(exc)}\n\n")
+                else:
                     csv_name = f"subd_v11_trade_records_{pd.Timestamp(start).date()}_{pd.Timestamp(end).date()}.csv"
-                    msg.attach_file(
-                        name=csv_name,
-                        contents=trade_records_csv_bytes(daily, start=start, end=end),
-                        content_type="text/csv; charset=utf-8",
-                    )
-                    msg.write(f"📎 完整调仓记录CSV: **{csv_name}**\n")
+                    try:
+                        msg.attach_file(
+                            name=csv_name,
+                            contents=trade_records_csv_bytes(daily, start=start, end=end),
+                            content_type="text/csv; charset=utf-8",
+                        )
+                        msg.write(f"📎 完整调仓记录CSV: **{csv_name}**\n")
+                    except Exception as exc:
+                        msg.write(f"📎 完整调仓记录CSV: N/A: {_exception_na_reason(exc)}\n")
                     msg.write("\n")
-                except Exception:
-                    pass
 
 
 # ════════════════════════════════════════════════════════════════
