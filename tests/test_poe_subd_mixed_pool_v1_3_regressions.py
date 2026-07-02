@@ -116,6 +116,51 @@ def test_v13_raw_sina_fallback_is_not_allowed_in_formal_load_close(monkeypatch):
         module.load_close(module._build_config(end_date=pd.Timestamp("2026-01-02")))
 
 
+def test_v13_load_close_falls_back_to_bdays_when_cn_calendar_unavailable(monkeypatch):
+    module = load_bot_module()
+    dates = pd.to_datetime(["2026-01-01", "2026-01-02"])
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", lambda start, end: None)
+    monkeypatch.setattr(
+        module,
+        "_fetch_yahoo_adj_close",
+        lambda ticker, start, end: pd.Series([1.0, 1.1], index=dates, name=ticker),
+    )
+    monkeypatch.setattr(
+        module,
+        "_fetch_eastmoney_index_close",
+        lambda secid, beg, end, name: pd.Series([1.0, 1.1], index=dates, name=name),
+    )
+    monkeypatch.setattr(
+        module,
+        "_load_public_close_with_per_code_fallback",
+        lambda codes, end_date: (
+            pd.DataFrame({codes[0]: [1.0, 1.1]}, index=dates),
+            pd.DataFrame(
+                [
+                    {
+                        "code": codes[0],
+                        "name": module.ASSETS[codes[0]],
+                        "source": "unit qfq",
+                        "adjustment": module.ADJUSTMENT_QFQ,
+                        "source_detail": module.SOURCE_DETAIL_TENCENT_QFQ,
+                        "first_date": "2026-01-01",
+                        "last_date": "2026-01-02",
+                        "first_used": "2026-01-01",
+                        "rows": 2,
+                    }
+                ]
+            ),
+        ),
+    )
+
+    prices, sources = module.load_close(module._build_config(end_date=pd.Timestamp("2026-01-02")))
+
+    assert prices.index.tolist() == list(pd.bdate_range("2026-01-01", "2026-01-02"))
+    assert prices.columns.tolist() == list(module.ASSETS)
+    assert not sources.empty
+
+
 def test_v13_default_performance_windows_use_trading_day_rows():
     module = load_bot_module()
     dates = pd.bdate_range("2011-01-03", periods=3000)

@@ -1307,7 +1307,7 @@ def _proxy_source_record(
 def load_close(config: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
     lookback_start = config.start_date - pd.Timedelta(days=60)
     calendar = _expected_cn_trading_days(config.start_date, config.end_date)
-    if calendar.empty:
+    if calendar is None or calendar.empty:
         calendar = pd.bdate_range(config.start_date, config.end_date)
     raw_series: dict[str, pd.Series] = {}
     sources: list[dict[str, object]] = []
