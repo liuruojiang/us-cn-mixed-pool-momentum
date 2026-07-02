@@ -2,6 +2,7 @@ import importlib.util
 import math
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -44,6 +45,48 @@ def test_v13_live_build_fails_closed_when_mixed_pool_live_quotes_are_unavailable
 
     with pytest.raises(Exception, match="unit live unavailable"):
         module._build_v11_daily(end_date=pd.Timestamp("2026-01-02"), data_state="live")
+
+
+def test_v13_live_signal_handler_falls_back_to_confirmed_when_proxy_live_quotes_unsupported(monkeypatch):
+    module = load_bot_module()
+    calls = []
+    writes = []
+
+    class FakeMessage:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def write(self, value):
+            writes.append(str(value))
+
+        def overwrite(self, value):
+            writes.append(str(value))
+
+    def fake_get_daily(force_refresh=False, data_state="confirmed"):
+        calls.append((force_refresh, data_state))
+        if data_state == "live":
+            raise module.poe.BotError(
+                "live quotes unavailable: live quotes unsupported for proxy/non-CN symbols: QQQ"
+            )
+        return pd.DataFrame({"date": [pd.Timestamp("2026-01-02")]}), "confirmed source"
+
+    def fake_report(daily, source_note, live=False, now=None):
+        assert live is False
+        assert "confirmed source" in source_note
+        assert "live quotes unavailable" in source_note
+        return "confirmed fallback report"
+
+    monkeypatch.setattr(module.poe, "start_message", lambda: FakeMessage())
+    monkeypatch.setattr(module, "_get_daily_for_today", fake_get_daily)
+    monkeypatch.setattr(module, "format_signal_report", fake_report)
+
+    module.SubDMixedPoolV13Bot()._handle_signal(live=True)
+
+    assert calls == [(True, "live"), (False, "confirmed")]
+    assert any("confirmed fallback report" in item for item in writes)
 
 
 def test_v13_proxy_assets_are_not_treated_as_a_share_etfs():

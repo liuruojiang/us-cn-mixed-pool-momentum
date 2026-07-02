@@ -538,6 +538,14 @@ def _format_code_list(codes: list[str] | set[str]) -> str:
     return ",".join(sorted(str(code) for code in codes)) or "-"
 
 
+def _is_proxy_live_quote_unsupported_error(exc: Exception) -> bool:
+    text = str(exc)
+    return (
+        "live quotes unsupported for proxy/non-CN symbols" in text
+        or ("live quotes unavailable" in text and "proxy/non-CN symbols" in text)
+    )
+
+
 def _live_snapshot_error(
     *,
     missing: set[str] | list[str] | None = None,
@@ -5682,12 +5690,26 @@ class SubDMixedPoolV13Bot:
                 msg.write("正在实时刷新数据并计算盘中假设信号...\n")
             else:
                 msg.write("正在刷新数据并计算收盘确认信号...\n")
-            daily, source_note = _get_daily_for_today(
-                force_refresh=live,
-                data_state="live" if live else "confirmed",
-            )
+            report_live = live
+            try:
+                daily, source_note = _get_daily_for_today(
+                    force_refresh=live,
+                    data_state="live" if live else "confirmed",
+                )
+            except Exception as exc:
+                if not live or not _is_proxy_live_quote_unsupported_error(exc):
+                    raise
+                daily, source_note = _get_daily_for_today(
+                    force_refresh=False,
+                    data_state="confirmed",
+                )
+                source_note = (
+                    f"{source_note}; live quotes unavailable: {str(exc)[:160]}; "
+                    "using confirmed close signal; live execution disabled"
+                )
+                report_live = False
             msg.overwrite("")
-            msg.write(format_signal_report(daily, source_note, live=live))
+            msg.write(format_signal_report(daily, source_note, live=report_live))
 
     # ---- params --------------------------------------------------------
 
