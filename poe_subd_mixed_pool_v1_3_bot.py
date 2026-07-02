@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Iterable, Literal, Optional
 
 import numpy as np
 import pandas as pd
@@ -98,9 +98,19 @@ ASSETS = {
     "QQQ": "NASDAQ100_QQQ_PROXY",
     "GLD": "GOLD_GLD_PROXY",
     "CN_CYB_399006": "CHINEXT_INDEX_PROXY",
+    "KMLM": "MANAGED_FUTURES_KMLM_PROXY",
+    "159985.SZ": "SOYMEAL_ETF",
 }
 CORE_ASSETS = ("QQQ", "GLD")
-DYNAMIC_ASSETS = {"CN_CYB_399006": pd.Timestamp("2010-06-01")}
+DYNAMIC_YAHOO_ASSETS = {
+    "KMLM": pd.Timestamp("2020-12-02"),
+}
+DYNAMIC_CN_ETF_ASSETS = {"159985.SZ": pd.Timestamp("2019-12-05")}
+DYNAMIC_ASSETS = {
+    "CN_CYB_399006": pd.Timestamp("2010-06-01"),
+    **DYNAMIC_YAHOO_ASSETS,
+    **DYNAMIC_CN_ETF_ASSETS,
+}
 
 ASSET_NAMES = {
     "159915.SZ": "创业板100ETF",
@@ -117,10 +127,12 @@ ASSET_NAMES = {
     "QQQ": "Nasdaq100(QQQ)",
     "GLD": "Gold(GLD)",
     "CN_CYB_399006": "ChiNext(399006)",
+    "KMLM": "Managed Futures(KMLM)",
+    "159985.SZ": "Soymeal ETF(159985.SZ)",
     "CASH": "Cash",
 }
 
-# --- V1.3 selected three-asset proxy parameter set. ---
+# --- V1.3 selected mixed proxy parameter set. ---
 LOOKBACK = 28
 TRADING_DAYS = 252
 SCORE_MIN = 0.0
@@ -148,7 +160,7 @@ CN_BIAS_N = 60
 CN_MOM_DAY = 20
 CASH_ANNUAL_YIELD = 0.03
 CASH_DAILY_RETURN = (1.0 + CASH_ANNUAL_YIELD) ** (1.0 / TRADING_DAYS) - 1.0
-V11_SCENARIO = "v1_3_three_asset_cash3_nav_overheat"
+V11_SCENARIO = "v1_3_kmlm_soy_cash3_nav_overheat"
 CN_TZ = timezone(timedelta(hours=8))
 CONFIRMED_CLOSE_CUTOFF = dt_time(15, 30)
 OFFICIAL_CLOSE_TIME = dt_time(15, 0)
@@ -164,7 +176,7 @@ LIVE_PRICE_LIMIT_DESCRIPTION = (
     "temporary proxy price band based on price-matrix reference previous close, "
     "ETF limit ratio, and 0.001 CNY tick; not official exchange reference price"
 )
-LIVE_PRICE_LIMIT_RATIO_BY_CODE = {code: 0.10 for code in ASSETS}
+LIVE_PRICE_LIMIT_RATIO_BY_CODE = {code: 0.10 for code in ASSETS if str(code).endswith((".SZ", ".SH"))}
 LIVE_PRICE_LIMIT_RATIO_BY_CODE["159915.SZ"] = 0.20
 POST_CLOSE_FIXED_PRICE_EFFECTIVE_DATE = pd.Timestamp("2026-07-06")
 POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED = False
@@ -191,7 +203,7 @@ APPROVED_QFQ_HISTORICAL_SOURCES = {
 
 @dataclass(frozen=True)
 class RunConfig:
-    source: Literal["akshare_em_qfq"]
+    source: Literal["akshare_em_qfq", "proxy_mixed_v1_3"]
     one_way_cost: float
     start_date: pd.Timestamp
     end_date: pd.Timestamp
@@ -225,6 +237,19 @@ def _eastmoney_market_id(code: str) -> str:
     return f"{'0' if suffix == 'SZ' else '1'}.{ticker}"
 
 
+def _is_cn_exchange_symbol(code: str | None) -> bool:
+    text = str(code or "").upper().strip()
+    return text.endswith(".SZ") or text.endswith(".SH")
+
+
+def _live_quote_supported_codes(codes: Iterable[str]) -> list[str]:
+    return [str(code) for code in codes if _is_cn_exchange_symbol(str(code))]
+
+
+def _live_quote_unsupported_codes(codes: Iterable[str]) -> list[str]:
+    return [str(code) for code in codes if not _is_cn_exchange_symbol(str(code))]
+
+
 def _eastmoney_symbol(code: str) -> str:
     return code.split(".", 1)[0]
 
@@ -232,6 +257,15 @@ def _eastmoney_symbol(code: str) -> str:
 def _tencent_fq_symbol(code: str) -> str:
     ticker, suffix = code.split(".")
     return f"{'sz' if suffix == 'SZ' else 'sh'}{ticker}"
+
+
+def _sina_symbol(code: str) -> str:
+    ticker, suffix = code.split(".")
+    if suffix == "SZ":
+        return f"sz{ticker}"
+    if suffix == "SH":
+        return f"sh{ticker}"
+    raise ValueError(f"Unsupported suffix: {code}")
 
 
 HTTP_HEADERS = {
@@ -444,6 +478,34 @@ def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     return close
 
 
+def _load_akshare_sina_raw_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
+    """Diagnostic fallback for CN ETF history when approved qfq sources are unavailable."""
+    if not _HAS_AKSHARE:
+        raise RuntimeError("akshare is not installed")
+    symbol = _sina_symbol(code)
+    last_error = None
+    for attempt in range(1, 4):
+        try:
+            df = ak.fund_etf_hist_sina(symbol=symbol)
+            if df is not None and not df.empty:
+                break
+        except Exception as exc:
+            last_error = exc
+        time.sleep(1.5 * attempt)
+    else:
+        raise RuntimeError(f"AkShare Sina returned no rows for {code} / {symbol}; last_error={last_error}")
+    if "date" not in df.columns or "close" not in df.columns:
+        raise RuntimeError(f"AkShare Sina missing date/close columns for {code} / {symbol}")
+    close = df[["date", "close"]].copy()
+    close["date"] = pd.to_datetime(close["date"])
+    close = close.set_index("date")["close"].astype(float).sort_index()
+    close = close.loc[:end_date]
+    close.name = code
+    if close.dropna().empty:
+        raise RuntimeError(f"AkShare Sina returned no usable close rows for {code} / {symbol}")
+    return close
+
+
 def _eastmoney_quote_time(value: object) -> str:
     ts = int(float(value))
     return datetime.fromtimestamp(ts, CN_TZ).strftime("%Y-%m-%d %H:%M:%S%z")
@@ -550,7 +612,10 @@ def _is_etf_tick_price(value: object) -> bool:
 
 
 def _live_price_limit_ratio(code: str) -> float:
-    return float(LIVE_PRICE_LIMIT_RATIO_BY_CODE.get(str(code).strip(), 0.10))
+    text = str(code).strip()
+    if not _is_cn_exchange_symbol(text):
+        return math.nan
+    return float(LIVE_PRICE_LIMIT_RATIO_BY_CODE.get(text, 0.10))
 
 
 def _price_limit_bounds_from_prev_close(code: str, prev_close: object) -> tuple[float, float]:
@@ -943,6 +1008,11 @@ def load_live_quotes(
     codes = list(dict.fromkeys(codes))
     if not codes:
         return pd.DataFrame(columns=LIVE_QUOTE_COLUMNS)
+    unsupported = _live_quote_unsupported_codes(codes)
+    if unsupported:
+        raise IncompleteLiveSnapshot(
+            "live quotes unsupported for proxy/non-CN symbols: " + _format_code_list(unsupported)
+        )
     request_ts = _as_bj_datetime(now)
     if expected_quote_date is None:
         expected_quote_date = pd.Timestamp(request_ts.date()).normalize()
@@ -1064,10 +1134,12 @@ def _source_summary_text(sources: pd.DataFrame) -> str:
 
 
 def _live_price_limit_summary() -> str:
-    return ", ".join(
-        f"{code}={_live_price_limit_ratio(code):.0%}"
-        for code in ASSETS
-    )
+    supported = _live_quote_supported_codes(ASSETS)
+    unsupported = _live_quote_unsupported_codes(ASSETS)
+    parts = [f"{code}={_live_price_limit_ratio(code):.0%}" for code in supported]
+    if unsupported:
+        parts.append("proxy/non-CN live execution unsupported=" + ", ".join(sorted(unsupported)))
+    return ", ".join(parts)
 
 
 def _fetch_yahoo_adj_close(ticker: str, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series:
@@ -1275,8 +1347,43 @@ def load_close(config: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
         )
     )
 
+    for ticker, first_used in DYNAMIC_YAHOO_ASSETS.items():
+        raw = _fetch_yahoo_adj_close(ticker, lookback_start, config.end_date)
+        raw = raw.loc[raw.index >= first_used]
+        raw_series[ticker] = raw
+        used = raw.loc[raw.index >= first_used].dropna()
+        sources.append(
+            _proxy_source_record(
+                ticker,
+                "Yahoo Finance chart API",
+                ADJUSTMENT_TOTAL_RETURN,
+                raw,
+                "adjusted close; dynamic asset joins from own first usable date",
+                used.index.min(),
+            )
+        )
+
+    for code, first_used in DYNAMIC_CN_ETF_ASSETS.items():
+        try:
+            cn_prices, cn_sources = _load_public_close_with_per_code_fallback([code], config.end_date)
+            close = cn_prices[code].loc[cn_prices[code].index >= first_used]
+            raw_series[code] = close
+            for row in cn_sources.to_dict(orient="records"):
+                row = dict(row)
+                row["source_detail"] = (
+                    str(row.get("source_detail") or "")
+                    + "; dynamic asset joins from own first usable date"
+                ).strip("; ")
+                sources.append(row)
+        except Exception as exc:
+            raise RuntimeError(
+                f"{code} qfq history unavailable; raw/unadjusted fallback is diagnostic-only: {exc}"
+            ) from exc
+
     raw_prices = pd.concat(raw_series.values(), axis=1).sort_index()
+    raw_unfilled_prices = raw_prices.reindex(calendar)
     aligned, _common_last, last_by_asset = _align_dynamic_proxy_prices(raw_prices, calendar)
+    aligned.attrs["raw_unfilled_prices"] = raw_unfilled_prices.reindex(aligned.index).copy()
     source_frame = pd.DataFrame(sources)
     source_frame["last_aligned"] = source_frame["code"].map(
         lambda code: last_by_asset[code].date().isoformat() if pd.notna(last_by_asset[code]) else ""
@@ -2917,6 +3024,11 @@ def _build_v11_daily(
     config = _build_config(end_date=end_date)
     prices, sources = load_close(config)
     prices = prices.loc[prices.index >= config.start_date]
+    raw_prices_for_fill_flags = prices.attrs.get("raw_unfilled_prices")
+    if not isinstance(raw_prices_for_fill_flags, pd.DataFrame):
+        raw_prices_for_fill_flags = prices.copy()
+    else:
+        raw_prices_for_fill_flags = raw_prices_for_fill_flags.reindex(prices.index).copy()
     live_quote_metadata: dict[str, dict[str, object]] = {}
     live_source_note = ""
     if data_state == "live":
@@ -2928,8 +3040,7 @@ def _build_v11_daily(
                     dict.fromkeys(str(item) for item in live_quotes["source"].dropna())
                 )
         except Exception as exc:
-            live_source_note = f"live quotes unavailable: {str(exc)[:120]}"
-    raw_prices_for_fill_flags = prices.copy()
+            raise poe.BotError(f"live quotes unavailable: {str(exc)[:240]}") from exc
     prices = prices.sort_index()
     common_last = pd.Timestamp(prices.index[-1])
     last_by_asset = {
@@ -2967,6 +3078,11 @@ def _load_live_quotes_for_prices(
     prices: pd.DataFrame,
     now: datetime | None = None,
 ) -> pd.DataFrame:
+    unsupported = _live_quote_unsupported_codes(codes)
+    if unsupported:
+        raise IncompleteLiveSnapshot(
+            "live quotes unsupported for proxy/non-CN symbols: " + _format_code_list(unsupported)
+        )
     kwargs: dict[str, object] = {"now": now}
     params = inspect.signature(load_live_quotes).parameters
     if "reference_prices" in params:
@@ -3089,7 +3205,10 @@ def _asset_exchange(code: str | None) -> str:
 
 
 def _security_type_for_asset(code: str | None) -> str:
-    return "ETF" if str(code or "").strip() in ASSETS else "UNKNOWN"
+    text = str(code or "").strip()
+    if text not in ASSETS:
+        return "UNKNOWN"
+    return "ETF" if _is_cn_exchange_symbol(text) else "PROXY"
 
 
 def _supports_post_close_fixed_price(
@@ -3133,6 +3252,8 @@ def _execution_session_status(
     session_date = pd.Timestamp(session_ts.date()).normalize()
     normalized_exchange = str(exchange or _asset_exchange(asset_code) or "").upper()
     normalized_security_type = str(security_type or "").upper()
+    if normalized_security_type != "ETF" or normalized_exchange not in {"SSE", "SZSE"}:
+        return "CLOSED"
     sse_legacy_etf = (
         normalized_exchange == "SSE"
         and normalized_security_type == "ETF"
@@ -4550,6 +4671,31 @@ def _default_performance_ranges(
     return ranges
 
 
+def trading_day_window_start(index: pd.Index, end: pd.Timestamp, trading_days: int) -> pd.Timestamp:
+    ordered = pd.DatetimeIndex(index).normalize().sort_values()
+    eligible = ordered[ordered <= pd.Timestamp(end).normalize()]
+    if eligible.empty:
+        raise ValueError(f"No trading dates on or before {pd.Timestamp(end).date()}")
+    pos = len(eligible) - 1
+    start_pos = max(0, pos - int(trading_days) + 1)
+    return pd.Timestamp(eligible[start_pos])
+
+
+def _default_performance_ranges_for_daily(
+    daily: pd.DataFrame,
+    latest: pd.Timestamp,
+    earliest: pd.Timestamp | None = None,
+) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
+    dates = pd.DatetimeIndex(pd.to_datetime(daily["date"])).normalize().sort_values()
+    ranges: list[tuple[str, pd.Timestamp, pd.Timestamp]] = []
+    if earliest is not None:
+        ranges.append(("full_sample", earliest, latest))
+    for label, years in (("10Y", 10), ("5Y", 5), ("3Y", 3), ("1Y", 1)):
+        ranges.append((label, trading_day_window_start(dates, latest, years * TRADING_DAYS), latest))
+    ranges.append(("from_2020", EVAL_START, latest))
+    return ranges
+
+
 def resolve_performance_ranges(
     query: str,
     now=None,
@@ -4565,6 +4711,29 @@ def resolve_performance_ranges(
         ranges.extend((f"{s.date()}~{e.date()}", s, e) for s, e in parsed)
     seen = {(label, pd.Timestamp(start).normalize(), pd.Timestamp(end).normalize()) for label, start, end in ranges}
     for item in _default_performance_ranges(latest, earliest):
+        key = (item[0], pd.Timestamp(item[1]).normalize(), pd.Timestamp(item[2]).normalize())
+        if key not in seen:
+            ranges.append(item)
+            seen.add(key)
+    return ranges
+
+
+def resolve_performance_ranges_for_daily(
+    query: str,
+    daily: pd.DataFrame,
+    now=None,
+    latest_date=None,
+    earliest_date=None,
+) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
+    now = _bj_today_naive() if now is None else _normalize_query_date(now)
+    latest = now if latest_date is None else _normalize_query_date(latest_date)
+    earliest = None if earliest_date is None else _normalize_query_date(earliest_date)
+    parsed = parse_all_date_ranges(query, now=now)
+    ranges: list[tuple[str, pd.Timestamp, pd.Timestamp]] = []
+    if parsed:
+        ranges.extend((f"{s.date()}~{e.date()}", s, e) for s, e in parsed)
+    seen = {(label, pd.Timestamp(start).normalize(), pd.Timestamp(end).normalize()) for label, start, end in ranges}
+    for item in _default_performance_ranges_for_daily(daily, latest, earliest):
         key = (item[0], pd.Timestamp(item[1]).normalize(), pd.Timestamp(item[2]).normalize())
         if key not in seen:
             ranges.append(item)
@@ -4725,7 +4894,7 @@ def _last_signal_date(daily: pd.DataFrame) -> str:
 def _trade_note(row: pd.Series) -> str:
     notes: list[str] = []
     if _bool(row.get("staged_initial")):
-        notes.append("新资产先建50%")
+        notes.append(f"新资产先建{INITIAL_ENTRY_FRACTION:.0%}")
     if _bool(row.get("fill_on_down_day")):
         notes.append("下跌日补仓")
     if not notes and _empty_to_none(row.get("trade_target")) is None:
@@ -4975,7 +5144,7 @@ def _entry_state_text(
     if fill_on_down:
         return "分阶段建仓: 本日下跌补足仓位。"
     if staged_initial:
-        return "分阶段建仓: 本日首笔50%建仓，后续等待下跌日补足。"
+        return f"分阶段建仓: 本日首笔{INITIAL_ENTRY_FRACTION:.0%}建仓，后续等待下跌日补足。"
     return "分阶段建仓: 当前无待补仓。"
 
 
@@ -5556,7 +5725,7 @@ class SubDMixedPoolV13Bot:
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}个代理品种** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
-            msg.write("| 数据源 | **QQQ/GLD: Yahoo adjusted close；创业板: Eastmoney 399006 指数代理** | A股交易日历；创业板2010-06-01后动态加入，不做上市前回填 |\n")
+            msg.write("| 数据源 | **QQQ/GLD/KMLM: Yahoo adjusted close；创业板: Eastmoney 399006指数代理；豆粕ETF: qfq正式源，raw仅诊断** | A股交易日历；动态资产从自身首个可用日期后加入，不做上市前回填 |\n")
             msg.write(f"| Live price check by code | **{_live_price_limit_summary()}** | {LIVE_PRICE_LIMIT_DESCRIPTION} |\n")
             msg.write(f"| Live history today cross-check | **>{LIVE_PRICE_HISTORY_TODAY_MAX_DIFF:.0%} => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |\n")
             if daily is not None:
@@ -5569,7 +5738,12 @@ class SubDMixedPoolV13Bot:
         daily = prepare_daily_for_performance(daily)
         earliest = pd.Timestamp(daily["date"].iloc[0])
         latest = pd.Timestamp(daily["date"].iloc[-1])
-        ranges = resolve_performance_ranges(query, latest_date=latest, earliest_date=earliest)
+        ranges = resolve_performance_ranges_for_daily(
+            query,
+            daily,
+            latest_date=latest,
+            earliest_date=earliest,
+        )
         chart_range = ranges[0] if ranges else None
         with poe.start_message() as msg:
             if chart_range is not None:
