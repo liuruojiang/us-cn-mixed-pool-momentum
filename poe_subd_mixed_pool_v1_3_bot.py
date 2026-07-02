@@ -1216,6 +1216,71 @@ def _fetch_akshare_index_close_fallback(
     return out
 
 
+def _fetch_cnfin_index_close_fallback(
+    secid: str,
+    beg: str,
+    end: str,
+    name: str,
+) -> pd.Series:
+    prod_code_by_secid = {"0.399006": "399006.SZ"}
+    prod_code = prod_code_by_secid.get(secid)
+    if prod_code is None:
+        raise RuntimeError(f"no CNFin fallback symbol for {secid}")
+    url = "https://quotedata.cnfin.com/quote/v1/kline"
+    required_start = pd.Timestamp(beg).normalize()
+    current_end = pd.Timestamp(end).normalize()
+    rows: list[list[object]] = []
+    last_error = None
+    for _page in range(10):
+        page_rows = None
+        params = {
+            "prod_code": prod_code,
+            "candle_period": "6",
+            "get_type": "range",
+            "start_date": required_start.strftime("%Y%m%d"),
+            "end_date": current_end.strftime("%Y%m%d"),
+            "fields": "open_px,high_px,low_px,close_px,business_amount,business_balance",
+        }
+        for attempt in range(1, 4):
+            try:
+                resp = _http_get(url, params=params, timeout=30, headers=HTTP_HEADERS)
+                resp.raise_for_status()
+                candle = (resp.json().get("data") or {}).get("candle") or {}
+                page_rows = candle.get(prod_code) or []
+                if page_rows:
+                    break
+            except Exception as exc:
+                last_error = exc
+            time.sleep(0.5 * attempt)
+        if not page_rows:
+            if not rows:
+                raise RuntimeError(f"CNFin index kline returned no data for {prod_code}; last_error={last_error}")
+            break
+        rows = page_rows + rows
+        first_date = pd.Timestamp(str(page_rows[0][0])).normalize()
+        if len(page_rows) < 2001 or first_date <= required_start:
+            break
+        current_end = first_date - pd.Timedelta(days=1)
+        if current_end < required_start:
+            break
+        time.sleep(0.2)
+    frame = pd.DataFrame(rows)
+    if frame.shape[1] < 5:
+        raise RuntimeError(f"CNFin index kline missing close field for {prod_code}")
+    out = pd.Series(
+        pd.to_numeric(frame.iloc[:, 4], errors="coerce").to_numpy(),
+        index=pd.to_datetime(frame.iloc[:, 0].astype(str), errors="coerce"),
+        name=name,
+    ).dropna().sort_index()
+    out = out[(out.index >= required_start) & (out.index <= pd.Timestamp(end).normalize())]
+    out = out[~out.index.duplicated(keep="last")]
+    if out.empty:
+        raise RuntimeError(f"CNFin index kline normalized to empty for {prod_code} in {beg}~{end}")
+    out.attrs["source_name"] = "CNFin quote kline"
+    out.attrs["source_detail"] = f"prod_code={prod_code}; no pre-2010 backfill"
+    return out
+
+
 def _fetch_eastmoney_index_close(secid: str, beg: str, end: str, name: str) -> pd.Series:
     url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
     params = {
@@ -1247,12 +1312,18 @@ def _fetch_eastmoney_index_close(secid: str, beg: str, end: str, name: str) -> p
         except Exception as exc:
             last_error = exc
             time.sleep(1.5 * attempt)
+    fallback_errors: list[str] = []
     try:
         return _fetch_akshare_index_close_fallback(secid, beg, end, name)
     except Exception as fallback_exc:
+        fallback_errors.append(f"akshare fallback failed: {fallback_exc}")
+    try:
+        return _fetch_cnfin_index_close_fallback(secid, beg, end, name)
+    except Exception as fallback_exc:
+        fallback_errors.append(f"CNFin fallback failed: {fallback_exc}")
         raise RuntimeError(
             f"Eastmoney index fetch failed for {secid}: {last_error}; "
-            f"akshare fallback failed: {fallback_exc}"
+            + "; ".join(fallback_errors)
         )
 
 

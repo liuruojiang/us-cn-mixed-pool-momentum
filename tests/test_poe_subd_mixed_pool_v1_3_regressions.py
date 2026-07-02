@@ -159,6 +159,35 @@ def test_v13_raw_sina_fallback_is_not_allowed_in_formal_load_close(monkeypatch):
         module.load_close(module._build_config(end_date=pd.Timestamp("2026-01-02")))
 
 
+def test_v13_cyb_index_uses_cnfin_when_eastmoney_and_akshare_fail(monkeypatch):
+    module = load_bot_module()
+    monkeypatch.setattr(module, "_HAS_AKSHARE", False)
+    monkeypatch.setattr(
+        module,
+        "_http_get",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("eastmoney down")),
+    )
+
+    def cnfin_fallback(secid, beg, end, name):
+        idx = pd.to_datetime(["2026-01-01", "2026-01-02"])
+        series = pd.Series([4000.0, 4017.27], index=idx, name=name)
+        series.attrs["source_name"] = "CNFin quote kline"
+        series.attrs["source_detail"] = "prod_code=399006.SZ; no pre-2010 backfill"
+        return series
+
+    monkeypatch.setattr(module, "_fetch_cnfin_index_close_fallback", cnfin_fallback, raising=False)
+
+    out = module._fetch_eastmoney_index_close(
+        "0.399006",
+        "20260101",
+        "20260102",
+        "CN_CYB_399006",
+    )
+
+    assert out.loc[pd.Timestamp("2026-01-02")] == 4017.27
+    assert out.attrs["source_name"] == "CNFin quote kline"
+
+
 def test_v13_load_close_falls_back_to_bdays_when_cn_calendar_unavailable(monkeypatch):
     module = load_bot_module()
     dates = pd.to_datetime(["2026-01-01", "2026-01-02"])
