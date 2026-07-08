@@ -47,10 +47,11 @@ def test_v13_live_build_fails_closed_when_mixed_pool_live_quotes_are_unavailable
         module._build_v11_daily(end_date=pd.Timestamp("2026-01-02"), data_state="live")
 
 
-def test_v13_live_signal_handler_falls_back_to_confirmed_when_proxy_live_quotes_unsupported(monkeypatch):
+def test_v13_live_signal_handler_does_not_display_confirmed_fallback_when_proxy_live_quotes_unsupported(monkeypatch):
     module = load_bot_module()
     calls = []
     writes = []
+    reports = []
 
     class FakeMessage:
         def __enter__(self):
@@ -74,9 +75,7 @@ def test_v13_live_signal_handler_falls_back_to_confirmed_when_proxy_live_quotes_
         return pd.DataFrame({"date": [pd.Timestamp("2026-01-02")]}), "confirmed source"
 
     def fake_report(daily, source_note, live=False, now=None):
-        assert live is False
-        assert "confirmed source" in source_note
-        assert "live quotes unavailable" in source_note
+        reports.append((daily, source_note, live, now))
         return "confirmed fallback report"
 
     monkeypatch.setattr(module.poe, "start_message", lambda: FakeMessage())
@@ -85,8 +84,173 @@ def test_v13_live_signal_handler_falls_back_to_confirmed_when_proxy_live_quotes_
 
     module.SubDMixedPoolV13Bot()._handle_signal(live=True)
 
-    assert calls == [(True, "live"), (False, "confirmed")]
-    assert any("confirmed fallback report" in item for item in writes)
+    assert calls == [(True, "live")]
+    assert reports == []
+    output = "\n".join(writes)
+    assert "live quotes unavailable" in output
+    assert "confirmed fallback report" not in output
+    assert "using confirmed close signal" not in output
+
+
+def test_v13_mixed_pool_live_quote_loader_fetches_yahoo_and_china_sources(monkeypatch):
+    module = load_bot_module()
+    now = datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ)
+    quote_epoch = int(datetime(2026, 6, 18, 14, 54, 30, tzinfo=module.CN_TZ).timestamp())
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self.payload
+
+    yahoo_prices = {"QQQ": 501.25, "GLD": 235.75, "KMLM": 27.92}
+
+    def yahoo_payload(ticker):
+        price = yahoo_prices[ticker]
+        return {
+            "chart": {
+                "result": [
+                    {
+                        "timestamp": [quote_epoch - 60, quote_epoch],
+                        "meta": {"exchangeTimezoneName": "America/New_York"},
+                        "indicators": {
+                            "quote": [
+                                {
+                                    "close": [price - 0.1, price],
+                                    "volume": [1000, 2000],
+                                }
+                            ]
+                        },
+                    }
+                ],
+                "error": None,
+            }
+        }
+
+    eastmoney_payload = {
+        "data": {
+            "diff": [
+                {
+                    "f12": "399006",
+                    "f14": "创业板指",
+                    "f2": 3010.5,
+                    "f5": 100,
+                    "f6": 200000.0,
+                    "f18": 3000.0,
+                    "f124": quote_epoch,
+                },
+                {
+                    "f12": "159985",
+                    "f14": "豆粕ETF",
+                    "f2": 2.18,
+                    "f5": 200,
+                    "f6": 436.0,
+                    "f18": 2.15,
+                    "f124": quote_epoch,
+                },
+            ]
+        }
+    }
+
+    def fake_http_get(url, params=None, **kwargs):
+        calls.append((url, params or {}))
+        if "query1.finance.yahoo.com" in url:
+            ticker = url.rsplit("/", 1)[-1]
+            return FakeResponse(yahoo_payload(ticker))
+        return FakeResponse(eastmoney_payload)
+
+    monkeypatch.setattr(module, "_now_bj", lambda: now)
+    monkeypatch.setattr(
+        module,
+        "EASTMONEY_LIVE_ENDPOINTS",
+        (("https://unit.test/eastmoney", "Eastmoney push2", True),),
+    )
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+
+    quotes = module.load_live_quotes(list(module.ASSETS), now=now)
+
+    assert quotes["code"].tolist() == list(module.ASSETS)
+    assert quotes.set_index("code").loc["QQQ", "price"] == pytest.approx(501.25)
+    assert quotes.set_index("code").loc["CN_CYB_399006", "price"] == pytest.approx(3010.5)
+    assert quotes.set_index("code").loc["159985.SZ", "price"] == pytest.approx(2.18)
+    assert set(quotes.loc[quotes["code"].isin(["QQQ", "GLD", "KMLM"]), "source"]) == {
+        "Yahoo Finance chart 1m"
+    }
+    assert "0.399006" in calls[-1][1]["secids"]
+    assert "0.159985" in calls[-1][1]["secids"]
+
+
+def test_v13_live_price_validation_skips_yahoo_prev_close_against_adjusted_history():
+    module = load_bot_module()
+    prices = pd.DataFrame(
+        {
+            "QQQ": [100.0],
+            "GLD": [200.0],
+            "CN_CYB_399006": [3000.0],
+            "KMLM": [25.0],
+            "159985.SZ": [2.15],
+        },
+        index=pd.to_datetime(["2026-06-17"]),
+    )
+    quotes = pd.DataFrame(
+        [
+            {
+                "code": "QQQ",
+                "price": 101.89,
+                "quote_time": "2026-06-18 14:54:30+0800",
+                "source": "Yahoo Finance chart 1m",
+                "source_execution_eligible": False,
+                "prev_close": 101.89,
+                "limit_down": math.nan,
+                "limit_up": math.nan,
+                "volume": 1000.0,
+                "amount": 101890.0,
+            }
+        ],
+        columns=module.LIVE_QUOTE_COLUMNS,
+    )
+
+    module._validate_live_quote_prices_against_history(
+        prices,
+        quotes,
+        pd.Timestamp("2026-06-18"),
+    )
+
+
+def test_v13_live_price_validation_allows_small_index_prev_close_rounding_diff():
+    module = load_bot_module()
+    prices = pd.DataFrame(
+        {"CN_CYB_399006": [3911.90]},
+        index=pd.to_datetime(["2026-07-07"]),
+    )
+    quotes = pd.DataFrame(
+        [
+            {
+                "code": "CN_CYB_399006",
+                "price": 3845.35,
+                "quote_time": "2026-07-08 15:00:00+0800",
+                "source": "Eastmoney push2",
+                "source_execution_eligible": False,
+                "prev_close": 3911.91,
+                "limit_down": math.nan,
+                "limit_up": math.nan,
+                "volume": 1000.0,
+                "amount": 3845350.0,
+            }
+        ],
+        columns=module.LIVE_QUOTE_COLUMNS,
+    )
+
+    module._validate_live_quote_prices_against_history(
+        prices,
+        quotes,
+        pd.Timestamp("2026-07-08"),
+    )
 
 
 def test_v13_proxy_assets_are_not_treated_as_a_share_etfs():

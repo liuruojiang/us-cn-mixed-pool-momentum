@@ -111,6 +111,14 @@ DYNAMIC_ASSETS = {
     **DYNAMIC_YAHOO_ASSETS,
     **DYNAMIC_CN_ETF_ASSETS,
 }
+YAHOO_LIVE_ASSETS = {
+    "QQQ": "QQQ",
+    "GLD": "GLD",
+    "KMLM": "KMLM",
+}
+EASTMONEY_LIVE_PROXY_SECIDS = {
+    "CN_CYB_399006": "0.399006",
+}
 
 ASSET_NAMES = {
     "159915.SZ": "创业板100ETF",
@@ -242,12 +250,38 @@ def _is_cn_exchange_symbol(code: str | None) -> bool:
     return text.endswith(".SZ") or text.endswith(".SH")
 
 
+def _yahoo_live_ticker(code: str) -> str | None:
+    return YAHOO_LIVE_ASSETS.get(str(code).strip())
+
+
+def _eastmoney_live_secid(code: str) -> str | None:
+    text = str(code).strip()
+    if _is_cn_exchange_symbol(text):
+        return _eastmoney_market_id(text)
+    return EASTMONEY_LIVE_PROXY_SECIDS.get(text)
+
+
+def _eastmoney_live_ticker(code: str) -> str | None:
+    secid = _eastmoney_live_secid(code)
+    if not secid:
+        return None
+    return secid.split(".", 1)[1]
+
+
 def _live_quote_supported_codes(codes: Iterable[str]) -> list[str]:
-    return [str(code) for code in codes if _is_cn_exchange_symbol(str(code))]
+    return [
+        str(code)
+        for code in codes
+        if _eastmoney_live_secid(str(code)) is not None or _yahoo_live_ticker(str(code)) is not None
+    ]
 
 
 def _live_quote_unsupported_codes(codes: Iterable[str]) -> list[str]:
-    return [str(code) for code in codes if not _is_cn_exchange_symbol(str(code))]
+    return [
+        str(code)
+        for code in codes
+        if _eastmoney_live_secid(str(code)) is None and _yahoo_live_ticker(str(code)) is None
+    ]
 
 
 def _eastmoney_symbol(code: str) -> str:
@@ -648,6 +682,18 @@ def _prev_close_matches_reference(vendor_prev_close: float, independent_prev_clo
     return abs(vendor - reference) <= ETF_PRICE_TICK
 
 
+def _prev_close_matches_reference_for_code(
+    code: str,
+    vendor_prev_close: float,
+    independent_prev_close: float,
+) -> bool:
+    if code in EASTMONEY_LIVE_PROXY_SECIDS:
+        if not (math.isfinite(vendor_prev_close) and math.isfinite(independent_prev_close)):
+            return False
+        return abs(vendor_prev_close / independent_prev_close - 1.0) <= 1e-4
+    return _prev_close_matches_reference(vendor_prev_close, independent_prev_close)
+
+
 def _normalize_price_limit_fields(
     code: str,
     prev_close: object = math.nan,
@@ -655,6 +701,8 @@ def _normalize_price_limit_fields(
     limit_up: object = math.nan,
 ) -> tuple[float, float, float]:
     previous = _optional_positive_float(prev_close)
+    if not _is_cn_exchange_symbol(code):
+        return previous, math.nan, math.nan
     lower = _optional_positive_float(limit_down)
     upper = _optional_positive_float(limit_up)
     if math.isfinite(previous) and not (math.isfinite(lower) and math.isfinite(upper)):
@@ -687,7 +735,10 @@ def _normalize_live_quote_rows(
 ) -> pd.DataFrame:
     requested_codes = list(dict.fromkeys(requested_codes))
     requested_set = set(requested_codes)
-    suffix_by_ticker = {code.split(".", 1)[0]: code for code in requested_codes}
+    suffix_by_ticker = {
+        (_eastmoney_live_ticker(code) or code.split(".", 1)[0]): code
+        for code in requested_codes
+    }
     now_ts = pd.Timestamp(_as_bj_datetime(now)) if now is not None else None
     if expected_quote_date is None and now_ts is not None:
         expected_quote_date = pd.Timestamp(now_ts.date()).normalize()
@@ -734,7 +785,10 @@ def _normalize_live_quote_rows(
             "price": price,
             "quote_time": _format_quote_time(quote_ts),
             "source": source,
-            "source_execution_eligible": _source_execution_eligible(source, source_execution_eligible),
+            "source_execution_eligible": _source_execution_eligible(
+                source,
+                bool(source_execution_eligible and _is_cn_exchange_symbol(code)),
+            ),
             "prev_close": prev_close,
             "limit_down": limit_down,
             "limit_up": limit_up,
@@ -818,7 +872,10 @@ def _normalize_live_quote_frame(
             "price": price,
             "quote_time": _format_quote_time(quote_ts),
             "source": source or "live quote",
-            "source_execution_eligible": _source_execution_eligible(source, explicit_flag),
+            "source_execution_eligible": _source_execution_eligible(
+                source,
+                bool(_explicit_bool_value(explicit_flag, False) and _is_cn_exchange_symbol(code)),
+            ),
             "prev_close": prev_close,
             "limit_down": limit_down,
             "limit_up": limit_up,
@@ -968,7 +1025,8 @@ def _validate_live_quote_prices_against_history(
         if not math.isfinite(quote_price):
             invalid.append(f"{code}:price")
             continue
-        if not _is_etf_tick_price(quote_price):
+        is_cn_exchange = _is_cn_exchange_symbol(code)
+        if is_cn_exchange and not _is_etf_tick_price(quote_price):
             invalid.append(f"{code}:price_tick={quote_price:.6f}")
             continue
         series = pd.to_numeric(price_lookup[code], errors="coerce")
@@ -978,17 +1036,22 @@ def _validate_live_quote_prices_against_history(
             invalid.append(f"{code}:prev_close_reference_missing")
             continue
         vendor_previous = _optional_positive_float(getattr(row, "prev_close", math.nan))
-        if math.isfinite(vendor_previous):
-            if not _is_etf_tick_price(vendor_previous):
+        check_vendor_previous = is_cn_exchange or code in EASTMONEY_LIVE_PROXY_SECIDS
+        if check_vendor_previous and math.isfinite(vendor_previous):
+            if is_cn_exchange and not _is_etf_tick_price(vendor_previous):
                 invalid.append(f"{code}:prev_close_tick={vendor_previous:.6f}")
                 continue
-            if not _prev_close_matches_reference(vendor_previous, independent_previous):
+            if not _prev_close_matches_reference_for_code(code, vendor_previous, independent_previous):
                 diff = abs(vendor_previous / independent_previous - 1.0)
                 invalid.append(f"{code}:prev_close_reference_diff={diff:.2%}")
                 continue
         previous = independent_previous
-        limit_down, limit_up = _price_limit_bounds_from_prev_close(code, previous)
-        if math.isfinite(limit_down) and math.isfinite(limit_up):
+        limit_down, limit_up = (
+            _price_limit_bounds_from_prev_close(code, previous)
+            if is_cn_exchange
+            else (math.nan, math.nan)
+        )
+        if is_cn_exchange and math.isfinite(limit_down) and math.isfinite(limit_up):
             if quote_price < limit_down - LIVE_PRICE_LIMIT_TOLERANCE or quote_price > limit_up + LIVE_PRICE_LIMIT_TOLERANCE:
                 detail = f"{code}:price_limit={quote_price:.4f} not_in [{limit_down:.4f},{limit_up:.4f}]"
                 if math.isfinite(previous):
@@ -1006,6 +1069,131 @@ def _validate_live_quote_prices_against_history(
         raise IncompleteLiveSnapshot(_live_snapshot_error(invalid=invalid))
 
 
+def _last_valid_index(values: list[object]) -> int | None:
+    for idx in range(len(values) - 1, -1, -1):
+        try:
+            value = float(values[idx])
+        except Exception:
+            continue
+        if math.isfinite(value) and value > 0:
+            return idx
+    return None
+
+
+def _load_yahoo_live_quotes(
+    codes: list[str],
+    *,
+    now: datetime | None = None,
+    expected_quote_date: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    rows: list[dict[str, object]] = []
+    now_ts = pd.Timestamp(_as_bj_datetime(now)) if now is not None else None
+    expected = None if expected_quote_date is None else pd.Timestamp(expected_quote_date).normalize()
+    for code in codes:
+        ticker = _yahoo_live_ticker(code)
+        if ticker is None:
+            continue
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
+        params = {
+            "range": "1d",
+            "interval": "1m",
+            "includePrePost": "true",
+            "events": "history",
+        }
+        last_error = None
+        for attempt in range(1, 3):
+            try:
+                resp = _http_get(url, params=params, timeout=20, headers=HTTP_HEADERS)
+                resp.raise_for_status()
+                result = (((resp.json().get("chart") or {}).get("result") or [None])[0])
+                if not result:
+                    raise IncompleteLiveSnapshot(f"{code}:yahoo_no_result")
+                timestamps = result.get("timestamp") or []
+                quote = ((result.get("indicators") or {}).get("quote") or [{}])[0]
+                closes = quote.get("close") or []
+                volumes = quote.get("volume") or []
+                idx = _last_valid_index(list(closes))
+                if idx is None or idx >= len(timestamps):
+                    raise IncompleteLiveSnapshot(f"{code}:yahoo_no_price")
+                price = float(closes[idx])
+                quote_ts = pd.to_datetime(int(timestamps[idx]), unit="s", utc=True).tz_convert(CN_TZ)
+                if now_ts is not None and quote_ts > now_ts + LIVE_QUOTE_FUTURE_TOLERANCE:
+                    raise IncompleteLiveSnapshot(f"{code}:future_quote_time")
+                if expected is not None and pd.Timestamp(quote_ts.date()).normalize() != expected:
+                    raise IncompleteLiveSnapshot(f"{code}:quote_date")
+                volume = (
+                    _optional_nonnegative_float(volumes[idx])
+                    if idx < len(volumes)
+                    else math.nan
+                )
+                amount = price * volume if math.isfinite(volume) else math.nan
+                meta = result.get("meta") or {}
+                prev_close = _optional_positive_float(
+                    meta.get("previousClose", meta.get("chartPreviousClose", math.nan))
+                )
+                rows.append(
+                    {
+                        "code": code,
+                        "price": price,
+                        "quote_time": _format_quote_time(quote_ts),
+                        "source": "Yahoo Finance chart 1m",
+                        "source_execution_eligible": False,
+                        "prev_close": prev_close,
+                        "limit_down": math.nan,
+                        "limit_up": math.nan,
+                        "volume": volume,
+                        "amount": amount,
+                    }
+                )
+                break
+            except Exception as exc:
+                last_error = exc
+                if attempt >= 2:
+                    raise RuntimeError(f"Yahoo live quote unavailable for {code}: {last_error}") from exc
+                time.sleep(0.5 * attempt)
+    return pd.DataFrame(rows, columns=LIVE_QUOTE_COLUMNS)
+
+
+def _eastmoney_live_codes(codes: list[str]) -> list[str]:
+    return [code for code in codes if _eastmoney_live_secid(code) is not None]
+
+
+def _yahoo_live_codes(codes: list[str]) -> list[str]:
+    return [code for code in codes if _yahoo_live_ticker(code) is not None]
+
+
+def _fetch_eastmoney_live_quotes_from_endpoint(
+    codes: list[str],
+    *,
+    url: str,
+    source: str,
+    source_execution_eligible: bool,
+    response_received_at: datetime,
+    expected_quote_date: pd.Timestamp,
+) -> pd.DataFrame:
+    if not codes:
+        return pd.DataFrame(columns=LIVE_QUOTE_COLUMNS)
+    params = {
+        "fltt": "2",
+        "invt": "2",
+        "fields": "f12,f14,f2,f5,f6,f18,f124",
+        "secids": ",".join(str(_eastmoney_live_secid(code)) for code in codes),
+    }
+    resp = _http_get(url, params=params, timeout=10, headers=HTTP_HEADERS)
+    resp.raise_for_status()
+    payload = resp.json()
+    rows = ((payload.get("data") or {}).get("diff") or [])
+    return _normalize_live_quote_rows(
+        rows,
+        codes,
+        source=source,
+        source_execution_eligible=source_execution_eligible,
+        now=response_received_at,
+        require_today=True,
+        expected_quote_date=expected_quote_date,
+    )
+
+
 def load_live_quotes(
     codes: list[str],
     now: datetime | None = None,
@@ -1019,34 +1207,46 @@ def load_live_quotes(
     unsupported = _live_quote_unsupported_codes(codes)
     if unsupported:
         raise IncompleteLiveSnapshot(
-            "live quotes unsupported for proxy/non-CN symbols: " + _format_code_list(unsupported)
+            "live quotes unsupported for symbols: " + _format_code_list(unsupported)
         )
     request_ts = _as_bj_datetime(now)
     if expected_quote_date is None:
         expected_quote_date = pd.Timestamp(request_ts.date()).normalize()
     else:
         expected_quote_date = pd.Timestamp(expected_quote_date).normalize()
-    params = {
-        "fltt": "2",
-        "invt": "2",
-        "fields": "f12,f14,f2,f5,f6,f18,f124",
-        "secids": ",".join(_eastmoney_market_id(code) for code in codes),
-    }
     errors: list[str] = []
     best_monitor_candidate: pd.DataFrame | None = None
-    for url, source, source_execution_eligible in EASTMONEY_LIVE_ENDPOINTS:
+    eastmoney_codes = _eastmoney_live_codes(codes)
+    yahoo_codes = _yahoo_live_codes(codes)
+    endpoints = EASTMONEY_LIVE_ENDPOINTS if eastmoney_codes else ((None, "", False),)
+    for url, source, source_execution_eligible in endpoints:
         for attempt in range(1, 3):
             try:
-                resp = _http_get(url, params=params, timeout=10, headers=HTTP_HEADERS)
-                resp.raise_for_status()
                 response_received_at = _now_bj()
-                payload = resp.json()
-                rows = ((payload.get("data") or {}).get("diff") or [])
-                candidate = _normalize_live_quote_rows(
-                    rows,
+                frames: list[pd.DataFrame] = []
+                if yahoo_codes:
+                    frames.append(
+                        _load_yahoo_live_quotes(
+                            yahoo_codes,
+                            now=response_received_at,
+                            expected_quote_date=expected_quote_date,
+                        )
+                    )
+                if eastmoney_codes and url is not None:
+                    frames.append(
+                        _fetch_eastmoney_live_quotes_from_endpoint(
+                            eastmoney_codes,
+                            url=url,
+                            source=source,
+                            source_execution_eligible=source_execution_eligible,
+                            response_received_at=response_received_at,
+                            expected_quote_date=expected_quote_date,
+                        )
+                    )
+                candidate = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=LIVE_QUOTE_COLUMNS)
+                candidate = _normalize_live_quote_frame(
+                    candidate,
                     codes,
-                    source=source,
-                    source_execution_eligible=source_execution_eligible,
                     now=response_received_at,
                     require_today=True,
                     expected_quote_date=expected_quote_date,
@@ -1057,7 +1257,8 @@ def load_live_quotes(
                     except IncompleteLiveSnapshot as exc:
                         errors.append(f"{source} attempt {attempt}: price quality rejected: {exc}")
                         continue
-                    missing_prev_close = _missing_vendor_prev_close_codes(candidate)
+                    cn_candidate = candidate[candidate["code"].map(_is_cn_exchange_symbol)]
+                    missing_prev_close = _missing_vendor_prev_close_codes(cn_candidate)
                     if missing_prev_close:
                         candidate = _demote_live_quote_execution(candidate)
                         errors.append(
@@ -1142,11 +1343,11 @@ def _source_summary_text(sources: pd.DataFrame) -> str:
 
 
 def _live_price_limit_summary() -> str:
-    supported = _live_quote_supported_codes(ASSETS)
-    unsupported = _live_quote_unsupported_codes(ASSETS)
-    parts = [f"{code}={_live_price_limit_ratio(code):.0%}" for code in supported]
-    if unsupported:
-        parts.append("proxy/non-CN live execution unsupported=" + ", ".join(sorted(unsupported)))
+    limited = [code for code in ASSETS if _is_cn_exchange_symbol(code)]
+    execution_unsupported = [code for code in ASSETS if not _is_cn_exchange_symbol(code)]
+    parts = [f"{code}={_live_price_limit_ratio(code):.0%}" for code in limited]
+    if execution_unsupported:
+        parts.append("proxy/non-CN live execution unsupported=" + ", ".join(sorted(execution_unsupported)))
     return ", ".join(parts)
 
 
@@ -5770,15 +5971,13 @@ class SubDMixedPoolV13Bot:
             except Exception as exc:
                 if not live or not _is_proxy_live_quote_unsupported_error(exc):
                     raise
-                daily, source_note = _get_daily_for_today(
-                    force_refresh=False,
-                    data_state="confirmed",
+                msg.overwrite("")
+                msg.write(
+                    "## SubD混合池子 V1.3 实时信号暂不可用\n\n"
+                    f"live quotes unavailable: {str(exc)[:240]}\n\n"
+                    "本次没有回退到收盘确认信号；请发送“信号”查看收盘确认版本。"
                 )
-                source_note = (
-                    f"{source_note}; live quotes unavailable: {str(exc)[:160]}; "
-                    "using confirmed close signal; live execution disabled"
-                )
-                report_live = False
+                return
             msg.overwrite("")
             msg.write(format_signal_report(daily, source_note, live=report_live))
 
