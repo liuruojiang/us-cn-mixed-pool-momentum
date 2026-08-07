@@ -555,6 +555,22 @@ def test_target_vol_rejects_nonfinite_returns(bad_return):
         module._compute_target_vol_scales(curve, target_vol=0.20, vol_window=2, max_lev=1.2)
 
 
+def test_target_vol_rejects_nonfinite_realized_vol_after_warmup():
+    module = load_bot_module()
+    curve = pd.DataFrame({"return": [1e308, -1e308, 1e308]})
+
+    with pytest.raises(ValueError, match="(?i)realized volatility.*finite"):
+        module._compute_target_vol_scales(curve, target_vol=0.20, vol_window=2, max_lev=1.2)
+
+
+def test_target_vol_rejects_nullable_missing_return_with_value_error():
+    module = load_bot_module()
+    curve = pd.DataFrame({"return": pd.Series([0.0, pd.NA, 0.01], dtype="object")})
+
+    with pytest.raises(ValueError, match="(?i)return.*finite"):
+        module._compute_target_vol_scales(curve, target_vol=0.20, vol_window=2, max_lev=1.2)
+
+
 def test_target_vol_scale_threshold_starts_from_explicit_initial_scale():
     module = load_bot_module()
     raw = pd.Series([0.62, 0.58, 0.40])
