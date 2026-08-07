@@ -9,6 +9,8 @@
 
 - `research_subd_six_etf_weighted_slope.py`：SubD 六 ETF 研究和回测核心。
 - `run_subd_six_etf_v1_1.py`：SubD V1.1 正式输出入口。
+- `poe_subd_six_etf_v1_1_bot.py`：SubD V1.1 自包含 Poe 展示脚本。
+- `poe_subd_mixed_pool_v1_3_bot.py`：A 股/美股混合池 V1.3 自包含 Poe 展示脚本。
 - `analyze_subd_six_etf_v1_1_qveris_robustness.py`：历史归档的 QVeris 数据源复核脚本；当前正式入口不再使用 QVeris。
 - `analyze_abcde_combo_20260509.py`：ABCDE 组合和 B60 基准对比。
 - `mnt_bot V 7.6 plus.py`：组合脚本依赖的 A/B/C 官方路径快照。
@@ -29,4 +31,4 @@ python .\run_subd_six_etf_v1_1.py
 python .\analyze_abcde_combo_20260509.py
 ```
 
-数据源规则见 `AGENTS.md`。当前 SubD V1.1 正式入口使用公开前复权/连续日收盘价链路，优先 AkShare/Eastmoney qfq；当 Eastmoney qfq 不可用时可回退到已验证的 Tencent fqkline `qfqday/day`（带连续性自检），并仅把 QVeris 相关材料作为历史归档证据保留。
+数据源规则见 `AGENTS.md`。两份 Poe 脚本的 A 股历史数据均优先使用 AkShare/Eastmoney qfq、已验证的 Tencent fqkline `qfqday/day` 和 Eastmoney HTTP qfq。仅当这三条链路对 `159985.SZ` 全部失败时，才允许使用新浪与新华财经原始日线的精确日期交集；该路径必须覆盖上市日、满足行数/重合率/最大价差和连续性门槛，并明确标记为 `raw/unadjusted cross-validated`。QVeris 相关材料只作为历史归档证据保留。

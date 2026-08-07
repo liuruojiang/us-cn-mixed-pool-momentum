@@ -1,8 +1,10 @@
 import importlib.util
 import math
 import sys
+from contextvars import copy_context
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import numpy as np
@@ -47,6 +49,51 @@ def load_research_module():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def test_performance_rendered_state_is_isolated_between_contexts():
+    module = load_bot_module()
+    left = copy_context()
+    right = copy_context()
+
+    assert left.run(module._performance_response_rendered) is False
+    assert right.run(module._performance_response_rendered) is False
+
+    left.run(module._set_performance_response_rendered, True)
+
+    assert left.run(module._performance_response_rendered) is True
+    assert right.run(module._performance_response_rendered) is False
+
+
+def test_performance_run_uses_only_its_request_rendered_state(monkeypatch):
+    module = load_bot_module()
+    bot = module.SubDSixEtfV11Bot()
+    other_request = copy_context()
+    monkeypatch.setattr(module.poe, "query", SimpleNamespace(text="表现"), raising=False)
+
+    def fail_after_other_request_rendered(_query):
+        other_request.run(module._set_performance_response_rendered, True)
+        raise RuntimeError("request A failed")
+
+    monkeypatch.setattr(bot, "_handle_performance", fail_after_other_request_rendered)
+
+    with pytest.raises(module.poe.BotError, match="request A failed"):
+        bot.run()
+
+
+def test_performance_run_suppresses_second_response_after_own_render(monkeypatch):
+    module = load_bot_module()
+    bot = module.SubDSixEtfV11Bot()
+    monkeypatch.setattr(module.poe, "query", SimpleNamespace(text="表现"), raising=False)
+
+    def fail_after_own_response_rendered(_query):
+        module._set_performance_response_rendered(True)
+        raise RuntimeError("already rendered")
+
+    monkeypatch.setattr(bot, "_handle_performance", fail_after_own_response_rendered)
+
+    assert bot.run() is None
+    assert module._performance_response_rendered() is False
 
 
 def minimal_daily(module, dates=("2026-06-08", "2026-06-09")):
@@ -230,7 +277,15 @@ def test_tencent_qfq_loader_pages_until_full_history(monkeypatch):
     assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(1.2)
 
 
-def test_tencent_qfq_loader_accepts_day_key_when_qfqday_missing(monkeypatch):
+@pytest.mark.parametrize(
+    ("code", "symbol"),
+    [
+        ("513030.SH", "sh513030"),
+        ("513520.SH", "sh513520"),
+        ("159985.SZ", "sz159985"),
+    ],
+)
+def test_tencent_qfq_loader_accepts_verified_day_key(monkeypatch, code, symbol):
     module = load_bot_module()
 
     class FakeResponse:
@@ -242,17 +297,139 @@ def test_tencent_qfq_loader_accepts_day_key_when_qfqday_missing(monkeypatch):
                 "code": 0,
                 "msg": "",
                 "data": {
-                    "sh513030": {
+                    symbol: {
                         "day": [["2026-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]]
                     }
                 },
             }
 
     monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
 
-    close = module._load_tencent_qfq_one_close("513030.SH", pd.Timestamp("2026-01-02"))
+    close = module._load_tencent_qfq_one_close(code, pd.Timestamp("2026-01-02"))
 
     assert close.loc[pd.Timestamp("2026-01-02")] == pytest.approx(1.1)
+    assert close.attrs["source_detail"] == module.SOURCE_DETAIL_TENCENT_VERIFIED_DAY_QFQ
+
+
+def test_tencent_qfq_loader_rejects_day_key_for_non_allowlisted_code(monkeypatch):
+    module = load_bot_module()
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "code": 0,
+                "msg": "",
+                "data": {
+                    "sz159915": {
+                        "day": [["2026-01-02", "1.0", "1.1", "1.2", "0.9", "1000"]]
+                    }
+                },
+            }
+
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+
+    with pytest.raises(RuntimeError, match="qfqday"):
+        module._load_tencent_qfq_one_close("159915.SZ", pd.Timestamp("2026-01-02"))
+
+
+def test_tencent_verified_day_detail_reaches_source_metadata(monkeypatch):
+    module = load_bot_module()
+
+    def fail_provider(code, end_date):
+        raise RuntimeError(f"provider unavailable for {code}")
+
+    def verified_tencent_day(code, end_date):
+        close = pd.Series(
+            [1.0, 1.1],
+            index=pd.to_datetime(["2026-01-01", "2026-01-02"]),
+            name=code,
+        )
+        close.attrs["source_detail"] = module.SOURCE_DETAIL_TENCENT_VERIFIED_DAY_QFQ
+        return close
+
+    monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_provider)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", verified_tencent_day)
+    monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_provider)
+
+    _prices, sources = module._load_public_close_with_per_code_fallback(
+        ["513030.SH"], pd.Timestamp("2026-01-02")
+    )
+
+    assert sources.loc[0, "source_detail"] == module.SOURCE_DETAIL_TENCENT_VERIFIED_DAY_QFQ
+
+
+def test_tencent_qfq_loader_rejects_day_only_page_after_qfq_history(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, node):
+            self._node = node
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"code": 0, "msg": "", "data": {"sh513030": self._node}}
+
+    qfq_rows = [
+        ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"],
+        ["2026-01-02", "1.1", "1.2", "1.3", "1.0", "2000"],
+    ]
+    day_rows = [["2023-12-29", "0.9", "1.0", "1.1", "0.8", "900"]]
+
+    def fake_http_get(*args, **kwargs):
+        calls.append(kwargs["params"]["param"])
+        node = {"qfqday": qfq_rows} if len(calls) == 1 else {"day": day_rows}
+        return FakeResponse(node)
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+    monkeypatch.setattr(module, "TENCENT_FQKLINE_PAGE_SIZE", 2, raising=False)
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+
+    with pytest.raises(RuntimeError, match="qfqday.*partial history"):
+        module._load_tencent_qfq_one_close("513030.SH", pd.Timestamp("2026-01-02"))
+
+
+def test_tencent_qfq_loader_rejects_provider_failure_after_qfq_history(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "code": 0,
+                "msg": "",
+                "data": {
+                    "sh513030": {
+                        "qfqday": [
+                            ["2024-01-02", "1.0", "1.1", "1.2", "0.9", "1000"],
+                            ["2026-01-02", "1.1", "1.2", "1.3", "1.0", "2000"],
+                        ]
+                    }
+                },
+            }
+
+    def fake_http_get(*args, **kwargs):
+        calls.append(kwargs["params"]["param"])
+        if len(calls) == 1:
+            return FakeResponse()
+        raise RuntimeError("unit provider failure")
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+    monkeypatch.setattr(module, "TENCENT_FQKLINE_PAGE_SIZE", 2, raising=False)
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+
+    with pytest.raises(RuntimeError, match="partial history.*provider failure"):
+        module._load_tencent_qfq_one_close("513030.SH", pd.Timestamp("2026-01-02"))
 
 
 def test_poe_bot_obsolete_dead_helpers_are_not_reintroduced():
@@ -304,6 +481,91 @@ def test_target_vol_keeps_strategy_return_window_pending_research_adoption():
 
     assert realized_vol.iloc[-1] == pytest.approx(0.0)
     assert next_scale.iloc[-1] == pytest.approx(1.5)
+
+
+@pytest.mark.parametrize("max_lev", [1.2, 0.6, 0.0])
+def test_target_vol_warmup_uses_capped_initial_scale_and_preserves_shift_timing(max_lev):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=5)
+    curve = pd.DataFrame({"return": [0.0, 0.01, -0.01, 0.02, -0.02]}, index=dates)
+    initial_scale = min(1.0, max_lev)
+
+    realized_vol, effective_scale, next_scale = module._compute_target_vol_scales(
+        curve,
+        target_vol=0.20,
+        vol_window=3,
+        max_lev=max_lev,
+    )
+
+    assert realized_vol.iloc[:2].isna().all()
+    assert next_scale.iloc[:2].tolist() == pytest.approx([initial_scale, initial_scale])
+    assert effective_scale.iloc[0] == pytest.approx(initial_scale)
+    assert effective_scale.iloc[1:].tolist() == pytest.approx(next_scale.iloc[:-1].tolist())
+    assert np.isfinite(next_scale.to_numpy()).all()
+    assert (next_scale >= 0.0).all()
+    assert (next_scale <= max_lev).all()
+
+
+def test_target_vol_zero_volatility_full_window_uses_max_leverage_next_period():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=4)
+    curve = pd.DataFrame({"return": [0.0, 0.0, 0.0, 0.0]}, index=dates)
+
+    realized_vol, effective_scale, next_scale = module._compute_target_vol_scales(
+        curve,
+        target_vol=0.20,
+        vol_window=3,
+        max_lev=1.2,
+    )
+
+    assert realized_vol.iloc[2:].tolist() == pytest.approx([0.0, 0.0])
+    assert next_scale.tolist() == pytest.approx([1.0, 1.0, 1.2, 1.2])
+    assert effective_scale.tolist() == pytest.approx([1.0, 1.0, 1.0, 1.2])
+
+
+@pytest.mark.parametrize(
+    ("target_vol", "vol_window", "max_lev"),
+    [
+        (0.0, 3, 1.2),
+        (-0.1, 3, 1.2),
+        (math.nan, 3, 1.2),
+        (math.inf, 3, 1.2),
+        (0.2, True, 1.2),
+        (0.2, 1, 1.2),
+        (0.2, 3.0, 1.2),
+        (0.2, 3, -0.1),
+        (0.2, 3, math.nan),
+        (0.2, 3, math.inf),
+    ],
+)
+def test_target_vol_rejects_invalid_parameters(target_vol, vol_window, max_lev):
+    module = load_bot_module()
+    curve = pd.DataFrame({"return": [0.0, 0.01, -0.01]})
+
+    with pytest.raises(ValueError):
+        module._compute_target_vol_scales(curve, target_vol, vol_window, max_lev)
+
+
+@pytest.mark.parametrize("bad_return", [math.nan, math.inf, -math.inf])
+def test_target_vol_rejects_nonfinite_returns(bad_return):
+    module = load_bot_module()
+    curve = pd.DataFrame({"return": [0.0, bad_return, 0.01]})
+
+    with pytest.raises(ValueError, match="(?i)return.*finite"):
+        module._compute_target_vol_scales(curve, target_vol=0.20, vol_window=2, max_lev=1.2)
+
+
+def test_target_vol_scale_threshold_starts_from_explicit_initial_scale():
+    module = load_bot_module()
+    raw = pd.Series([0.62, 0.58, 0.40])
+
+    confirmed = module.apply_target_vol_scale_rebalance_threshold(
+        raw,
+        threshold=0.075,
+        initial_scale=0.60,
+    )
+
+    assert confirmed.tolist() == pytest.approx([0.60, 0.60, 0.40])
 
 
 def test_price_forward_fill_metadata_marks_suspended_asset_only():
@@ -454,6 +716,441 @@ def test_held_asset_missing_price_raises_instead_of_zero_return(monkeypatch):
             r2_threshold=0.2,
             switch_buffer=1.0,
         )
+
+
+def _run_v11_stale_trade_case(monkeypatch, stale_asset, staged=False):
+    module = load_bot_module()
+    monkeypatch.setattr(module, "LOOKBACK", 2)
+    old_asset, new_asset = list(module.ASSETS)[:2]
+    dates = pd.bdate_range("2026-01-01", periods=4)
+    prices = pd.DataFrame(100.0, index=dates, columns=list(module.ASSETS))
+    if staged:
+        prices.loc[dates[2], old_asset] = 101.0
+        prices.loc[dates[3], old_asset] = 100.0
+
+    def fake_scores(prices, idx, r2_threshold=None):
+        target = old_asset if staged or idx < len(prices) - 1 else new_asset
+        scores = {old_asset: 1.0, new_asset: 0.5}
+        scores[target] = 2.0
+        return scores, {code: 0.9 for code in scores}, scores.copy()
+
+    monkeypatch.setattr(module, "calc_scores", fake_scores)
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    flags.loc[dates[-1], stale_asset] = True
+    config = module.RunConfig(
+        source="akshare_em_qfq",
+        one_way_cost=0.001,
+        start_date=dates[0],
+        end_date=dates[-1],
+        output_tag="unit",
+        target_vols=(),
+        vol_window=80,
+        max_lev=1.5,
+    )
+    case = module.EntryCase(
+        "staged" if staged else "full",
+        "all_new_asset_50_wait_down" if staged else "full_entry",
+        0.5 if staged else 1.0,
+    )
+    curve = module.run_staged_entry(
+        prices,
+        config,
+        case,
+        r2_threshold=0.2,
+        switch_buffer=1.0,
+        price_ffill_flags=flags,
+    )
+    return module, curve, dates, old_asset, new_asset
+
+
+def test_v11_stale_buy_leg_atomically_blocks_switch(monkeypatch):
+    module = load_bot_module()
+    new_asset = list(module.ASSETS)[1]
+    _, curve, dates, old_asset, _ = _run_v11_stale_trade_case(monkeypatch, new_asset)
+    row = curve.loc[dates[-1]]
+
+    assert bool(row["trade_blocked_by_stale_price"]) is True
+    assert row["blocked_trade_target"] == new_asset
+    assert new_asset in row["stale_price_trade_assets"].split(",")
+    assert row["position_before"] == old_asset
+    assert row["position"] == old_asset
+    assert pd.isna(row["trade_target"])
+    assert row["turnover"] == pytest.approx(0.0)
+    assert row["cost"] == pytest.approx(0.0)
+
+
+def test_v11_stale_sell_leg_atomically_blocks_switch(monkeypatch):
+    module = load_bot_module()
+    old_asset = list(module.ASSETS)[0]
+    _, curve, dates, _, new_asset = _run_v11_stale_trade_case(monkeypatch, old_asset)
+    row = curve.loc[dates[-1]]
+
+    assert bool(row["trade_blocked_by_stale_price"]) is True
+    assert row["blocked_trade_target"] == new_asset
+    assert old_asset in row["stale_price_trade_assets"].split(",")
+    assert row["position"] == row["position_before"] == old_asset
+    assert row["turnover"] == pytest.approx(0.0)
+    assert row["cost"] == pytest.approx(0.0)
+
+
+def test_v11_stale_staged_fill_restores_pending_state_and_counters(monkeypatch):
+    module = load_bot_module()
+    old_asset = list(module.ASSETS)[0]
+    _, curve, dates, _, _ = _run_v11_stale_trade_case(monkeypatch, old_asset, staged=True)
+    before = curve.loc[dates[-2]]
+    row = curve.loc[dates[-1]]
+
+    assert bool(row["trade_blocked_by_stale_price"]) is True
+    assert row["position"] == row["position_before"] == old_asset
+    assert row["holding_fraction"] == pytest.approx(row["fraction_before"])
+    assert row["pending_entry_target"] == before["pending_entry_target"] == old_asset
+    assert row["pending_entry_since"] == before["pending_entry_since"]
+    assert row["pending_entry_days"] == before["pending_entry_days"]
+    assert row["staged_initial_count"] == before["staged_initial_count"]
+    assert row["staged_fill_count"] == before["staged_fill_count"]
+    assert bool(row["fill_on_down_day"]) is False
+    assert row["turnover"] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("bad_mask", ["missing_date", "missing_asset", "na", "string", "duplicate_date", "intraday"])
+def test_v11_explicit_ffill_mask_is_strictly_validated(bad_mask):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=2)
+    prices = pd.DataFrame(100.0, index=dates, columns=list(module.ASSETS))
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    if bad_mask == "missing_date":
+        flags = flags.iloc[:-1]
+    elif bad_mask == "missing_asset":
+        flags = flags.drop(columns=[list(module.ASSETS)[0]])
+    elif bad_mask == "na":
+        flags = flags.astype(object)
+        flags.iloc[0, 0] = None
+    elif bad_mask == "string":
+        flags = flags.astype(str)
+    elif bad_mask == "duplicate_date":
+        duplicate = flags.iloc[[0]].copy()
+        duplicate.index = pd.DatetimeIndex([dates[0] + pd.Timedelta(hours=12)])
+        flags = pd.concat([flags, duplicate])
+    else:
+        flags.index = flags.index + pd.Timedelta(hours=12)
+    config = module.RunConfig("akshare_em_qfq", 0.001, dates[0], dates[-1], "unit", (), 80, 1.5)
+
+    with pytest.raises((ValueError, RuntimeError), match="(?i)(mask|ffill)"):
+        module.run_staged_entry(
+            prices,
+            config,
+            module.EntryCase("full", "full_entry", 1.0),
+            0.2,
+            1.0,
+            price_ffill_flags=flags,
+        )
+
+
+def test_v11_live_quote_is_added_to_raw_availability_before_ffill_flags():
+    module = load_bot_module()
+    yesterday, today = pd.to_datetime(["2026-01-01", "2026-01-02"])
+    raw = pd.DataFrame(1.0, index=[yesterday], columns=list(module.ASSETS))
+    updated = pd.DataFrame(1.0, index=[yesterday, today], columns=list(module.ASSETS))
+    metadata = {
+        code: {"quote_date": today, "quote_price": 2.0 + offset}
+        for offset, code in enumerate(module.ASSETS)
+    }
+
+    synced = module._sync_live_quote_raw_availability(raw, updated, metadata)
+    flags = module._price_forward_fill_flags(synced, updated, list(module.ASSETS))
+
+    assert not flags.loc[today, list(module.ASSETS)].any()
+
+
+def test_v11_live_daily_path_marks_valid_live_quotes_as_not_forward_filled(monkeypatch):
+    module = load_bot_module()
+    yesterday, today = pd.to_datetime(["2026-01-01", "2026-01-02"])
+    historical = pd.DataFrame(1.0, index=[yesterday], columns=list(module.ASSETS))
+    updated = pd.DataFrame(1.0, index=[yesterday, today], columns=list(module.ASSETS))
+    metadata = {
+        code: {"quote_date": today, "quote_price": 2.0 + offset}
+        for offset, code in enumerate(module.ASSETS)
+    }
+    sources = pd.DataFrame({"source": ["unit"], "adjustment": [module.ADJUSTMENT_QFQ], "source_detail": ["unit"]})
+
+    monkeypatch.setattr(module, "load_close", lambda config: (historical.copy(), sources.copy()))
+    monkeypatch.setattr(module, "_load_live_quotes_for_prices", lambda *args, **kwargs: pd.DataFrame({"source": ["unit"]}))
+    monkeypatch.setattr(module, "_apply_live_quotes_to_prices", lambda *args, **kwargs: (updated.copy(), metadata))
+    monkeypatch.setattr(
+        module,
+        "align_prices_to_common_valid_date",
+        lambda prices, assets: (prices.copy(), today, {code: today for code in module.ASSETS}),
+    )
+
+    def fake_build_curves(input_prices, config, price_ffill_flags=None):
+        assert not price_ffill_flags.loc[today, list(module.ASSETS)].any()
+        daily = minimal_daily(module, dates=("2026-01-01", "2026-01-02"))
+        daily.index = pd.DatetimeIndex([yesterday, today])
+        return [daily.drop(columns=["date"])]
+
+    monkeypatch.setattr(module, "build_curves", fake_build_curves)
+
+    daily, _ = module._build_v11_daily(end_date=today, data_state="live")
+
+    assert not daily.loc[daily["date"] == today, [f"price_ffill_{code}" for code in module.ASSETS]].iloc[0].any()
+
+
+def test_v11_build_curves_blocks_stale_target_vol_sell_and_carries_actual_exposure(monkeypatch):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=3)
+    asset = list(module.ASSETS)[0]
+    prices = pd.DataFrame(100.0, index=dates, columns=list(module.ASSETS))
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    flags.loc[dates[1]:, asset] = True
+    base = pd.DataFrame(
+        {
+            "position_before": ["CASH", asset, asset],
+            "position": [asset, asset, asset],
+            "fraction_before": [0.0, 1.0, 1.0],
+            "holding_fraction": [1.0, 1.0, 1.0],
+            "trade_target": [asset, None, None],
+            "asset_return": [0.0, 0.0, 0.0],
+            "gross_return": [0.0, 0.0, 0.0],
+            "return": [0.0, 0.0, 0.0],
+            "nav": [1.0, 1.0, 1.0],
+            "turnover": [1.0, 0.0, 0.0],
+            "cost": [0.0, 0.0, 0.0],
+        },
+        index=dates,
+    )
+    monkeypatch.setattr(module, "run_staged_entry", lambda *args, **kwargs: base.copy())
+    monkeypatch.setattr(
+        module,
+        "_compute_target_vol_scales",
+        lambda *args: (
+            pd.Series(0.1, index=dates),
+            pd.Series([1.0, 1.0, 0.5], index=dates),
+            pd.Series([1.0, 0.5, 0.5], index=dates),
+        ),
+    )
+    monkeypatch.setattr(module, "apply_overheat_overlay", lambda curve, *args, **kwargs: curve)
+    monkeypatch.setattr(module, "build_overheat_features", lambda prices: {})
+    config = module.RunConfig("akshare_em_qfq", 0.001, dates[0], dates[-1], "unit", (), 80, 1.5)
+
+    out = module.build_curves(prices, config, price_ffill_flags=flags)[0]
+
+    for date in dates[1:]:
+        assert bool(out.loc[date, "trade_blocked_by_stale_price"]) is True
+        assert out.loc[date, "turnover"] == pytest.approx(0.0)
+        assert out.loc[date, "cost"] == pytest.approx(0.0)
+        assert out.loc[date, "final_exposure_after_overheat"] == pytest.approx(1.0)
+
+
+def test_v11_build_curves_blocks_stale_overheat_sell_and_carries_actual_exposure(monkeypatch):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=3)
+    asset = list(module.ASSETS)[0]
+    prices = pd.DataFrame(100.0, index=dates, columns=list(module.ASSETS))
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    flags.loc[dates[1]:, asset] = True
+    base = pd.DataFrame(
+        {
+            "position_before": ["CASH", asset, asset], "position": [asset, asset, asset],
+            "fraction_before": [0.0, 1.0, 1.0], "holding_fraction": [1.0, 1.0, 1.0],
+            "trade_target": [asset, None, None], "asset_return": [0.0, 0.0, 0.0],
+            "gross_return": [0.0, 0.0, 0.0], "return": [0.0, 0.0, 0.0],
+            "nav": [1.0, 1.0, 1.0], "turnover": [1.0, 0.0, 0.0], "cost": [0.0, 0.0, 0.0],
+        }, index=dates,
+    )
+    monkeypatch.setattr(module, "run_staged_entry", lambda *args, **kwargs: base.copy())
+    monkeypatch.setattr(
+        module, "_compute_target_vol_scales",
+        lambda *args: tuple(pd.Series(1.0, index=dates) for _ in range(3)),
+    )
+    features = {
+        code: pd.DataFrame(
+            {"bias": [0.0, 1.0, 1.0], "bias_mom": [0.0, 1.0, 1.0], "same_side": [False, True, True]},
+            index=dates,
+        ) for code in module.ASSETS
+    }
+    monkeypatch.setattr(module, "build_overheat_features", lambda prices: features)
+    config = module.RunConfig("akshare_em_qfq", 0.001, dates[0], dates[-1], "unit", (), 80, 1.5)
+
+    out = module.build_curves(prices, config, price_ffill_flags=flags)[0]
+    for date in dates[1:]:
+        assert bool(out.loc[date, "trade_blocked_by_stale_price"]) is True
+        assert out.loc[date, "turnover"] == pytest.approx(0.0)
+        assert out.loc[date, "final_exposure_after_overheat"] == pytest.approx(
+            out.loc[date, "drifted_exposure_before_trade"]
+        )
+        assert out.loc[date, "actual_position_next"] == asset
+
+
+def test_v11_stale_zero_overheat_recovery_keeps_actual_full_position(monkeypatch):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=4)
+    asset = list(module.ASSETS)[0]
+    prices = pd.DataFrame(100.0, index=dates, columns=list(module.ASSETS))
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    flags.loc[dates[2], asset] = True
+    base = pd.DataFrame(
+        {
+            "position_before": ["CASH", asset, asset, asset],
+            "position": [asset, asset, asset, asset],
+            "fraction_before": [0.0, module.INITIAL_ENTRY_FRACTION, 1.0, 1.0],
+            "holding_fraction": [module.INITIAL_ENTRY_FRACTION, 1.0, 1.0, 1.0],
+            "trade_target": [asset, asset, None, None],
+            "trade_fraction": [module.INITIAL_ENTRY_FRACTION, 1.0, 1.0, 1.0],
+            "pending_entry_target": [asset, None, None, None],
+            "pending_entry_since": [dates[0], None, None, None],
+            "pending_entry_days": [0, 0, 0, 0],
+            "staged_initial": [True, False, False, False],
+            "fill_on_down_day": [False, True, False, False],
+            "asset_return": [0.0, -0.01, 0.0, 0.0],
+            "gross_return": [0.0, -0.005, 0.0, 0.0],
+            "return": [0.0, -0.005, 0.0, 0.0],
+            "nav": [1.0, 0.995, 0.995, 0.995],
+            "turnover": [module.INITIAL_ENTRY_FRACTION, 1.0 - module.INITIAL_ENTRY_FRACTION, 0.0, 0.0],
+            "cost": [0.0, 0.0, 0.0, 0.0],
+        }, index=dates,
+    )
+    monkeypatch.setattr(module, "run_staged_entry", lambda *args, **kwargs: base.copy())
+    monkeypatch.setattr(
+        module, "_compute_target_vol_scales",
+        lambda *args: tuple(pd.Series(1.0, index=dates) for _ in range(3)),
+    )
+    features = {
+        code: pd.DataFrame(
+            {
+                "bias": [0.0, 0.0, 1.0, 0.0],
+                "bias_mom": [0.0, 0.0, 1.0, 0.0],
+                "same_side": [False, False, True, False],
+            }, index=dates,
+        ) for code in module.ASSETS
+    }
+    monkeypatch.setattr(module, "build_overheat_features", lambda prices: features)
+    config = module.RunConfig("akshare_em_qfq", 0.0, dates[0], dates[-1], "unit", (), 80, 1.5)
+
+    out = module.build_curves(prices, config, price_ffill_flags=flags)[0]
+
+    assert bool(out.loc[dates[2], "trade_blocked_by_stale_price"]) is True
+    assert out.loc[dates[2], "final_exposure_after_overheat"] == pytest.approx(1.0)
+    assert out.loc[dates[3], "final_exposure_after_overheat"] == pytest.approx(1.0)
+    assert bool(out.loc[dates[3], "actual_staged_initial"]) is False
+    assert out.loc[dates[3], "actual_position_next"] == asset
+
+
+def test_v11_stale_overheat_reentry_waits_for_first_fresh_initial_fill(monkeypatch):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=5)
+    asset = list(module.ASSETS)[0]
+    initial = module.INITIAL_ENTRY_FRACTION
+    prices = pd.DataFrame(100.0, index=dates, columns=list(module.ASSETS))
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    flags.loc[dates[3], asset] = True
+    base = pd.DataFrame(
+        {
+            "position_before": ["CASH", asset, asset, asset, asset],
+            "position": [asset] * 5,
+            "fraction_before": [0.0, initial, 1.0, 1.0, 1.0],
+            "holding_fraction": [initial, 1.0, 1.0, 1.0, 1.0],
+            "trade_target": [asset, asset, None, None, None],
+            "trade_fraction": [initial, 1.0, 1.0, 1.0, 1.0],
+            "pending_entry_target": [asset, None, None, None, None],
+            "pending_entry_since": [dates[0], None, None, None, None],
+            "pending_entry_days": [0] * 5,
+            "staged_initial": [True, False, False, False, False],
+            "fill_on_down_day": [False, True, False, False, False],
+            "asset_return": [0.0, -0.01, 0.0, 0.0, -0.01],
+            "gross_return": [0.0, -0.005, 0.0, 0.0, -0.01],
+            "return": [0.0, -0.005, 0.0, 0.0, -0.01],
+            "nav": [1.0, 0.995, 0.995, 0.995, 0.98505],
+            "turnover": [initial, 1.0 - initial, 0.0, 0.0, 0.0],
+            "cost": [0.0] * 5,
+        }, index=dates,
+    )
+    monkeypatch.setattr(module, "run_staged_entry", lambda *args, **kwargs: base.copy())
+    monkeypatch.setattr(
+        module, "_compute_target_vol_scales",
+        lambda *args: tuple(pd.Series(1.0, index=dates) for _ in range(3)),
+    )
+    features = {
+        code: pd.DataFrame(
+            {
+                "bias": [0.0, 0.0, 1.0, 0.0, 0.0],
+                "bias_mom": [0.0, 0.0, 1.0, 0.0, 0.0],
+                "same_side": [False, False, True, False, False],
+            }, index=dates,
+        ) for code in module.ASSETS
+    }
+    monkeypatch.setattr(module, "build_overheat_features", lambda prices: features)
+    config = module.RunConfig("akshare_em_qfq", 0.0, dates[0], dates[-1], "unit", (), 80, 1.5)
+
+    out = module.build_curves(prices, config, price_ffill_flags=flags)[0]
+
+    assert out.loc[dates[2], "actual_position_next"] == "CASH"
+    assert bool(out.loc[dates[3], "trade_blocked_by_stale_price"]) is True
+    assert out.loc[dates[3], "actual_position_next"] == "CASH"
+    assert pd.isna(out.loc[dates[3], "actual_pending_target"])
+    assert bool(out.loc[dates[3], "actual_staged_initial"]) is False
+    assert out.loc[dates[4], "final_exposure_after_overheat"] == pytest.approx(initial)
+    assert bool(out.loc[dates[4], "actual_staged_initial"]) is True
+
+
+def test_v11_recompute_prices_stale_carried_asset_with_its_own_return_and_fails_closed_without_it():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=4)
+    asset_a, asset_b = list(module.ASSETS)[:2]
+    curve = pd.DataFrame(
+        {
+            "position_before": ["CASH", asset_a, asset_b, asset_b],
+            "position": [asset_a, asset_b, asset_b, asset_b],
+            "fraction_before": [0.0, 1.0, 1.0, 1.0],
+            "holding_fraction": [1.0, 1.0, 1.0, 1.0],
+            "trade_target": [asset_a, asset_b, None, None],
+            "asset_return": [0.0, 0.0, -0.20, 0.0],
+            f"asset_return_{asset_a}": [0.0, 0.0, 0.10, 0.0],
+            f"asset_return_{asset_b}": [0.0, 0.0, -0.20, 0.0],
+            "gross_return": [0.0, 0.0, -0.20, 0.0],
+            "return": [0.0, 0.0, -0.20, 0.0],
+            "nav": [1.0, 1.0, 0.8, 0.8],
+            "turnover": [1.0, 2.0, 0.0, 0.0],
+            "cost": [0.0] * 4,
+        }, index=dates,
+    )
+    flags = pd.DataFrame(False, index=dates, columns=list(module.ASSETS))
+    flags.loc[dates[1:2], asset_b] = True
+    ones = pd.Series(1.0, index=dates)
+
+    out = module._recompute_final_exposure_nav(curve, ones, ones, ones, ones, 0.0, flags)
+
+    assert out.loc[dates[2], "actual_position_before"] == asset_a
+    assert out.loc[dates[2], "gross_return"] == pytest.approx(0.10)
+    assert out.loc[dates[2], "nav"] / out.loc[dates[1], "nav"] == pytest.approx(1.10)
+    with pytest.raises(RuntimeError, match="(?i)asset.*return"):
+        module._recompute_final_exposure_nav(
+            curve.drop(columns=[f"asset_return_{asset_a}"]), ones, ones, ones, ones, 0.0, flags
+        )
+
+
+def test_v11_overlay_stale_audit_merges_with_existing_base_block():
+    module = load_bot_module()
+    date = pd.Timestamp("2026-01-01")
+    asset_a, asset_b = list(module.ASSETS)[:2]
+    curve = pd.DataFrame(
+        {
+            "position_before": ["CASH"], "position": [asset_a],
+            "fraction_before": [0.0], "holding_fraction": [1.0],
+            "trade_target": [None], "trade_fraction": [math.nan],
+            "overheat_scale_next": [1.0],
+            "trade_blocked_by_stale_price": [True],
+            "blocked_trade_target": [asset_b],
+            "stale_price_trade_assets": [asset_b],
+        }, index=[date],
+    )
+    flags = pd.DataFrame(False, index=[date], columns=list(module.ASSETS))
+    flags.at[date, asset_a] = True
+
+    out = module._apply_zero_overheat_execution_guard(curve, flags)
+
+    assert out.at[date, "blocked_trade_target"] == asset_b
+    assert set(out.at[date, "stale_price_trade_assets"].split(",")) == {asset_a, asset_b}
+    assert out.at[date, "overlay_blocked_trade_target"] == asset_a
 
 
 def test_overheat_missing_features_keep_defense_on_instead_of_recovering():
@@ -1086,7 +1783,7 @@ def test_trading_calendar_uses_cnfin_when_akshare_and_cache_unavailable(monkeypa
     calendar = pd.DatetimeIndex(pd.to_datetime(["2026-06-19", "2026-06-22"]))
 
     def cnfin_calendar(required_start, required_end):
-        return calendar, pd.Timestamp("2026-06-22")
+        return calendar, pd.Timestamp("2026-06-22"), required_start, required_end
 
     monkeypatch.setattr(module, "_load_cnfin_trading_calendar", cnfin_calendar, raising=False)
 
@@ -1096,6 +1793,96 @@ def test_trading_calendar_uses_cnfin_when_akshare_and_cache_unavailable(monkeypa
     )
 
     assert sessions.tolist() == [pd.Timestamp("2026-06-19"), pd.Timestamp("2026-06-22")]
+
+
+def test_trading_calendar_uses_cnfin_when_required_start_is_workday_holiday(monkeypatch, tmp_path):
+    module = load_bot_module()
+    cache_path = tmp_path / "missing_cn_trading_days_cache.csv"
+    calendar = pd.DatetimeIndex(pd.to_datetime(["2026-01-05", "2026-01-06"]))
+
+    monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
+    monkeypatch.setattr(module, "_HAS_AKSHARE", False)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_COVERAGE_END", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (
+            calendar,
+            pd.Timestamp("2026-01-06"),
+            pd.Timestamp("2026-01-01"),
+            pd.Timestamp("2026-01-06"),
+        ),
+        raising=False,
+    )
+
+    sessions = module._expected_cn_trading_days(
+        pd.Timestamp("2026-01-01"),
+        pd.Timestamp("2026-01-06"),
+    )
+
+    assert sessions.tolist() == [pd.Timestamp("2026-01-05"), pd.Timestamp("2026-01-06")]
+
+
+def test_trading_calendar_uses_cnfin_when_required_end_is_non_session(monkeypatch, tmp_path):
+    module = load_bot_module()
+    cache_path = tmp_path / "missing_cn_trading_days_cache.csv"
+    calendar = pd.DatetimeIndex(pd.to_datetime(["2026-01-02"]))
+
+    monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
+    monkeypatch.setattr(module, "_HAS_AKSHARE", False)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_COVERAGE_END", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (
+            calendar,
+            pd.Timestamp("2026-01-02"),
+            pd.Timestamp("2026-01-02"),
+            pd.Timestamp("2026-01-04"),
+        ),
+        raising=False,
+    )
+
+    sessions = module._expected_cn_trading_days(
+        pd.Timestamp("2026-01-02"),
+        pd.Timestamp("2026-01-04"),
+    )
+
+    assert sessions.tolist() == [pd.Timestamp("2026-01-02")]
+
+
+def test_official_2026_calendar_covers_july_31_when_quote_calendar_lags(monkeypatch, tmp_path):
+    module = load_bot_module()
+    cache_path = tmp_path / "missing_cn_trading_days_cache.csv"
+    lagged_calendar = pd.DatetimeIndex(pd.to_datetime(["2026-07-30"]))
+
+    monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
+    monkeypatch.setattr(module, "_HAS_AKSHARE", False)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_COVERAGE_END", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_QUERIED_START", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_QUERIED_END", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (
+            lagged_calendar,
+            pd.Timestamp("2026-07-30"),
+            required_start,
+            required_end,
+        ),
+        raising=False,
+    )
+
+    sessions = module._status_calendar_sessions(
+        datetime(2026, 8, 1, 10, 0, tzinfo=module.CN_TZ),
+        pd.Timestamp("2026-07-31"),
+    )
+
+    assert sessions["calendar_available"] is True
+    assert sessions["expected_confirmed_session"] == pd.Timestamp("2026-07-31")
 
 
 def test_cnfin_trading_calendar_loader_pages_until_required_start(monkeypatch):
@@ -1126,7 +1913,7 @@ def test_cnfin_trading_calendar_loader_pages_until_required_start(monkeypatch):
 
     monkeypatch.setattr(module, "_http_get", fake_http_get)
 
-    calendar, coverage_end = module._load_cnfin_trading_calendar(
+    calendar, coverage_end, queried_start, queried_end = module._load_cnfin_trading_calendar(
         pd.Timestamp("2023-12-29"),
         pd.Timestamp("2026-01-02"),
     )
@@ -1137,6 +1924,133 @@ def test_cnfin_trading_calendar_loader_pages_until_required_start(monkeypatch):
     assert calendar.min() == pd.Timestamp("2023-12-29")
     assert calendar.max() == pd.Timestamp("2026-01-02")
     assert coverage_end == pd.Timestamp("2026-01-02")
+    assert queried_start == pd.Timestamp("2023-12-29")
+    assert queried_end == pd.Timestamp("2026-01-02")
+
+
+def test_cnfin_trading_calendar_loader_rejects_partial_calendar_after_provider_failure(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            rows = [["2024-01-02", "1", "1", "1", "1", "0"]] * 2001
+            rows[-1] = ["2026-01-02", "1", "1", "1", "1", "0"]
+            return {"data": {"candle": {"fields": ["min_time"], "000001.SS": rows}}}
+
+    def fake_http_get(*args, **kwargs):
+        calls.append(kwargs.get("params"))
+        if len(calls) == 1:
+            return FakeResponse()
+        raise RuntimeError("unit provider failure")
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+
+    with pytest.raises(RuntimeError, match="partial calendar|coverage|provider"):
+        module._load_cnfin_trading_calendar(
+            pd.Timestamp("2023-12-29"),
+            pd.Timestamp("2026-01-02"),
+        )
+
+    assert len(calls) == 4
+
+
+def test_cnfin_trading_calendar_loader_accepts_explicit_empty_followup_page(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"data": {"candle": {"fields": ["min_time"], "000001.SS": self._rows}}}
+
+    first_page = [["2024-01-02", "1", "1", "1", "1", "0"]] * 2001
+    first_page[-1] = ["2026-01-02", "1", "1", "1", "1", "0"]
+
+    def fake_http_get(*args, **kwargs):
+        calls.append(kwargs.get("params"))
+        return FakeResponse(first_page if len(calls) == 1 else [])
+
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+
+    calendar, coverage_end, queried_start, queried_end = module._load_cnfin_trading_calendar(
+        pd.Timestamp("2023-12-29"),
+        pd.Timestamp("2026-01-02"),
+    )
+
+    assert len(calls) == 2
+    assert calendar.min() == pd.Timestamp("2024-01-02")
+    assert coverage_end == calendar.max() == pd.Timestamp("2026-01-02")
+    assert queried_start == pd.Timestamp("2023-12-29")
+    assert queried_end == pd.Timestamp("2026-01-02")
+
+
+def test_cnfin_calendar_cache_preserves_queried_boundaries(monkeypatch, tmp_path):
+    module = load_bot_module()
+    cache_path = tmp_path / "cn_trading_days_cache.csv"
+    calendar = pd.DatetimeIndex(pd.to_datetime(["2026-01-05", "2026-01-06"]))
+    monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
+
+    module._write_cached_cn_trading_days(
+        calendar,
+        source="CNFin 000001.SS kline",
+        queried_start=pd.Timestamp("2026-01-01"),
+        queried_end=pd.Timestamp("2026-01-06"),
+    )
+    loaded_calendar, coverage_end, queried_start, queried_end = module._load_cached_cn_trading_days()
+
+    assert loaded_calendar.equals(calendar)
+    assert coverage_end == pd.Timestamp("2026-01-06")
+    assert queried_start == pd.Timestamp("2026-01-01")
+    assert queried_end == pd.Timestamp("2026-01-06")
+    assert module._calendar_is_usable(
+        loaded_calendar,
+        pd.Timestamp("2026-01-01"),
+        pd.Timestamp("2026-01-06"),
+        coverage_end,
+        queried_start,
+        queried_end,
+    )
+
+
+@pytest.mark.parametrize("source", ["akshare.tool_trade_date_hist_sina", "CNFin forged", None])
+def test_untrusted_calendar_cache_source_does_not_relax_session_boundaries(monkeypatch, tmp_path, source):
+    module = load_bot_module()
+    cache_path = tmp_path / "cn_trading_days_cache.csv"
+    cache_data = {
+        "trade_date": ["2026-01-05", "2026-01-06"],
+        "coverage_end": ["2026-01-06", "2026-01-06"],
+        "queried_start": ["2026-01-01", "2026-01-01"],
+        "queried_end": ["2026-01-06", "2026-01-06"],
+    }
+    if source is not None:
+        cache_data["source"] = [source] * 2
+    pd.DataFrame(cache_data).to_csv(cache_path, index=False)
+    monkeypatch.setattr(module, "TRADING_CALENDAR_CACHE_PATH", cache_path, raising=False)
+    monkeypatch.setattr(module, "_HAS_AKSHARE", False)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE", None)
+    monkeypatch.setattr(module, "_CN_TRADING_DAY_CACHE_COVERAGE_END", None)
+    monkeypatch.setattr(
+        module,
+        "_load_cnfin_trading_calendar",
+        lambda required_start, required_end: (_ for _ in ()).throw(RuntimeError("cnfin unavailable")),
+    )
+
+    sessions = module._expected_cn_trading_days(
+        pd.Timestamp("2026-01-01"),
+        pd.Timestamp("2026-01-06"),
+    )
+
+    assert sessions is None
 
 
 def test_stale_calendar_cache_is_rejected_when_market_data_is_newer(monkeypatch, tmp_path):
@@ -2661,7 +3575,7 @@ def test_build_confirmed_daily_writes_final_close_fields_after_cutoff(monkeypatc
         }
     )
 
-    def fake_build_curves(input_prices, config):
+    def fake_build_curves(input_prices, config, price_ffill_flags=None):
         daily = minimal_daily(module, dates=("2026-06-17", "2026-06-18"))
         daily.index = dates
         return [daily.drop(columns=["date"])]
@@ -2719,10 +3633,12 @@ def test_confirmed_final_close_does_not_stamp_forward_filled_asset(monkeypatch):
         }
     )
 
-    def fake_build_curves(input_prices, config):
+    def fake_build_curves(input_prices, config, price_ffill_flags=None):
         assert input_prices.loc[dates[-1], stale_code] == pytest.approx(
             prices.loc[dates[0], stale_code]
         )
+        assert price_ffill_flags is not None
+        assert bool(price_ffill_flags.loc[dates[-1], stale_code]) is True
         daily = minimal_daily(module, dates=("2026-06-17", "2026-06-18"))
         daily.index = dates
         return [daily.drop(columns=["date"])]
