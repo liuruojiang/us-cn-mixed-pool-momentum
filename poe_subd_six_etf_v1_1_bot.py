@@ -181,11 +181,16 @@ TENCENT_VERIFIED_DAY_QFQ_CODES = {"513030.SH", "513520.SH", "159985.SZ"}
 TENCENT_FQKLINE_PAGE_SIZE = 640
 CROSS_VALIDATED_RAW_CODES = {"159985.SZ": pd.Timestamp("2019-12-05")}
 SINA_DAILY_KLINE_MAX_ROWS = 1970
+SINA_DAILY_KLINE_WARN_ROWS = 1900
 CROSS_VALIDATED_RAW_MIN_ROWS = 500
 CROSS_VALIDATED_RAW_MIN_SHORTER_OVERLAP = 0.99
 CROSS_VALIDATED_RAW_MAX_ABS_CLOSE_DIFF = 0.001
 CNFIN_KLINE_PAGE_SIZE = 2001
 MAX_ADJUSTED_DAILY_ABS_RETURN = 0.35
+
+
+class DeterministicProviderSchemaError(RuntimeError):
+    pass
 APPROVED_QFQ_HISTORICAL_SOURCES = {
     ("akshare.fund_etf_hist_em daily close", SOURCE_DETAIL_AKSHARE_QFQ),
     ("Eastmoney push2his kline", SOURCE_DETAIL_EASTMONEY_FQT1),
@@ -438,12 +443,12 @@ def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
                 elif code in TENCENT_VERIFIED_DAY_QFQ_CODES and "day" in node:
                     page_payload_key = "day"
                 else:
-                    missing_qfqday_error = RuntimeError(
+                    missing_qfqday_error = DeterministicProviderSchemaError(
                         f"Tencent fqkline adjusted response missing qfqday for {code}"
                     )
                     raise missing_qfqday_error
                 if payload_key is not None and page_payload_key != payload_key:
-                    missing_qfqday_error = RuntimeError(
+                    missing_qfqday_error = DeterministicProviderSchemaError(
                         f"Tencent fqkline qfqday/day payload changed; refusing partial history for {code}"
                     )
                     raise missing_qfqday_error
@@ -453,6 +458,12 @@ def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
                 page_rows = node.get(payload_key) or []
                 if page_rows:
                     break
+            except DeterministicProviderSchemaError as exc:
+                if rows:
+                    raise RuntimeError(
+                        f"Tencent fqkline qfqday missing; refusing partial history for {code}"
+                    ) from exc
+                raise
             except Exception as exc:
                 page_error = exc
                 last_error = exc
@@ -1206,7 +1217,12 @@ def _load_cross_validated_raw_one_close(code: str, end_date: pd.Timestamp) -> pd
     close = sina_common.copy()
     _validate_adjusted_close_continuity(code, close, SOURCE_SINA_CNFIN_CROSS_VALIDATED)
     close.attrs["adjustment"] = ADJUSTMENT_CROSS_VALIDATED_RAW
-    close.attrs["source_detail"] = SOURCE_DETAIL_SINA_CNFIN_CROSS_VALIDATED
+    source_detail = SOURCE_DETAIL_SINA_CNFIN_CROSS_VALIDATED
+    if len(sina) >= SINA_DAILY_KLINE_WARN_ROWS:
+        source_detail += (
+            f"; Sina history cap warning: {len(sina)}/{SINA_DAILY_KLINE_MAX_ROWS} rows"
+        )
+    close.attrs["source_detail"] = source_detail
     return close
 
 

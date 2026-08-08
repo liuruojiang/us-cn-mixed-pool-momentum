@@ -2,6 +2,7 @@ import importlib.util
 import math
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -158,3 +159,78 @@ def test_v13_target_vol_helpers_reject_bool_inputs(args):
     curve = pd.DataFrame({"return": [0.0] * 30})
     with pytest.raises(ValueError):
         module._compute_target_vol_scales(curve, *args)
+
+
+def test_v13_qfq_loaders_use_strategy_start(monkeypatch):
+    module = load_module(V13_PATH, "review_v13_qfq_start")
+    akshare_calls = []
+    http_calls = []
+    monkeypatch.setattr(module, "_HAS_AKSHARE", True)
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+    monkeypatch.setattr(
+        module.ak,
+        "fund_etf_hist_em",
+        lambda **kwargs: akshare_calls.append(kwargs) or pd.DataFrame(),
+    )
+    with pytest.raises(RuntimeError):
+        module._load_akshare_eastmoney_qfq_one_close(
+            "159985.SZ", pd.Timestamp("2026-01-02")
+        )
+    assert akshare_calls[0]["start_date"] == module.START_DATE.strftime("%Y%m%d")
+
+    response = SimpleNamespace(
+        raise_for_status=lambda: None,
+        json=lambda: {"data": {"klines": []}},
+    )
+
+    def fake_get(*args, **kwargs):
+        http_calls.append(kwargs["params"])
+        return response
+
+    monkeypatch.setattr(module, "_http_get", fake_get)
+    with pytest.raises(RuntimeError):
+        module._load_eastmoney_one_close(
+            "159985.SZ", pd.Timestamp("2026-01-02")
+        )
+    assert http_calls[0]["beg"] == module.START_DATE.strftime("%Y%m%d")
+
+
+def test_cross_validated_raw_warns_before_sina_cap(bot_module, monkeypatch):
+    listing_date = bot_module.CROSS_VALIDATED_RAW_CODES["159985.SZ"]
+    index = pd.bdate_range(
+        listing_date, periods=bot_module.SINA_DAILY_KLINE_WARN_ROWS
+    )
+    series = pd.Series(1.0, index=index, name="159985.SZ")
+    monkeypatch.setattr(
+        bot_module, "_load_sina_raw_one_close", lambda *_: series.copy()
+    )
+    monkeypatch.setattr(
+        bot_module, "_load_cnfin_raw_one_close", lambda *_: series.copy()
+    )
+    monkeypatch.setattr(
+        bot_module, "_validate_adjusted_close_continuity", lambda *_: None
+    )
+    out = bot_module._load_cross_validated_raw_one_close(
+        "159985.SZ", index[-1]
+    )
+    assert "Sina history cap warning" in out.attrs["source_detail"]
+
+
+def test_tencent_schema_failure_does_not_retry(bot_module, monkeypatch):
+    calls = []
+    symbol = bot_module._tencent_fq_symbol("159941.SZ")
+    response = SimpleNamespace(
+        raise_for_status=lambda: None,
+        json=lambda: {"data": {symbol: {"day": []}}},
+    )
+    monkeypatch.setattr(bot_module.time, "sleep", lambda *_: None)
+    monkeypatch.setattr(
+        bot_module,
+        "_http_get",
+        lambda *args, **kwargs: calls.append(1) or response,
+    )
+    with pytest.raises(RuntimeError, match="missing qfqday"):
+        bot_module._load_tencent_qfq_one_close(
+            "159941.SZ", pd.Timestamp("2026-01-02")
+        )
+    assert len(calls) == 1
