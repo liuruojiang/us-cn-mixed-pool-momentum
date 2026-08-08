@@ -1,4 +1,6 @@
 import importlib.util
+import math
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -129,3 +131,30 @@ def test_introduction_describes_confirmed_cache(path):
     text = path.read_text(encoding="utf-8")
     assert "5分钟缓存" in text
     assert "查询时刷新" not in text
+
+
+def test_v13_unsupported_live_symbols_use_typed_error():
+    module = load_module(V13_PATH, "review_v13_unsupported")
+    with pytest.raises(module.UnsupportedLiveQuoteSymbols) as caught:
+        module.load_live_quotes(
+            ["NOT_SUPPORTED"], now=datetime(2026, 8, 5, 14, 55)
+        )
+    assert caught.value.codes == ("NOT_SUPPORTED",)
+    assert module._is_proxy_live_quote_unsupported_error(caught.value)
+
+
+def test_v13_non_cn_price_limit_bounds_are_nan():
+    module = load_module(V13_PATH, "review_v13_non_cn_bounds")
+    lower, upper = module._price_limit_bounds_from_prev_close("QQQ", 100.0)
+    assert math.isnan(lower) and math.isnan(upper)
+
+
+@pytest.mark.parametrize(
+    "args",
+    [(True, 20, 1.0), (0.2, True, 1.0), (0.2, 20, True)],
+)
+def test_v13_target_vol_helpers_reject_bool_inputs(args):
+    module = load_module(V13_PATH, "review_v13_target_vol")
+    curve = pd.DataFrame({"return": [0.0] * 30})
+    with pytest.raises(ValueError):
+        module._compute_target_vol_scales(curve, *args)

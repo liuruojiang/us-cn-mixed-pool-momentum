@@ -642,12 +642,17 @@ def _format_code_list(codes: list[str] | set[str]) -> str:
     return ",".join(sorted(str(code) for code in codes)) or "-"
 
 
+class UnsupportedLiveQuoteSymbols(IncompleteLiveSnapshot):
+    def __init__(self, codes: list[str] | set[str]):
+        self.codes = tuple(sorted(str(code) for code in codes))
+        super().__init__(
+            "live quotes unsupported for proxy/non-CN symbols: "
+            + _format_code_list(set(self.codes))
+        )
+
+
 def _is_proxy_live_quote_unsupported_error(exc: Exception) -> bool:
-    text = str(exc)
-    return (
-        "live quotes unsupported for proxy/non-CN symbols" in text
-        or ("live quotes unavailable" in text and "proxy/non-CN symbols" in text)
-    )
+    return isinstance(exc, UnsupportedLiveQuoteSymbols)
 
 
 def _live_snapshot_error(
@@ -734,7 +739,10 @@ def _price_limit_bounds_from_prev_close(code: str, prev_close: object) -> tuple[
     previous = _decimal_from_number(prev_close)
     if previous is None:
         return math.nan, math.nan
-    ratio = Decimal(str(_live_price_limit_ratio(code)))
+    ratio_value = _live_price_limit_ratio(code)
+    if not math.isfinite(ratio_value):
+        return math.nan, math.nan
+    ratio = Decimal(str(ratio_value))
     lower = (previous * (Decimal("1") - ratio)).quantize(ETF_PRICE_TICK, rounding=ROUND_HALF_UP)
     upper = (previous * (Decimal("1") + ratio)).quantize(ETF_PRICE_TICK, rounding=ROUND_HALF_UP)
     if abs(previous - lower) < ETF_PRICE_TICK:
@@ -1276,9 +1284,7 @@ def load_live_quotes(
         return pd.DataFrame(columns=LIVE_QUOTE_COLUMNS)
     unsupported = _live_quote_unsupported_codes(codes)
     if unsupported:
-        raise IncompleteLiveSnapshot(
-            "live quotes unsupported for symbols: " + _format_code_list(unsupported)
-        )
+        raise UnsupportedLiveQuoteSymbols(unsupported)
     request_ts = _as_bj_datetime(now)
     if expected_quote_date is None:
         expected_quote_date = pd.Timestamp(request_ts.date()).normalize()
@@ -3017,10 +3023,11 @@ def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series
 def apply_target_vol_scale_rebalance_threshold(
     raw_next_scale: pd.Series,
     threshold: float = TARGET_VOL_SCALE_REBALANCE_THRESHOLD,
+    initial_scale: float = 1.0,
 ) -> pd.Series:
-    raw = raw_next_scale.astype(float).replace([np.inf, -np.inf], np.nan).fillna(1.0)
+    raw = raw_next_scale.astype(float)
     confirmed: list[float] = []
-    last_confirmed = 1.0
+    last_confirmed = float(initial_scale)
     for value in raw:
         value = float(value)
         if threshold <= 0 or abs(value - last_confirmed) >= threshold:
@@ -3035,12 +3042,54 @@ def _compute_target_vol_scales(
     vol_window: int,
     max_lev: float,
 ) -> tuple[pd.Series, pd.Series, pd.Series]:
-    base_ret = curve["return"].astype(float).fillna(0.0)
-    realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(TRADING_DAYS)
-    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], max_lev)
-    next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
-    next_scale = apply_target_vol_scale_rebalance_threshold(next_scale)
-    effective_scale = next_scale.shift(1).fillna(1.0)
+    if isinstance(target_vol, (bool, np.bool_)):
+        raise ValueError("target_vol must be a finite positive number")
+    if isinstance(vol_window, (bool, np.bool_)) or not isinstance(
+        vol_window, (int, np.integer)
+    ):
+        raise ValueError("vol_window must be an integer greater than 1")
+    if isinstance(max_lev, (bool, np.bool_)):
+        raise ValueError("max_lev must be a finite nonnegative number")
+
+    target_vol = float(target_vol)
+    max_lev = float(max_lev)
+    vol_window = int(vol_window)
+    if not math.isfinite(target_vol) or target_vol <= 0.0:
+        raise ValueError("target_vol must be a finite positive number")
+    if vol_window <= 1:
+        raise ValueError("vol_window must be an integer greater than 1")
+    if not math.isfinite(max_lev) or max_lev < 0.0:
+        raise ValueError("max_lev must be a finite nonnegative number")
+
+    try:
+        base_ret = curve["return"].astype(float)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("return values must be finite") from exc
+    if not np.isfinite(base_ret.to_numpy()).all():
+        raise ValueError("return values must be finite")
+
+    initial_scale = min(1.0, max_lev)
+    with np.errstate(over="ignore", invalid="ignore"):
+        realized_vol = (
+            base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0)
+            * math.sqrt(TRADING_DAYS)
+        )
+    post_warmup_vol = realized_vol.iloc[vol_window - 1 :]
+    if not np.isfinite(post_warmup_vol.to_numpy()).all():
+        raise ValueError("realized volatility must be finite after warmup")
+
+    complete_window = realized_vol.notna()
+    next_scale = pd.Series(initial_scale, index=curve.index, dtype=float)
+    positive_vol = complete_window & realized_vol.gt(0.0)
+    zero_vol = complete_window & realized_vol.eq(0.0)
+    next_scale.loc[positive_vol] = target_vol / realized_vol.loc[positive_vol]
+    next_scale.loc[zero_vol] = max_lev
+    next_scale = next_scale.clip(lower=0.0, upper=max_lev)
+    next_scale = apply_target_vol_scale_rebalance_threshold(
+        next_scale,
+        initial_scale=initial_scale,
+    )
+    effective_scale = next_scale.shift(1, fill_value=initial_scale)
     return realized_vol, effective_scale.astype(float), next_scale.astype(float)
 
 
@@ -3997,9 +4046,7 @@ def _load_live_quotes_for_prices(
 ) -> pd.DataFrame:
     unsupported = _live_quote_unsupported_codes(codes)
     if unsupported:
-        raise IncompleteLiveSnapshot(
-            "live quotes unsupported for proxy/non-CN symbols: " + _format_code_list(unsupported)
-        )
+        raise UnsupportedLiveQuoteSymbols(unsupported)
     kwargs: dict[str, object] = {"now": now}
     params = inspect.signature(load_live_quotes).parameters
     if "reference_prices" in params:

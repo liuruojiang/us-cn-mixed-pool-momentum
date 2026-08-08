@@ -278,9 +278,7 @@ def test_v13_live_signal_handler_does_not_display_confirmed_fallback_when_proxy_
     def fake_get_daily(force_refresh=False, data_state="confirmed"):
         calls.append((force_refresh, data_state))
         if data_state == "live":
-            raise module.poe.BotError(
-                "live quotes unavailable: live quotes unsupported for proxy/non-CN symbols: QQQ"
-            )
+            raise module.UnsupportedLiveQuoteSymbols({"QQQ"})
         return pd.DataFrame({"date": [pd.Timestamp("2026-01-02")]}), "confirmed source"
 
     def fake_report(daily, source_note, live=False, now=None):
