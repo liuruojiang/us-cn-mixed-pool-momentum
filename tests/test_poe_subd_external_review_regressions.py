@@ -632,7 +632,6 @@ def test_trade_leg_with_forward_filled_price_blocks_execution(monkeypatch):
 def test_calendar_failure_reason_prefers_context_local_value():
     module = load_bot_module()
     module._set_calendar_failure("context-local")
-    module._CN_TRADING_DAY_FAILURE_REASON = "other-request"
 
     assert module._calendar_failure_reason() == "context-local"
 
@@ -2146,7 +2145,7 @@ def test_calendar_cache_rejects_inconsistent_coverage_metadata(monkeypatch, tmp_
     )
 
     assert module._expected_cn_trading_days(pd.Timestamp("2026-06-17"), pd.Timestamp("2026-06-18")) is None
-    assert "元数据不一致" in module._CN_TRADING_DAY_FAILURE_REASON
+    assert "元数据不一致" in module._calendar_failure_reason()
 
 
 def test_latest_market_date_must_be_a_calendar_session(monkeypatch, tmp_path):

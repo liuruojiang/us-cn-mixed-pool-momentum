@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
+from threading import RLock
 from typing import Literal, Optional
 
 import numpy as np
@@ -159,7 +160,9 @@ LIVE_PRICE_LIMIT_RATIO_BY_CODE["159915.SZ"] = 0.20
 POST_CLOSE_FIXED_PRICE_EFFECTIVE_DATE = pd.Timestamp("2026-07-06")
 POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED = False
 DAILY_CACHE_TTL = timedelta(minutes=5)
-TRADING_CALENDAR_CACHE_PATH = Path("outputs/cn_trading_days_cache.csv")
+TRADING_CALENDAR_CACHE_PATH = Path(
+    f"outputs/cn_trading_days_cache_{START_DATE.strftime('%Y%m%d')}.csv"
+)
 ADJUSTMENT_QFQ = "qfq/front-adjusted"
 ADJUSTMENT_TOTAL_RETURN = "total-return/adjusted-close"
 ADJUSTMENT_CROSS_VALIDATED_RAW = "raw/unadjusted cross-validated"
@@ -1058,6 +1061,8 @@ def load_live_quotes(
                         _validate_live_quote_prices_against_history(reference_prices, candidate, expected_quote_date)
                     except IncompleteLiveSnapshot as exc:
                         errors.append(f"{source} attempt {attempt}: price quality rejected: {exc}")
+                        if attempt < 2:
+                            time.sleep(0.5 * attempt)
                         continue
                     missing_prev_close = _missing_vendor_prev_close_codes(candidate)
                     if missing_prev_close:
@@ -1074,6 +1079,8 @@ def load_live_quotes(
                         response_received_at,
                     )
                     errors.append(f"{source} attempt {attempt}: quote quality rejected: {quality_reason}")
+                    if attempt < 2:
+                        time.sleep(0.5 * attempt)
                     continue
                 if _all_quotes_execution_eligible(candidate):
                     return candidate
@@ -1083,12 +1090,15 @@ def load_live_quotes(
                     response_received_at,
                 )
                 errors.append(f"{source} attempt {attempt}: source permission rejected")
+                if attempt < 2:
+                    time.sleep(0.5 * attempt)
                 continue
             except IncompleteLiveSnapshot as exc:
                 errors.append(f"{source} attempt {attempt}: {exc}")
             except Exception as exc:
                 errors.append(f"{source} attempt {attempt}: {str(exc)[:120]}")
-            time.sleep(0.5 * attempt)
+            if attempt < 2:
+                time.sleep(0.5 * attempt)
     if best_monitor_candidate is not None:
         return best_monitor_candidate
     raise RuntimeError("Eastmoney live quote unavailable. " + " | ".join(errors[-6:]))
@@ -1939,7 +1949,6 @@ OFFICIAL_CN_CALENDAR_2026_CLOSED_DATES = pd.DatetimeIndex(
         ]
     )
 )
-_CN_TRADING_DAY_FAILURE_REASON = ""
 _CN_TRADING_DAY_FAILURE_REASON_VAR: ContextVar[str] = ContextVar(
     "_CN_TRADING_DAY_FAILURE_REASON",
     default="",
@@ -2183,13 +2192,11 @@ def _write_cached_cn_trading_days(
 
 
 def _set_calendar_failure(reason: str) -> None:
-    global _CN_TRADING_DAY_FAILURE_REASON
-    _CN_TRADING_DAY_FAILURE_REASON = reason
     _CN_TRADING_DAY_FAILURE_REASON_VAR.set(reason)
 
 
 def _calendar_failure_reason() -> str:
-    return _CN_TRADING_DAY_FAILURE_REASON_VAR.get() or _CN_TRADING_DAY_FAILURE_REASON
+    return _CN_TRADING_DAY_FAILURE_REASON_VAR.get()
 
 
 def _load_official_cn_trading_calendar_2026(
@@ -2215,7 +2222,10 @@ def _load_official_cn_trading_calendar_2026(
     )
 
 
-def _load_cn_trading_calendar(
+_CN_TRADING_DAY_CACHE_LOCK = RLock()
+
+
+def _load_cn_trading_calendar_unlocked(
     required_start: pd.Timestamp,
     required_end: pd.Timestamp,
 ) -> tuple[
@@ -2347,6 +2357,19 @@ def _load_cn_trading_calendar(
     else:
         _set_calendar_failure("交易日历不可用，禁止生成实盘动作")
     return None
+
+
+def _load_cn_trading_calendar(
+    required_start: pd.Timestamp,
+    required_end: pd.Timestamp,
+) -> tuple[
+    pd.DatetimeIndex,
+    pd.Timestamp | None,
+    pd.Timestamp | None,
+    pd.Timestamp | None,
+] | None:
+    with _CN_TRADING_DAY_CACHE_LOCK:
+        return _load_cn_trading_calendar_unlocked(required_start, required_end)
 
 
 def _expected_cn_trading_days(start: pd.Timestamp, end: pd.Timestamp) -> pd.DatetimeIndex | None:
@@ -3345,6 +3368,7 @@ def _load_live_quotes_for_prices(
 
 
 _DAILY_CACHE: dict[str, tuple[datetime, pd.DataFrame, str]] = {}
+_DAILY_CACHE_LOCK = RLock()
 
 
 def _daily_cache_key(date_key: str, data_state: str) -> str:
@@ -3352,7 +3376,8 @@ def _daily_cache_key(date_key: str, data_state: str) -> str:
 
 
 def _clear_daily_cache() -> None:
-    _DAILY_CACHE.clear()
+    with _DAILY_CACHE_LOCK:
+        _DAILY_CACHE.clear()
 
 
 def _crossed_close_boundary(cached_at: datetime, now: datetime) -> bool:
@@ -3383,17 +3408,18 @@ def _with_cache_metadata(daily: pd.DataFrame, cached_at: datetime) -> pd.DataFra
 
 
 def _cached_daily(date_key: str, data_state: str = "confirmed") -> tuple[pd.DataFrame, str]:
-    key = _daily_cache_key(date_key, data_state)
-    now = _now_bj()
-    cached = _DAILY_CACHE.get(key)
-    if cached is not None:
-        cached_at, daily, source_name = cached
-        if now - cached_at <= DAILY_CACHE_TTL and not _crossed_close_boundary(cached_at, now):
-            return daily, source_name
-    daily, source_name = _call_build_v11_daily(pd.Timestamp(date_key), data_state, now)
-    daily = _with_cache_metadata(daily, now)
-    _DAILY_CACHE[key] = (now, daily, source_name)
-    return daily, source_name
+    with _DAILY_CACHE_LOCK:
+        key = _daily_cache_key(date_key, data_state)
+        now = _now_bj()
+        cached = _DAILY_CACHE.get(key)
+        if cached is not None:
+            cached_at, daily, source_name = cached
+            if now - cached_at <= DAILY_CACHE_TTL and not _crossed_close_boundary(cached_at, now):
+                return daily, source_name
+        daily, source_name = _call_build_v11_daily(pd.Timestamp(date_key), data_state, now)
+        daily = _with_cache_metadata(daily, now)
+        _DAILY_CACHE[key] = (now, daily, source_name)
+        return daily, source_name
 
 
 _cached_daily.cache_clear = _clear_daily_cache  # type: ignore[attr-defined]
@@ -4427,9 +4453,11 @@ def _get_daily_for_today(force_refresh: bool = False, data_state: str = "confirm
         try:
             daily, source_name = _call_build_v11_daily(pd.Timestamp(date_key), data_state, now)
             daily = _with_cache_metadata(daily, now)
-            _DAILY_CACHE[key] = (now, daily, source_name)
+            with _DAILY_CACHE_LOCK:
+                _DAILY_CACHE[key] = (now, daily, source_name)
         except Exception as exc:
-            cached = _DAILY_CACHE.get(key)
+            with _DAILY_CACHE_LOCK:
+                cached = _DAILY_CACHE.get(key)
             if cached is None:
                 raise
             cached_at, daily, source_name = cached

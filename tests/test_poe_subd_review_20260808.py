@@ -1,5 +1,7 @@
 import importlib.util
 import math
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -234,3 +236,109 @@ def test_tencent_schema_failure_does_not_retry(bot_module, monkeypatch):
             "159941.SZ", pd.Timestamp("2026-01-02")
         )
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_calendar_failure_reason_is_request_local(path):
+    module = load_module(path, f"review_calendar_context_{path.stem}")
+    module._set_calendar_failure("request-a")
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        other_request_reason = pool.submit(module._calendar_failure_reason).result()
+    assert other_request_reason == ""
+    assert module._calendar_failure_reason() == "request-a"
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_calendar_cache_path_is_namespaced_by_strategy_start(path):
+    module = load_module(path, f"review_calendar_path_{path.stem}")
+    assert module.START_DATE.strftime("%Y%m%d") in module.TRADING_CALENDAR_CACHE_PATH.name
+
+
+def test_v13_yahoo_snapshot_is_reused_across_eastmoney_retries(monkeypatch):
+    module = load_module(V13_PATH, "review_v13_yahoo_reuse")
+    yahoo_calls = []
+    monkeypatch.setattr(
+        module,
+        "_load_yahoo_live_quotes",
+        lambda *args, **kwargs: yahoo_calls.append(1) or pd.DataFrame(),
+    )
+    monkeypatch.setattr(
+        module,
+        "_fetch_eastmoney_live_quotes_from_endpoint",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("eastmoney down")),
+    )
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+    with pytest.raises(RuntimeError, match="unavailable"):
+        module.load_live_quotes(
+            ["QQQ", "159915.SZ"], now=datetime(2026, 8, 5, 14, 55)
+        )
+    assert len(yahoo_calls) == 1
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_daily_cache_build_is_single_flight(path, monkeypatch):
+    module = load_module(path, f"review_daily_singleflight_{path.stem}")
+    calls = []
+
+    def fake_build(*args, **kwargs):
+        calls.append(1)
+        time.sleep(0.05)
+        return pd.DataFrame({"date": [pd.Timestamp("2026-08-07")]}), "test"
+
+    monkeypatch.setattr(module, "_call_build_v11_daily", fake_build)
+    monkeypatch.setattr(module, "_now_bj", lambda: datetime(2026, 8, 8, 10, 0))
+    module._cached_daily.cache_clear()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(module._cached_daily, "2026-08-07") for _ in range(2)]
+        [future.result() for future in futures]
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_live_price_quality_rejection_backs_off_before_retry(path, monkeypatch):
+    module = load_module(path, f"review_live_backoff_{path.stem}")
+    sleeps = []
+    candidate = pd.DataFrame(
+        {
+            "code": ["159915.SZ"],
+            "price": [1.0],
+            "prev_close": [1.0],
+            "quote_time": ["2026-08-05 14:55:00"],
+            "source": ["test"],
+            "source_execution_eligible": [True],
+        }
+    )
+    monkeypatch.setattr(module, "EASTMONEY_LIVE_ENDPOINTS", (("u", "s", True),))
+    monkeypatch.setattr(module.time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setattr(
+        module,
+        "_validate_live_quote_prices_against_history",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            module.IncompleteLiveSnapshot("bad price")
+        ),
+    )
+    if path == V11_PATH:
+        response = SimpleNamespace(
+            raise_for_status=lambda: None,
+            json=lambda: {"data": {"diff": [{}]}},
+        )
+        monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: response)
+        monkeypatch.setattr(
+            module, "_normalize_live_quote_rows", lambda *args, **kwargs: candidate.copy()
+        )
+    else:
+        monkeypatch.setattr(
+            module,
+            "_fetch_eastmoney_live_quotes_from_endpoint",
+            lambda *args, **kwargs: candidate.copy(),
+        )
+        monkeypatch.setattr(
+            module, "_normalize_live_quote_frame", lambda frame, *args, **kwargs: frame
+        )
+    with pytest.raises(RuntimeError, match="unavailable"):
+        module.load_live_quotes(
+            ["159915.SZ"],
+            now=datetime(2026, 8, 5, 14, 55),
+            reference_prices=pd.DataFrame({"159915.SZ": [1.0]}),
+        )
+    assert sleeps == [0.5]
