@@ -5941,8 +5941,9 @@ class SubDSixEtfV11Bot:
             msg.write(f"| 过热触发/恢复 | **{OVERHEAT_ENTER:.0%} / {OVERHEAT_EXIT:.0%}** | price/MA{CN_BIAS_N}-1 且乖离动量同向 |\n")
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
+            msg.write("| SELL腿执行校验 | **需要已验证可卖数量** | 未接券商可卖数量时，含SELL腿的换仓保持monitor-only，不生成可执行动作 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}只ETF** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
-            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Tencent fqkline qfqday -> Eastmoney HTTP qfq** | 历史回测统一使用前复权/连续日收盘价；Tencent仅接受显式qfqday，不使用raw day；CNFin历史fallback仍未接入 |\n")
+            msg.write("| 数据源 | **AkShare/Eastmoney qfq -> Tencent fqkline qfqday -> Eastmoney HTTP qfq -> Sina + CNFin交叉验证raw fallback** | 历史回测优先使用前复权/连续日收盘价；Tencent仅接受经验证的qfq payload；raw fallback仅允许白名单品种并要求Sina与CNFin逐日交叉验证 |\n")
             msg.write(f"| Live price limit by ETF | **{_live_price_limit_summary()}** | {LIVE_PRICE_LIMIT_DESCRIPTION} |\n")
             msg.write(f"| Live history today cross-check | **>{LIVE_PRICE_HISTORY_TODAY_MAX_DIFF:.0%} => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |\n")
             if daily is not None:
@@ -6031,7 +6032,7 @@ poe.update_settings(SettingsResponse(
     allow_attachments=True,
     introduction_message=(
         "**SubD六ETF V1.1 信号查询**\n\n"
-        "- 发送 **\"信号\"** -> 最新收盘确认信号（查询时刷新；收盘确认前不使用当天盘中bar）\n"
+        "- 发送 **\"信号\"** -> 最新收盘确认信号（最多复用5分钟缓存；收盘确认前不使用当天盘中bar）\n"
         "- 发送 **\"实时信号\"** -> 盘中/最新日线快照下的假设收盘信号\n"
         "- 发送 **\"参数\"** -> V1.1参数总览\n"
         "- 发送 **\"实时参数\"** -> 参数 + 实时数据快照\n"

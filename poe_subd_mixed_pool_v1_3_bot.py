@@ -6377,6 +6377,27 @@ def _momentum_status(score: float, r2: float) -> str:
     return "入选"
 
 
+def _score_rule_text() -> str:
+    r2_rule = "R²过滤关闭" if R2_THRESHOLD is None else f"R²≥{R2_THRESHOLD:.2f}"
+    return (
+        f"Score 为{LOOKBACK}日加权对数斜率年化动量；只有 "
+        f"{SCORE_MIN:g} < Score < {SCORE_MAX:g} 的 ETF 才进入候选池；{r2_rule}。"
+    )
+
+
+def _mixed_market_timing_notice(live: bool) -> str:
+    notice = (
+        "跨市场提示：美国日期T收盘晚于中国日期T收盘，US→CN切换不代表同日收盘可执行；"
+        "中国长假会压缩累计美国收益到节后首个中国交易日。"
+    )
+    if live:
+        notice += (
+            " Yahoo 1分钟价在北京时间下午通常属于美股盘前/隔夜，"
+            "仅作监控估算，不是美国正式收盘价。"
+        )
+    return notice
+
+
 def _momentum_role(code: str, sig: dict[str, object]) -> str:
     roles: list[str] = []
     if code == str(sig.get("best_candidate")):
@@ -6456,6 +6477,7 @@ def format_live_params_snapshot(
     lines.append(f"- 是否可作为实盘动作: **{'是' if data_status['tradable'] else '否'}**")
     lines.append(f"- 今日实时快照是否可用: **{'是' if data_status['live_data_available'] else '否'}**")
     lines.append(f"- 执行口径: **{data_status['execution_note']}**")
+    lines.append(f"- {_mixed_market_timing_notice(live)}")
     if data_status["execution_legs"]:
         leg_text = "；".join(
             f"{leg['side']} {leg['asset']}({leg['exchange']}/{leg['security_type']}): "
@@ -6523,7 +6545,7 @@ def format_live_params_snapshot(
     if sig.get("overheat_feature_missing"):
         lines.append("| Overheat feature missing | **YES** | Keep prior defense state; recovery signal is not tradable |")
     lines.append("")
-    lines.append("说明: Score 为25日加权对数斜率年化动量；只有 `0 < Score < 5` 且 R² 达标的 ETF 才进入候选池。")
+    lines.append(f"说明: {_score_rule_text()}")
     lines.append(_overheat_rule_text(row))
     return "\n".join(lines) + "\n"
 
@@ -6705,10 +6727,12 @@ class SubDMixedPoolV13Bot:
             msg.write(f"| 过热触发/恢复 | **{OVERHEAT_ENTER:.0%} / {OVERHEAT_EXIT:.0%}** | price/MA{CN_BIAS_N}-1 且乖离动量同向 |\n")
             msg.write(f"| 过热后仓位 | **{OVERHEAT_DERISK_SCALE:.0%}** | 触发后切现金敞口 |\n")
             msg.write(f"| 单边成本 | **{ONE_WAY_COST:.1%}** | 调仓成本 |\n")
+            msg.write("| SELL腿执行校验 | **需要已验证可卖数量** | 未接券商可卖数量时，含SELL腿的换仓保持monitor-only，不生成可执行动作 |\n")
             msg.write(f"| 资产池 | **{len(ASSETS)}个代理品种** | {', '.join(_asset_name(c) for c in ASSETS)} |\n")
             msg.write("| 数据源 | **QQQ/GLD/KMLM: Yahoo adjusted close；创业板: Eastmoney 399006指数代理；豆粕ETF: qfq正式源，raw仅诊断** | A股交易日历；动态资产从自身首个可用日期后加入，不做上市前回填 |\n")
             msg.write(f"| Live price check by code | **{_live_price_limit_summary()}** | {LIVE_PRICE_LIMIT_DESCRIPTION} |\n")
             msg.write(f"| Live history today cross-check | **>{LIVE_PRICE_HISTORY_TODAY_MAX_DIFF:.0%} => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |\n")
+            msg.write(f"\n{_mixed_market_timing_notice(live)}\n")
             if daily is not None:
                 msg.write(format_live_params_snapshot(daily, source_note, live=live))
 
@@ -6808,7 +6832,7 @@ class SubDMixedPoolV13Bot:
 def _v13_introduction_message() -> str:
     return (
         "**SubD混合池子 V1.3 信号查询**\n\n"
-        + "- 发送 **\"信号\"** -> 最新收盘确认信号（查询时刷新；收盘确认前不使用当天盘中bar）\n"
+        + "- 发送 **\"信号\"** -> 最新收盘确认信号（最多复用5分钟缓存；收盘确认前不使用当天盘中bar）\n"
         + "- 发送 **\"实时信号\"** -> 盘中/最新日线快照下的假设收盘信号\n"
         + "- 发送 **\"参数\"** -> V1.3参数总览\n"
         + "- 发送 **\"实时参数\"** -> 参数 + 实时数据快照\n"

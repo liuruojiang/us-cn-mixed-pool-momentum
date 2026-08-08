@@ -83,3 +83,49 @@ def test_standalone_iso_date_is_not_parsed_as_month_range(bot_module):
     start, end = bot_module.parse_date_range("2026-08-05的表现")
     assert start == pd.Timestamp("2026-08-05")
     assert end == pd.Timestamp("2026-08-05")
+
+
+def _capture_params(module, monkeypatch) -> str:
+    writes: list[str] = []
+
+    class Message:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+        def write(self, value):
+            writes.append(value)
+
+        def overwrite(self, *_):
+            return None
+
+    monkeypatch.setattr(module.poe, "start_message", lambda: Message())
+    bot_class = getattr(module, "SubDSixEtfV11Bot", None) or module.SubDMixedPoolV13Bot
+    bot_class()._handle_params(live=False)
+    return "".join(writes)
+
+
+def test_v11_params_describe_cross_validated_raw_fallback(monkeypatch):
+    module = load_module(V11_PATH, "review_v11_params")
+    text = _capture_params(module, monkeypatch)
+    assert "Sina + CNFin交叉验证raw fallback" in text
+    assert "SELL腿" in text and "可卖数量" in text
+
+
+def test_v13_params_and_snapshot_disclose_actual_rules(monkeypatch):
+    module = load_module(V13_PATH, "review_v13_params_text")
+    text = _capture_params(module, monkeypatch)
+    assert str(module.LOOKBACK) in module._score_rule_text()
+    assert "R²过滤关闭" in module._score_rule_text()
+    assert "SELL腿" in text and "可卖数量" in text
+    assert "跨市场" in module._mixed_market_timing_notice(live=False)
+    assert "盘前/隔夜" in module._mixed_market_timing_notice(live=True)
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_introduction_describes_confirmed_cache(path):
+    text = path.read_text(encoding="utf-8")
+    assert "5分钟缓存" in text
+    assert "查询时刷新" not in text
