@@ -3422,27 +3422,31 @@ def apply_target_vol_overlay(
 # ════════════════════════════════════════════════════════════════
 
 def calc_bias_momentum(close_series: pd.Series) -> pd.Series:
-    prices_arr = close_series.values.astype(float)
-    n = len(prices_arr)
+    prices = close_series.values.astype(float)
+    n = len(prices)
     result = np.full(n, np.nan)
     ma = close_series.rolling(CN_BIAS_N).mean().values
     total_lookback = CN_BIAS_N + CN_MOM_DAY - 1
     first_valid_idx = total_lookback - 1
-    x = np.arange(CN_MOM_DAY, dtype=float)
-    for i in range(first_valid_idx, n):
-        bias_window = np.empty(CN_MOM_DAY)
-        valid = True
-        for j in range(CN_MOM_DAY):
-            idx_j = i - CN_MOM_DAY + 1 + j
-            if np.isnan(ma[idx_j]) or ma[idx_j] < 1e-10 or np.isnan(prices_arr[idx_j]):
-                valid = False
-                break
-            bias_window[j] = prices_arr[idx_j] / ma[idx_j]
-        if not valid or bias_window[0] < 1e-10:
-            continue
-        bias_norm = bias_window / bias_window[0]
-        slope_val = np.polyfit(x, bias_norm, 1)[0]
-        result[i] = slope_val * 10000
+    if n <= first_valid_idx:
+        return pd.Series(result, index=close_series.index)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        bias_ratio = np.where((ma >= 1e-10) & np.isfinite(prices), prices / ma, np.nan)
+
+    windows = np.lib.stride_tricks.sliding_window_view(bias_ratio, CN_MOM_DAY)
+    starts = windows[:, 0]
+    valid = np.isfinite(windows).all(axis=1) & (starts >= 1e-10)
+    end_indices = np.arange(CN_MOM_DAY - 1, n)
+    valid &= end_indices >= first_valid_idx
+    if valid.any():
+        x = np.arange(CN_MOM_DAY, dtype=float)
+        x_centered = x - x.mean()
+        denom = float(np.sum(x_centered * x_centered))
+        normalized = windows[valid] / starts[valid, None]
+        y_centered = normalized - normalized.mean(axis=1, keepdims=True)
+        slopes = (y_centered @ x_centered) / denom
+        result[end_indices[valid]] = slopes * 10000
     return pd.Series(result, index=close_series.index)
 
 

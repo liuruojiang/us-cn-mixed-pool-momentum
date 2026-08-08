@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
+import numpy as np
 import pytest
 
 
@@ -397,3 +398,57 @@ def test_attach_live_metadata_parses_daily_dates_once(path, monkeypatch):
     }
     module._attach_live_quote_metadata(daily, metadata)
     assert len(calls) == 1
+
+
+def _scalar_bias_momentum(module, close_series):
+    prices = close_series.to_numpy(dtype=float)
+    result = np.full(len(prices), np.nan)
+    ma = close_series.rolling(module.CN_BIAS_N).mean().to_numpy()
+    first_valid = module.CN_BIAS_N + module.CN_MOM_DAY - 2
+    x = np.arange(module.CN_MOM_DAY, dtype=float)
+    for end in range(first_valid, len(prices)):
+        start = end - module.CN_MOM_DAY + 1
+        window_prices = prices[start : end + 1]
+        window_ma = ma[start : end + 1]
+        if (
+            not np.isfinite(window_prices).all()
+            or not np.isfinite(window_ma).all()
+            or (window_ma < 1e-10).any()
+        ):
+            continue
+        bias = window_prices / window_ma
+        if bias[0] < 1e-10:
+            continue
+        result[end] = np.polyfit(x, bias / bias[0], 1)[0] * 10000
+    return pd.Series(result, index=close_series.index)
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+@pytest.mark.parametrize("case", ["seeded", "nan_zero", "short"])
+def test_bias_momentum_matches_scalar_oracle(path, case):
+    module = load_module(path, f"review_bias_parity_{path.stem}_{case}")
+    rng = np.random.default_rng(20260808)
+    if case == "short":
+        values = 100 * np.cumprod(1 + rng.normal(0, 0.01, 50))
+    else:
+        values = 100 * np.cumprod(1 + rng.normal(0, 0.01, 1200))
+        if case == "nan_zero":
+            values[250] = np.nan
+            values[600:665] = 0.0
+    series = pd.Series(values, index=pd.bdate_range("2020-01-01", periods=len(values)))
+    expected = _scalar_bias_momentum(module, series)
+    actual = module.calc_bias_momentum(series)
+    np.testing.assert_allclose(actual, expected, rtol=1e-10, atol=1e-10, equal_nan=True)
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_bias_momentum_does_not_call_polyfit_per_window(path, monkeypatch):
+    module = load_module(path, f"review_bias_vectorized_{path.stem}")
+    series = pd.Series(np.linspace(90.0, 110.0, 500))
+    monkeypatch.setattr(
+        module.np,
+        "polyfit",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("scalar loop")),
+    )
+    result = module.calc_bias_momentum(series)
+    assert result.notna().any()
