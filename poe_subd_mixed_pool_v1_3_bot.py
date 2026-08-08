@@ -2065,11 +2065,11 @@ def _attach_live_quote_metadata(
     out = daily.copy()
     if not live_quote_metadata or out.empty:
         return out
+    dates = pd.to_datetime(out["date"]).dt.normalize()
     for code, metadata in live_quote_metadata.items():
         quote_date = metadata.get("quote_date")
         if quote_date is None:
             continue
-        dates = pd.to_datetime(out["date"]).dt.normalize()
         mask = dates == pd.Timestamp(quote_date).normalize()
         if not mask.any():
             continue
@@ -3996,7 +3996,7 @@ def build_curves(
 # ════════════════════════════════════════════════════════════════
 
 def _build_config(end_date=None) -> RunConfig:
-    end_date = pd.Timestamp.today().normalize() if end_date is None else pd.Timestamp(end_date).normalize()
+    end_date = _bj_today_naive() if end_date is None else pd.Timestamp(end_date).normalize()
     return RunConfig(
         source="proxy_mixed_v1_3", one_way_cost=ONE_WAY_COST,
         start_date=START_DATE, end_date=end_date,
@@ -4611,7 +4611,7 @@ def _execution_legs_status(
 ) -> list[dict[str, object]]:
     if daily.empty:
         return []
-    row = daily.iloc[-1]
+    row = daily.sort_values("date").iloc[-1]
     legs: list[dict[str, object]] = []
     sell_delta = _row_float_value(row, "sell_delta", 0.0)
     buy_delta = _row_float_value(row, "buy_delta", 0.0)

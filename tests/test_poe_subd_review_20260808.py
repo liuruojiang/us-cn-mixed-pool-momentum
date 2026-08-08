@@ -342,3 +342,58 @@ def test_live_price_quality_rejection_backs_off_before_retry(path, monkeypatch):
             reference_prices=pd.DataFrame({"159915.SZ": [1.0]}),
         )
     assert sleeps == [0.5]
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_execution_legs_select_latest_date_not_physical_last_row(path, monkeypatch):
+    module = load_module(path, f"review_execution_sort_{path.stem}")
+    daily = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2026-08-07", "2026-08-06"]),
+            "sell_delta": [0.5, 0.0],
+            "buy_delta": [0.0, 0.5],
+            "actual_position_before": ["159915.SZ", "CASH"],
+            "actual_position_next": ["CASH", "159915.SZ"],
+        }
+    )
+    monkeypatch.setattr(
+        module,
+        "_execution_leg_status",
+        lambda side, code, *args, **kwargs: {"side": side, "code": code},
+    )
+    legs = module._execution_legs_status(
+        daily,
+        datetime(2026, 8, 7, 14, 55),
+        is_trading_day=True,
+        signal_price_is_available=True,
+        execution_enabled=True,
+    )
+    assert legs == [{"side": "SELL", "code": "159915.SZ"}]
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_build_config_defaults_to_beijing_today(path, monkeypatch):
+    module = load_module(path, f"review_config_bj_{path.stem}")
+    expected = pd.Timestamp("1999-12-31")
+    monkeypatch.setattr(module, "_bj_today_naive", lambda: expected)
+    assert module._build_config().end_date == expected
+
+
+@pytest.mark.parametrize("path", [V11_PATH, V13_PATH])
+def test_attach_live_metadata_parses_daily_dates_once(path, monkeypatch):
+    module = load_module(path, f"review_metadata_parse_{path.stem}")
+    real_to_datetime = module.pd.to_datetime
+    calls = []
+
+    def counted_to_datetime(*args, **kwargs):
+        calls.append(1)
+        return real_to_datetime(*args, **kwargs)
+
+    monkeypatch.setattr(module.pd, "to_datetime", counted_to_datetime)
+    daily = pd.DataFrame({"date": ["2026-08-07"]})
+    metadata = {
+        code: {"quote_date": pd.Timestamp("2026-08-07"), "quote_price": 1.0}
+        for code in ("159915.SZ", "159941.SZ")
+    }
+    module._attach_live_quote_metadata(daily, metadata)
+    assert len(calls) == 1
