@@ -4617,11 +4617,12 @@ def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Ti
     if sub.empty:
         return []
     sub = sub.sort_values("date")
+    sub["_report_return"] = _daily_returns_for_window(sub).to_numpy(dtype=float)
     rows: list[dict[str, object]] = []
     for year, part in sub.groupby(sub["date"].dt.year):
         if part.empty:
             continue
-        ret = _daily_returns_for_window(part)
+        ret = part["_report_return"].astype(float)
         wealth = _wealth_from_returns(ret)
         std = ret.std(ddof=0)
         dd = _drawdown_from_wealth(wealth)
@@ -4770,6 +4771,16 @@ def parse_date_range(text, now=None):
     match = re.search(r"(\d{4})[-年/.](\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix + r"\s*至今", text)
     if match:
         return _checked_timestamp(int(match.group(1)), int(match.group(2)), int(match.group(3)), match.group(0)), now
+    # Standalone YYYY-MM-DD
+    match = re.search(
+        r"(?<!\d)(\d{4})[-年/.](\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix,
+        text,
+    )
+    if match:
+        day = _checked_timestamp(
+            int(match.group(1)), int(match.group(2)), int(match.group(3)), match.group(0)
+        )
+        return day, day
     # MM-DD至今
     match = re.search(r"(\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix + r"\s*至今", text)
     if match:

@@ -5303,11 +5303,12 @@ def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Ti
     if sub.empty:
         return []
     sub = sub.sort_values("date")
+    sub["_report_return"] = _daily_returns_for_window(sub).to_numpy(dtype=float)
     rows: list[dict[str, object]] = []
     for year, part in sub.groupby(sub["date"].dt.year):
         if part.empty:
             continue
-        ret = _daily_returns_for_window(part)
+        ret = part["_report_return"].astype(float)
         wealth = _wealth_from_returns(ret)
         std = ret.std(ddof=0)
         dd = _drawdown_from_wealth(wealth)
@@ -5456,6 +5457,16 @@ def parse_date_range(text, now=None):
     match = re.search(r"(\d{4})[-年/.](\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix + r"\s*至今", text)
     if match:
         return _checked_timestamp(int(match.group(1)), int(match.group(2)), int(match.group(3)), match.group(0)), now
+    # Standalone YYYY-MM-DD
+    match = re.search(
+        r"(?<!\d)(\d{4})[-年/.](\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix,
+        text,
+    )
+    if match:
+        day = _checked_timestamp(
+            int(match.group(1)), int(match.group(2)), int(match.group(3)), match.group(0)
+        )
+        return day, day
     # MM-DD至今
     match = re.search(r"(\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix + r"\s*至今", text)
     if match:
@@ -5588,6 +5599,16 @@ def classify_query(text: str) -> str:
 
 
 MANDATORY_PERFORMANCE_LABELS = {"full_sample", "10Y", "5Y", "3Y", "1Y"}
+MANDATORY_WINDOW_TRADING_DAYS = {
+    "10Y": 10 * TRADING_DAYS,
+    "5Y": 5 * TRADING_DAYS,
+    "3Y": 3 * TRADING_DAYS,
+    "1Y": TRADING_DAYS,
+}
+
+
+def _eval_start_label() -> str:
+    return f"from_{EVAL_START.year}"
 
 
 def _default_performance_ranges(
@@ -5603,7 +5624,7 @@ def _default_performance_ranges(
             ("5Y", latest - pd.DateOffset(years=5), latest),
             ("3Y", latest - pd.DateOffset(years=3), latest),
             ("1Y", latest - pd.DateOffset(years=1), latest),
-            ("from_2020", EVAL_START, latest),
+            (_eval_start_label(), EVAL_START, latest),
         ]
     )
     return ranges
@@ -5630,7 +5651,7 @@ def _default_performance_ranges_for_daily(
         ranges.append(("full_sample", earliest, latest))
     for label, years in (("10Y", 10), ("5Y", 5), ("3Y", 3), ("1Y", 1)):
         ranges.append((label, trading_day_window_start(dates, latest, years * TRADING_DAYS), latest))
-    ranges.append(("from_2020", EVAL_START, latest))
+    ranges.append((_eval_start_label(), EVAL_START, latest))
     return ranges
 
 
@@ -5688,8 +5709,16 @@ def _mandatory_window_na_reason(
     label: str,
     start: pd.Timestamp,
     earliest: pd.Timestamp,
+    available_rows: int | None = None,
 ) -> str | None:
-    if label in {"10Y", "5Y", "3Y", "1Y"} and earliest > pd.Timestamp(start).normalize():
+    required_rows = MANDATORY_WINDOW_TRADING_DAYS.get(label)
+    if (
+        required_rows is not None
+        and available_rows is not None
+        and available_rows < required_rows
+    ):
+        return f"insufficient history: {available_rows} rows < {required_rows} trading days"
+    if required_rows is not None and earliest > pd.Timestamp(start).normalize():
         return (
             f"insufficient history: first available {earliest.date().isoformat()} "
             f"after required {pd.Timestamp(start).date().isoformat()}"
@@ -6696,6 +6725,9 @@ class SubDMixedPoolV13Bot:
             latest_date=latest,
             earliest_date=earliest,
         )
+        available_rows = int(
+            (pd.to_datetime(daily["date"]).dt.normalize() <= latest).sum()
+        )
         chart_range = ranges[0] if ranges else None
         with poe.start_message() as msg:
             if chart_range is not None:
@@ -6711,7 +6743,12 @@ class SubDMixedPoolV13Bot:
             first_chart_range = None
             for label, start, end in ranges:
                 try:
-                    na_reason = _mandatory_window_na_reason(label, start, earliest)
+                    na_reason = _mandatory_window_na_reason(
+                        label,
+                        start,
+                        earliest,
+                        available_rows=available_rows,
+                    )
                     if na_reason is not None:
                         raise poe.BotError(na_reason)
                     m = calc_performance(daily, start, end)
