@@ -8,7 +8,7 @@
 
 - 正式脚本：`poe_subd_six_etf_v1_1_bot.py`、`poe_subd_mixed_pool_v1_3_bot.py`
 - 回归测试：`tests/test_poe_subd_review_20260808.py`，以及两份既有回归测试中的相容性更新
-- 修订前备份：`D:\Codex\home\worktrees\美股A股混合池子动量策略\poe-subd-review-repair\.codex_backups\20260808_190718`
+- 修订前备份：`D:\动量策略\美股A股混合池子动量策略\.codex_backups\20260808_190718`
 - 备份核验：两份正式脚本及 manifest 均存在
 - 修订前基线：`python -m pytest -q` 为 322 passed、1 warning。实施计划中的“287 passed”是计划编写时的旧预期，最终以实际基线为准。
 
