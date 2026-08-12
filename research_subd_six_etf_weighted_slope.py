@@ -35,6 +35,7 @@ COOLDOWN_TRADING_DAYS = 5
 DEFAULT_ONE_WAY_COST = 0.001
 DEFAULT_VOL_WINDOW = 80
 DEFAULT_MAX_LEV = 1.5
+MAX_ADJUSTED_DAILY_ABS_RETURN = 0.35
 SOURCE_AKSHARE_SINA_RAW = "akshare_sina_raw"
 SOURCE_AKSHARE_EM_QFQ = "akshare_em_qfq"
 SOURCE_ALIASES = {
@@ -48,6 +49,20 @@ HTTP_SESSION = requests.Session()
 
 def http_get(url: str, **kwargs):
     return HTTP_SESSION.get(url, **kwargs)
+
+
+def validate_adjusted_close_continuity(code: str, close: pd.Series, source: str) -> None:
+    returns = close.dropna().pct_change().abs().dropna()
+    if returns.empty:
+        return
+    bad = returns[returns > MAX_ADJUSTED_DAILY_ABS_RETURN]
+    if bad.empty:
+        return
+    first_date = pd.Timestamp(bad.index[0]).date().isoformat()
+    raise RuntimeError(
+        f"{source} adjusted close continuity check failed for {code}: "
+        f"{first_date} abs_return={float(bad.iloc[0]):.2%}"
+    )
 
 
 @dataclass(frozen=True)
@@ -121,6 +136,7 @@ def load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> p
     close = close.set_index("日期")["收盘"].astype(float).sort_index()
     close = close.loc[:end_date]
     close.name = code
+    validate_adjusted_close_continuity(code, close, "akshare.fund_etf_hist_em daily close")
     return close
 
 
@@ -161,6 +177,8 @@ def load_sina_close(codes: list[str], end_date: pd.Timestamp) -> tuple[pd.DataFr
                 "first": non_na.index.min().date().isoformat(),
                 "last": non_na.index.max().date().isoformat(),
                 "rows": int(non_na.shape[0]),
+                "diagnostic_only": True,
+                "formal_eligible": False,
             }
         )
     return pd.concat(series, axis=1).sort_index(), pd.DataFrame(sources)
@@ -253,6 +271,7 @@ def load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close = close.set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end_date]
     close.name = code
+    validate_adjusted_close_continuity(code, close, "Eastmoney push2his kline")
     return close
 
 
@@ -301,9 +320,16 @@ def weighted_slope_score(window: pd.Series) -> float:
 
 def weighted_slope_score_and_r2(window: pd.Series) -> tuple[float, float]:
     values = window.dropna().astype(float)
-    if len(values) != LOOKBACK or (values <= 0).any():
+    if (
+        len(values) != LOOKBACK
+        or (values <= 0).any()
+        or not np.isfinite(values.to_numpy(dtype=float)).all()
+    ):
         return math.nan, math.nan
     y = np.log(values.to_numpy())
+    if float(np.ptp(y)) <= 1e-12:
+        return math.nan, math.nan
+    y = y - y[0]
     x = np.arange(len(y), dtype=float)
     weights = np.arange(1, len(y) + 1, dtype=float)
     slope, intercept = np.polyfit(x, y, 1, w=np.sqrt(weights))

@@ -1,5 +1,7 @@
 # Poe SubD 1.1 / 1.3 P1 Correctness Repair Record
 
+> Superseded status (2026-08-12): V1.1 now has a hard post-drift 1.5x exposure cap, finite/positive NAV guards, bounded live stale-if-error reuse, and symmetric runner/Poe validation. V1.3 continues to provide Poe signals; cross-market timing and FX limitations are advisory and do not globally suppress signals. See `docs/subd_v11_v13_adversarial_repair_20260812.md` for the current state. The deferred statements below are retained as the 2026-07-11 historical record.
+
 Date: 2026-07-11
 
 ## Result

@@ -136,15 +136,20 @@ def test_public_loader_uses_cross_validated_raw_only_after_qfq_failures(module, 
     monkeypatch.setattr(module, "_load_eastmoney_one_close", fail("eastmoney"))
     monkeypatch.setattr(module, "_load_cross_validated_raw_one_close", cross_loader)
 
-    prices, sources = module._load_public_close_with_per_code_fallback(
-        ["159985.SZ"], dates[-1]
-    )
+    if module.VERSION == "1.3":
+        with pytest.raises(RuntimeError, match="All historical data sources failed"):
+            module._load_public_close_with_per_code_fallback(["159985.SZ"], dates[-1])
+        assert calls == ["akshare", "tencent", "eastmoney"]
+    else:
+        prices, sources = module._load_public_close_with_per_code_fallback(
+            ["159985.SZ"], dates[-1]
+        )
 
-    assert calls == ["akshare", "tencent", "eastmoney", "cross"]
-    assert prices.columns.tolist() == ["159985.SZ"]
-    assert sources.loc[0, "source"] == module.SOURCE_SINA_CNFIN_CROSS_VALIDATED
-    assert sources.loc[0, "adjustment"] == module.ADJUSTMENT_CROSS_VALIDATED_RAW
-    assert sources.loc[0, "source_detail"] == module.SOURCE_DETAIL_SINA_CNFIN_CROSS_VALIDATED
+        assert calls == ["akshare", "tencent", "eastmoney", "cross"]
+        assert prices.columns.tolist() == ["159985.SZ"]
+        assert sources.loc[0, "source"] == module.SOURCE_SINA_CNFIN_CROSS_VALIDATED
+        assert sources.loc[0, "adjustment"] == module.ADJUSTMENT_CROSS_VALIDATED_RAW
+        assert sources.loc[0, "source_detail"] == module.SOURCE_DETAIL_SINA_CNFIN_CROSS_VALIDATED
 
 
 def test_public_loader_never_tries_raw_pair_for_other_codes(module, monkeypatch):

@@ -1,0 +1,21 @@
+{
+  "strategy": "V1.1",
+  "requested_end": "2026-08-11",
+  "price_start": "2011-12-09",
+  "price_end": "2026-08-11",
+  "price_rows": 3562,
+  "common_last": "2026-08-11",
+  "last_by_asset": {
+    "159915.SZ": "2026-08-11",
+    "159941.SZ": "2026-08-11",
+    "513030.SH": "2026-08-11",
+    "513520.SH": "2026-08-11",
+    "159985.SZ": "2026-08-11",
+    "518880.SH": "2026-08-11"
+  },
+  "one_way_cost": 0.001,
+  "target_vol": 0.25,
+  "vol_window": 80,
+  "max_lev": 1.5,
+  "price_adjustment": "qfq formal loaders"
+}
