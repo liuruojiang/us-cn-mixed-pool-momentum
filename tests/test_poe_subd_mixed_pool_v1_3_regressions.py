@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
+import numpy as np
 import pytest
 
 
@@ -115,16 +116,7 @@ def minimal_signal_daily(module, date="2026-06-18"):
     return pd.DataFrame([row])
 
 
-def test_v13_has_no_global_display_policy():
-    module = load_bot_module()
-
-    assert not hasattr(module, "FORMAL_CROSS_MARKET_MODEL_AVAILABLE")
-    assert not hasattr(module, "V13_RESEARCH_ONLY_REASON")
-    assert not hasattr(module, "_v13_policy_state")
-    assert not hasattr(module, "_v13_policy_notice")
-
-
-def test_v13_introduction_advertises_normal_display_queries(monkeypatch):
+def test_v13_introduction_keeps_poe_signal_queries_available(monkeypatch):
     import fastapi_poe
 
     captured = []
@@ -134,10 +126,11 @@ def test_v13_introduction_advertises_normal_display_queries(monkeypatch):
 
     assert len(captured) == 1
     introduction = captured[0].introduction_message
-    assert "research-only" not in introduction
-    assert "不可执行" not in introduction
+    assert '发送 **"信号"** -> 最新收盘确认信号' in introduction
+    assert '发送 **"实时信号"** -> 盘中/最新日线快照下的假设收盘信号' in introduction
     assert '发送 **"交易记录 过去两个月"** -> 调仓记录表 + 完整CSV' in introduction
     assert '发送 **"净值曲线 过去两年"** / **"收益曲线 今年"** -> 绩效表 + 净值曲线' in introduction
+    assert "诊断模式" not in introduction
 
 
 def test_v13_performance_reaches_provider_without_policy_only_refusal(monkeypatch):
@@ -159,7 +152,70 @@ def test_v13_performance_reaches_provider_without_policy_only_refusal(monkeypatc
     assert len(provider_calls) == 1
 
 
-def test_v13_signal_report_displays_normally_without_policy_banner(monkeypatch):
+def test_v13_performance_keeps_standard_poe_surface(monkeypatch):
+    module = load_bot_module()
+    daily = pd.concat(
+        [minimal_signal_daily(module, "2026-06-18"), minimal_signal_daily(module, "2026-06-19")],
+        ignore_index=True,
+    )
+    events = []
+
+    class FakeMessage:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def write(self, value):
+            events.append(("write", str(value)))
+
+        def attach_file(self, **kwargs):
+            events.append(("attachment", str(kwargs.get("name", ""))))
+
+    start = pd.Timestamp("2026-06-18")
+    end = pd.Timestamp("2026-06-19")
+    metrics = {
+        "start": start.date().isoformat(),
+        "end": end.date().isoformat(),
+        "rows": 2,
+        "total": 0.0,
+        "annual": 0.0,
+        "maxdd": 0.0,
+        "vol": 0.0,
+        "sharpe": 0.0,
+        "trades": 0,
+        "avg_final_exposure": 0.0,
+        "zero_exposure_days": 2,
+        "cash_days": 2,
+    }
+    monkeypatch.setattr(module, "_get_daily_for_today", lambda **kwargs: (daily, "unit-qfq"))
+    monkeypatch.setattr(
+        module,
+        "resolve_performance_ranges_for_daily",
+        lambda *args, **kwargs: [("full_sample", start, end)],
+    )
+    monkeypatch.setattr(
+        module,
+        "_write_nav_curve",
+        lambda *args, **kwargs: events.append(("chart", "full_sample")),
+    )
+    monkeypatch.setattr(module, "calc_performance", lambda *args, **kwargs: metrics)
+    monkeypatch.setattr(module, "calc_yearly_performance", lambda *args, **kwargs: [])
+    monkeypatch.setattr(module, "format_trade_records_table", lambda *args, **kwargs: "")
+    monkeypatch.setattr(module, "trade_records_csv_bytes", lambda *args, **kwargs: b"")
+    monkeypatch.setattr(module.poe, "start_message", lambda: FakeMessage())
+
+    module.SubDMixedPoolV13Bot()._handle_performance("表现")
+
+    chart_index = next(index for index, event in enumerate(events) if event[0] == "chart")
+    report_text = "".join(event[1] for event in events if event[0] == "write")
+    assert chart_index == 0
+    assert "V1.3 表现" in report_text
+    assert "诊断表现" not in report_text
+
+
+def test_v13_cross_market_advisory_does_not_block_signal_report(monkeypatch):
     module = load_bot_module()
     daily = minimal_signal_daily(module)
     monkeypatch.setattr(
@@ -175,13 +231,13 @@ def test_v13_signal_report_displays_normally_without_policy_banner(monkeypatch):
         now=datetime(2026, 6, 18, 14, 55),
     )
 
-    assert "research-only" not in report
-    assert "不可执行" not in report.split("### 信号摘要", 1)[0]
     assert "## SubD混合池子 V1.3 实时操作信号" in report
+    assert "诊断信号" not in report
     assert "动量排名" in report
+    assert "跨市场提示" in module._mixed_market_timing_notice(live=True)
 
 
-def test_v13_signal_status_has_no_policy_only_metadata(monkeypatch):
+def test_v13_signal_status_is_not_globally_blocked_by_cross_market_advisory(monkeypatch):
     module = load_bot_module()
     daily = minimal_signal_daily(module)
     monkeypatch.setattr(
@@ -197,36 +253,52 @@ def test_v13_signal_status_has_no_policy_only_metadata(monkeypatch):
         purpose="execution",
     )
     assert execution["exchange_all_legs_can_submit"] is True
+    assert execution["all_legs_can_submit"] is True
+    assert execution["model_execution_price_available"] is True
     assert execution["strategy_actionable_now"] is True
     assert execution["actionable_now"] is True
+    assert execution["action_required_now"] is True
+    assert execution["action_required"] is True
     assert execution["tradable"] is True
-    assert "research_only" not in execution
-    assert "research_only_reason" not in execution
+    assert "diagnostic_only" not in execution
 
 
-def test_v13_parameter_and_introduction_surfaces_have_no_policy_warning(monkeypatch):
+def test_v13_exported_trade_csv_keeps_existing_poe_schema():
     module = load_bot_module()
-    writes = []
+    daily = minimal_signal_daily(module)
+    payload = module.trade_records_csv_bytes(daily).decode("utf-8-sig")
 
-    class FakeMessage:
-        def __enter__(self):
-            return self
+    assert payload.startswith("date,strategy,operation,")
+    assert "result_status" not in payload.splitlines()[0]
 
-        def __exit__(self, exc_type, exc, tb):
-            return False
 
-        def write(self, value):
-            writes.append(str(value))
+def test_v13_exported_nav_chart_keeps_standard_title(monkeypatch):
+    module = load_bot_module()
+    daily = pd.concat(
+        [minimal_signal_daily(module, "2026-06-18"), minimal_signal_daily(module, "2026-06-19")],
+        ignore_index=True,
+    )
+    daily.loc[1, "return"] = 0.01
+    captured_titles = []
+    import matplotlib.axes
 
-        def overwrite(self, value):
-            writes.append(str(value))
+    original_set_title = matplotlib.axes.Axes.set_title
 
-    monkeypatch.setattr(module.poe, "start_message", lambda: FakeMessage())
+    def title_spy(self, label, *args, **kwargs):
+        captured_titles.append(str(label))
+        return original_set_title(self, label, *args, **kwargs)
 
-    module.SubDMixedPoolV13Bot()._handle_params(live=False)
-    surface_text = "".join(writes) + module._v13_introduction_message()
-    assert "research-only" not in surface_text
-    assert "不可执行" not in surface_text
+    monkeypatch.setattr(matplotlib.axes.Axes, "set_title", title_spy)
+    png = module.render_nav_curve_png(
+        daily,
+        "1Y",
+        pd.Timestamp("2026-06-18"),
+        pd.Timestamp("2026-06-19"),
+    )
+
+    assert png.startswith(b"\x89PNG")
+    assert any("SubD Mixed Pool V1.3 NAV Curve" in title for title in captured_titles)
+    assert all("DIAGNOSTIC ONLY" not in title for title in captured_titles)
 
 
 def test_v13_live_build_fails_closed_when_mixed_pool_live_quotes_are_unavailable(monkeypatch):
@@ -1217,6 +1289,51 @@ def test_v13_raw_sina_fallback_is_not_allowed_in_formal_load_close(monkeypatch):
         module.load_close(module._build_config(end_date=pd.Timestamp("2026-01-02")))
 
 
+def test_v13_loaded_prices_and_sources_keep_existing_poe_schema(monkeypatch):
+    module = load_bot_module()
+    dates = pd.bdate_range("2021-01-04", periods=3)
+
+    def series(name):
+        return pd.Series([1.0, 1.01, 1.02], index=dates, name=name)
+
+    monkeypatch.setattr(module, "_expected_cn_trading_days", lambda start, end: dates)
+    monkeypatch.setattr(module, "_fetch_yahoo_adj_close", lambda ticker, start, end: series(ticker))
+    monkeypatch.setattr(
+        module,
+        "_fetch_eastmoney_index_close",
+        lambda secid, beg, end, name: series(name),
+    )
+    monkeypatch.setattr(
+        module,
+        "_load_public_close_with_per_code_fallback",
+        lambda codes, end_date: (
+            pd.DataFrame({"159985.SZ": series("159985.SZ")}),
+            pd.DataFrame(
+                [
+                    {
+                        "code": "159985.SZ",
+                        "name": module.ASSETS["159985.SZ"],
+                        "source": "unit qfq",
+                        "adjustment": module.ADJUSTMENT_QFQ,
+                        "source_detail": "unit-test",
+                        "first": dates[0].date().isoformat(),
+                        "last": dates[-1].date().isoformat(),
+                        "rows": len(dates),
+                    }
+                ]
+            ),
+        ),
+    )
+
+    prices, sources = module.load_close(module._build_config(end_date=dates[-1]))
+
+    assert "raw_unfilled_prices" in prices.attrs
+    assert "result_status" not in prices.attrs
+    assert sources.columns[:3].tolist() == ["code", "name", "source"]
+    assert "result_status" not in sources.columns
+    assert "asset_pool_status" not in sources.columns
+
+
 @pytest.mark.parametrize(
     ("code", "symbol"),
     [
@@ -1475,3 +1592,387 @@ def test_v13_default_performance_windows_use_trading_day_rows():
     assert starts["3Y"] == dates[-3 * module.TRADING_DAYS]
     assert starts["1Y"] == dates[-1 * module.TRADING_DAYS]
     assert starts["10Y"] != dates[-1] - pd.DateOffset(years=10)
+
+
+def test_v13_cnfin_index_rejects_provider_failure_after_partial_page(monkeypatch):
+    module = load_bot_module()
+    calls = []
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "data": {
+                    "candle": {
+                        "fields": ["min_time", "open_px", "high_px", "low_px", "close_px"],
+                        "399006.SZ": [
+                            ["2018-01-02", 1, 1, 1, 100],
+                            ["2026-01-02", 1, 1, 1, 200],
+                        ],
+                    }
+                }
+            }
+
+    def fake_http_get(*args, **kwargs):
+        calls.append(kwargs.get("params"))
+        if len(calls) == 1:
+            return FakeResponse()
+        raise RuntimeError("unit provider failure")
+
+    monkeypatch.setattr(module, "CNFIN_KLINE_PAGE_SIZE", 2, raising=False)
+    monkeypatch.setattr(module, "_http_get", fake_http_get)
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+
+    with pytest.raises(RuntimeError, match="(?i)partial.*provider|provider.*partial"):
+        module._fetch_cnfin_index_close_fallback(
+            "0.399006", "20100101", "20260102", "CN_CYB_399006"
+        )
+
+    assert len(calls) == 4
+
+
+def test_v13_cnfin_index_rejects_history_that_does_not_cover_required_start(monkeypatch):
+    module = load_bot_module()
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "data": {
+                    "candle": {
+                        "fields": ["min_time", "open_px", "high_px", "low_px", "close_px"],
+                        "399006.SZ": [["2018-01-02", 1, 1, 1, 100]],
+                    }
+                }
+            }
+
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: FakeResponse())
+
+    with pytest.raises(RuntimeError, match="(?i)coverage|required_start"):
+        module._fetch_cnfin_index_close_fallback(
+            "0.399006", "20100101", "20260102", "CN_CYB_399006"
+        )
+
+
+def test_v13_live_force_refresh_rejects_cache_older_than_stale_if_error_limit(monkeypatch):
+    module = load_bot_module()
+    module._cached_daily.cache_clear()
+    now = datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ)
+    cached_at = now - module.LIVE_CACHE_STALE_IF_ERROR_MAX_AGE - pd.Timedelta(seconds=1)
+    key = module._daily_cache_key("2026-06-18", "live")
+    module._DAILY_CACHE[key] = (
+        cached_at,
+        pd.DataFrame({"date": [pd.Timestamp("2026-06-18")], "marker": [7]}),
+        "cached-live",
+    )
+    monkeypatch.setattr(module, "_now_bj", lambda: now)
+    monkeypatch.setattr(
+        module,
+        "_call_build_v11_daily",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("provider down")),
+    )
+
+    with pytest.raises(RuntimeError, match="provider down"):
+        module._get_daily_for_today(force_refresh=True, data_state="live")
+
+
+def test_v13_live_force_refresh_may_reuse_recent_cache_on_provider_error(monkeypatch):
+    module = load_bot_module()
+    module._cached_daily.cache_clear()
+    now = datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ)
+    cached_at = now - module.LIVE_CACHE_STALE_IF_ERROR_MAX_AGE + pd.Timedelta(seconds=1)
+    key = module._daily_cache_key("2026-06-18", "live")
+    module._DAILY_CACHE[key] = (
+        cached_at,
+        pd.DataFrame({"date": [pd.Timestamp("2026-06-18")], "marker": [7]}),
+        "cached-live",
+    )
+    monkeypatch.setattr(module, "_now_bj", lambda: now)
+    monkeypatch.setattr(
+        module,
+        "_call_build_v11_daily",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("provider down")),
+    )
+
+    daily, source = module._get_daily_for_today(force_refresh=True, data_state="live")
+
+    assert daily["marker"].tolist() == [7]
+    assert "refresh failed" in source
+
+
+@pytest.mark.parametrize("prepare_name", ["prepare_daily_for_signal", "prepare_daily_for_performance"])
+def test_v13_daily_preparation_rejects_normalized_duplicate_dates(prepare_name):
+    module = load_bot_module()
+    first = minimal_signal_daily(module, "2026-06-18")
+    second = minimal_signal_daily(module, "2026-06-18")
+    second.loc[0, "date"] = pd.Timestamp("2026-06-18 15:00:00")
+    daily = pd.concat([first, second], ignore_index=True)
+
+    prepare = getattr(module, prepare_name)
+    kwargs = {"live": True} if prepare_name == "prepare_daily_for_signal" else {}
+    with pytest.raises(module.poe.BotError, match="(?i)duplicate.*date"):
+        prepare(daily, **kwargs)
+
+
+@pytest.mark.parametrize("bad_return", [math.nan, math.inf, -math.inf, -1.0, -1.01])
+def test_v13_daily_preparation_rejects_invalid_returns(bad_return):
+    module = load_bot_module()
+    daily = minimal_signal_daily(module)
+    daily.loc[0, "return"] = bad_return
+
+    with pytest.raises(module.poe.BotError, match="(?i)return.*finite|return.*greater than -1"):
+        module.prepare_daily_for_signal(daily, live=True)
+
+
+@pytest.mark.parametrize("bad_nav", [math.nan, math.inf, -math.inf, 0.0, -1.0])
+def test_v13_daily_preparation_rejects_invalid_nav(bad_nav):
+    module = load_bot_module()
+    daily = minimal_signal_daily(module)
+    daily.loc[0, "nav"] = bad_nav
+
+    with pytest.raises(module.poe.BotError, match="(?i)nav.*finite|nav.*positive"):
+        module.prepare_daily_for_signal(daily, live=True)
+
+
+@pytest.mark.parametrize("bad_return", [math.nan, math.inf, -math.inf, -1.0, -1.01])
+def test_v13_calc_performance_rejects_invalid_returns(bad_return):
+    module = load_bot_module()
+    daily = pd.concat(
+        [minimal_signal_daily(module, "2026-06-18"), minimal_signal_daily(module, "2026-06-19")],
+        ignore_index=True,
+    )
+    daily.loc[1, "return"] = bad_return
+
+    with pytest.raises(module.poe.BotError, match="(?i)return.*finite|return.*greater than -1"):
+        module.calc_performance(daily, daily["date"].min(), daily["date"].max())
+
+
+@pytest.mark.parametrize("bad_nav", [math.nan, math.inf, -math.inf, 0.0, -1.0])
+def test_v13_calc_performance_nav_fallback_rejects_invalid_nav(bad_nav):
+    module = load_bot_module()
+    daily = pd.concat(
+        [minimal_signal_daily(module, "2026-06-18"), minimal_signal_daily(module, "2026-06-19")],
+        ignore_index=True,
+    ).drop(columns=["return"])
+    daily.loc[1, "nav"] = bad_nav
+
+    with pytest.raises(module.poe.BotError, match="(?i)nav.*finite|nav.*positive"):
+        module.calc_performance(daily, daily["date"].min(), daily["date"].max())
+
+
+def test_v13_wealth_and_reported_metrics_are_finite():
+    module = load_bot_module()
+    with pytest.raises(module.poe.BotError, match="(?i)wealth.*finite"):
+        module._wealth_from_returns(pd.Series([0.0, 1e308, 1e308]))
+    with pytest.raises(module.poe.BotError, match="(?i)nav.*finite"):
+        module.max_drawdown(pd.Series([1.0, math.inf]))
+
+    daily = pd.concat(
+        [minimal_signal_daily(module, "2026-06-18"), minimal_signal_daily(module, "2026-06-19")],
+        ignore_index=True,
+    )
+    daily["return"] = 0.0
+    metrics = module.calc_performance(daily, daily["date"].min(), daily["date"].max())
+    numeric_metrics = [
+        metrics[key]
+        for key in ("total", "annual", "maxdd", "vol", "sharpe", "avg_scale", "avg_final_exposure")
+    ]
+    assert all(math.isfinite(float(value)) for value in numeric_metrics)
+
+
+@pytest.mark.parametrize("scale", [1e-12, 1.0, 1e12])
+def test_v13_weighted_slope_constant_tolerance_and_scale_invariance(scale):
+    module = load_bot_module()
+    constant = pd.Series(scale * (1.0 + np.linspace(0.0, 1e-14, module.LOOKBACK)))
+    score, r2 = module.weighted_slope_score_and_r2(constant)
+    assert math.isnan(score)
+    assert math.isnan(r2)
+
+    trend = pd.Series(scale * np.exp(np.linspace(0.0, 0.10, module.LOOKBACK)))
+    base = module.weighted_slope_score_and_r2(
+        pd.Series(np.exp(np.linspace(0.0, 0.10, module.LOOKBACK)))
+    )
+    scaled = module.weighted_slope_score_and_r2(trend)
+    assert scaled == pytest.approx(base, rel=1e-11, abs=1e-12)
+
+
+def test_v13_calc_scores_never_selects_constant_price_asset():
+    module = load_bot_module()
+    prices = pd.DataFrame(
+        {
+            code: 100.0 * (1.0 + np.linspace(0.0, 1e-14, module.LOOKBACK))
+            for code in module.ASSETS
+        }
+    )
+
+    scores, r2_values, raw_scores = module.calc_scores(prices, module.LOOKBACK - 1)
+
+    assert scores == {}
+    assert r2_values == {}
+    assert raw_scores == {}
+
+
+def test_v13_primary_qfq_loaders_apply_continuity_gate(monkeypatch):
+    module = load_bot_module()
+    dates = pd.to_datetime(["2026-01-01", "2026-01-02"])
+    calls = []
+    monkeypatch.setattr(module, "_validate_adjusted_close_continuity", lambda *args: calls.append(args))
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+    monkeypatch.setattr(module, "_HAS_AKSHARE", True)
+    monkeypatch.setattr(
+        module.ak,
+        "fund_etf_hist_em",
+        lambda **kwargs: pd.DataFrame({"日期": dates, "收盘": [1.0, 1.01]}),
+    )
+
+    module._load_akshare_eastmoney_qfq_one_close("159985.SZ", dates[-1])
+
+    rows = [
+        "2026-01-01,1,1,1,1,1,1,1,1,1,1",
+        "2026-01-02,1,1.01,1.01,1,1,1,1,1,1,1",
+    ]
+    response = SimpleNamespace(raise_for_status=lambda: None, json=lambda: {"data": {"klines": rows}})
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: response)
+    module._load_eastmoney_one_close("159985.SZ", dates[-1])
+
+    assert [item[0] for item in calls] == ["159985.SZ", "159985.SZ"]
+
+
+def test_v13_yahoo_and_index_loaders_apply_continuity_gate(monkeypatch):
+    module = load_bot_module()
+    calls = []
+    monkeypatch.setattr(module, "_validate_adjusted_close_continuity", lambda *args: calls.append(args))
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+
+    yahoo_payload = {
+        "chart": {
+            "result": [
+                {
+                    "timestamp": [1609459200, 1609545600],
+                    "indicators": {"adjclose": [{"adjclose": [100.0, 101.0]}]},
+                }
+            ]
+        }
+    }
+    yahoo_response = SimpleNamespace(raise_for_status=lambda: None, json=lambda: yahoo_payload)
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: yahoo_response)
+    module._fetch_yahoo_adj_close("QQQ", pd.Timestamp("2021-01-01"), pd.Timestamp("2021-01-02"))
+
+    monkeypatch.setattr(module, "_HAS_AKSHARE", True)
+    monkeypatch.setattr(
+        module.ak,
+        "stock_zh_index_daily",
+        lambda **kwargs: pd.DataFrame(
+            {"date": pd.to_datetime(["2021-01-01", "2021-01-02"]), "close": [100.0, 101.0]}
+        ),
+    )
+    module._fetch_akshare_index_close_fallback(
+        "0.399006", "20210101", "20210102", "CN_CYB_399006"
+    )
+
+    assert [item[0] for item in calls] == ["QQQ", "CN_CYB_399006"]
+
+
+def test_v13_eastmoney_and_cnfin_index_loaders_apply_continuity_gate(monkeypatch):
+    module = load_bot_module()
+    calls = []
+    monkeypatch.setattr(module, "_validate_adjusted_close_continuity", lambda *args: calls.append(args))
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+
+    eastmoney_rows = [
+        "2021-01-01,1,100,1,1,1,1,1,1,1,1",
+        "2021-01-02,1,101,1,1,1,1,1,1,1,1",
+    ]
+    eastmoney_response = SimpleNamespace(
+        raise_for_status=lambda: None,
+        json=lambda: {"data": {"klines": eastmoney_rows}},
+    )
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: eastmoney_response)
+    module._fetch_eastmoney_index_close(
+        "0.399006", "20210101", "20210102", "CN_CYB_399006"
+    )
+
+    cnfin_response = SimpleNamespace(
+        raise_for_status=lambda: None,
+        json=lambda: {
+            "data": {
+                "candle": {
+                    "fields": ["min_time", "open_px", "high_px", "low_px", "close_px"],
+                    "399006.SZ": [
+                        ["2021-01-01", 1, 1, 1, 100],
+                        ["2021-01-02", 1, 1, 1, 101],
+                    ],
+                }
+            }
+        },
+    )
+    monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: cnfin_response)
+    module._fetch_cnfin_index_close_fallback(
+        "0.399006", "20210101", "20210102", "CN_CYB_399006"
+    )
+
+    assert [item[0] for item in calls] == ["CN_CYB_399006", "CN_CYB_399006"]
+
+
+def test_v13_formal_qfq_loader_never_attempts_raw_fallback(monkeypatch):
+    module = load_bot_module()
+    raw_calls = []
+
+    def fail_qfq(*args, **kwargs):
+        raise RuntimeError("qfq unavailable")
+
+    monkeypatch.setattr(module, "_load_akshare_eastmoney_qfq_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_tencent_qfq_one_close", fail_qfq)
+    monkeypatch.setattr(module, "_load_eastmoney_one_close", fail_qfq)
+    monkeypatch.setattr(
+        module,
+        "_load_cross_validated_raw_one_close",
+        lambda *args, **kwargs: raw_calls.append((args, kwargs)),
+    )
+
+    with pytest.raises(RuntimeError, match="All historical data sources failed"):
+        module._load_public_close_with_per_code_fallback(
+            ["159985.SZ"], pd.Timestamp("2026-01-02")
+        )
+
+    assert raw_calls == []
+
+
+def _v13_tail_test_prices(module, dates):
+    return pd.DataFrame(
+        {
+            code: np.linspace(1.0, 1.1, len(dates))
+            for code in module.ASSETS
+        },
+        index=dates,
+    )
+
+
+def test_v13_dynamic_asset_allows_normal_cross_market_tail_gap():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=8)
+    prices = _v13_tail_test_prices(module, dates)
+    prices.loc[dates[-module.DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS :], "KMLM"] = math.nan
+
+    aligned, common_last, last_by_asset = module._align_dynamic_proxy_prices(prices, dates)
+
+    assert common_last == dates[-1]
+    assert last_by_asset["KMLM"] == dates[-module.DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS - 1]
+    assert aligned.loc[dates[-1], "KMLM"] == pytest.approx(
+        prices.loc[dates[-module.DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS - 1], "KMLM"]
+    )
+
+
+def test_v13_dynamic_asset_rejects_excessive_tail_gap():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=10)
+    prices = _v13_tail_test_prices(module, dates)
+    missing = module.DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS + 1
+    prices.loc[dates[-missing:], "159985.SZ"] = math.nan
+
+    with pytest.raises(RuntimeError, match="159985.SZ.*tail|tail.*159985.SZ"):
+        module._align_dynamic_proxy_prices(prices, dates)

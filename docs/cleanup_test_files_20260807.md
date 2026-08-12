@@ -1,5 +1,7 @@
 # Sub-D Poe Test-File Cleanup And Remote Sync Record - 2026-08-07
 
+> Superseded status (2026-08-12): the 14 V1.1 target-vol validation failures recorded below are fixed. The current full suite is `495 passed, 1 warning`; the remaining warning is the upstream `fastapi_poe` Pydantic deprecation. This file remains as a dated cleanup record.
+
 ## Scope
 
 This cleanup closed the V1.1/V1.3 Poe display and `159985.SZ` source-fallback pass before remote synchronization. It removed generated test/runtime caches from the active workspace and preserved all source-code regression tests, strategy/research outputs, documentation, and rollback evidence.

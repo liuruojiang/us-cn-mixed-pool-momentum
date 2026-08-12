@@ -160,6 +160,7 @@ LIVE_PRICE_LIMIT_RATIO_BY_CODE["159915.SZ"] = 0.20
 POST_CLOSE_FIXED_PRICE_EFFECTIVE_DATE = pd.Timestamp("2026-07-06")
 POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED = False
 DAILY_CACHE_TTL = timedelta(minutes=5)
+LIVE_CACHE_STALE_IF_ERROR_MAX_AGE = LIVE_QUOTE_MAX_AGE.to_pytimedelta()
 TRADING_CALENDAR_CACHE_PATH = Path(
     f"outputs/cn_trading_days_cache_{START_DATE.strftime('%Y%m%d')}.csv"
 )
@@ -356,6 +357,7 @@ def _load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> 
     close = close.set_index("日期")["收盘"].astype(float).sort_index()
     close = close.loc[:end_date]
     close.name = code
+    _validate_adjusted_close_continuity(code, close, "akshare.fund_etf_hist_em daily close")
     return close
 
 
@@ -399,6 +401,7 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close = close.set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end_date]
     close.name = code
+    _validate_adjusted_close_continuity(code, close, "Eastmoney push2his kline")
     return close
 
 
@@ -1305,7 +1308,18 @@ def _live_price_limit_summary() -> str:
 
 def load_close(config: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
     codes = list(ASSETS)
-    return _load_public_close_with_per_code_fallback(codes, config.end_date)
+    prices, sources = _load_public_close_with_per_code_fallback(codes, config.end_date)
+    diagnostic = sources["adjustment"].astype(str).str.lower() != ADJUSTMENT_QFQ
+    if diagnostic.any():
+        rejected = ", ".join(
+            f"{row.code}:{row.adjustment}"
+            for row in sources.loc[diagnostic].itertuples(index=False)
+        )
+        raise RuntimeError(
+            "Raw/unadjusted history is diagnostic-only and cannot enter the formal V1.1 path: "
+            + rejected
+        )
+    return prices, sources
 
 
 def _apply_live_quotes_to_prices(
@@ -1553,9 +1567,16 @@ def _attach_confirmed_final_close_metadata(
 
 def weighted_slope_score_and_r2(window: pd.Series) -> tuple[float, float]:
     values = window.dropna().astype(float)
-    if len(values) != LOOKBACK or (values <= 0).any():
+    if (
+        len(values) != LOOKBACK
+        or (values <= 0).any()
+        or not np.isfinite(values.to_numpy(dtype=float)).all()
+    ):
         return math.nan, math.nan
     y = np.log(values.to_numpy())
+    if float(np.ptp(y)) <= 1e-12:
+        return math.nan, math.nan
+    y = y - y[0]
     x = np.arange(len(y), dtype=float)
     weights = np.arange(1, len(y) + 1, dtype=float)
     slope, intercept = np.polyfit(x, y, 1, w=np.sqrt(weights))
@@ -2535,6 +2556,7 @@ def _recompute_final_exposure_nav(
     overheat_next: pd.Series,
     one_way_cost: float,
     price_ffill_flags: pd.DataFrame | None = None,
+    max_lev: float | None = None,
 ) -> pd.DataFrame:
     out = curve.copy()
     ffill_flags = _validate_price_ffill_flags(out, price_ffill_flags)
@@ -2558,6 +2580,17 @@ def _recompute_final_exposure_nav(
     target_vol_next = target_vol_next.reindex(out.index).astype(float).fillna(1.0)
     overheat_effective = overheat_effective.reindex(out.index).astype(float).fillna(1.0)
     overheat_next = overheat_next.reindex(out.index).astype(float).fillna(1.0)
+
+    if max_lev is None and "max_lev" in out.columns and not out.empty:
+        max_lev = out["max_lev"].iloc[0]
+    if isinstance(max_lev, (bool, np.bool_)):
+        raise ValueError("max_lev hard cap must be a finite nonnegative number")
+    try:
+        hard_cap = math.inf if max_lev is None else float(max_lev)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("max_lev hard cap must be a finite nonnegative number") from exc
+    if max_lev is not None and (not math.isfinite(hard_cap) or hard_cap < 0.0):
+        raise ValueError("max_lev hard cap must be a finite nonnegative number")
 
     if "asset_return" not in out.columns:
         base_fraction_col = "base_fraction_before" if "base_fraction_before" in out.columns else "fraction_before"
@@ -2591,6 +2624,9 @@ def _recompute_final_exposure_nav(
     actual_position_next_vals: list[str] = []
     stale_blocked_vals: list[bool] = []
     stale_assets_vals: list[str] = []
+    cap_rebalance_vals: list[bool] = []
+    cap_turnover_vals: list[float] = []
+    cap_cost_vals: list[float] = []
     carried_position = "CASH"
     carried_exposure = 0.0
     pending_rebalance = False
@@ -2605,6 +2641,7 @@ def _recompute_final_exposure_nav(
         oh_effective = float(overheat_effective.loc[idx])
         oh_next = float(overheat_next.loc[idx])
         scheduled_exposure = frac_before * tv_effective * oh_effective if prev_position != "CASH" else 0.0
+        scheduled_exposure = min(scheduled_exposure, hard_cap)
         if row_number == 0:
             actual_prev_position = prev_position if scheduled_exposure > eps else "CASH"
             exposure_before = scheduled_exposure
@@ -2632,7 +2669,9 @@ def _recompute_final_exposure_nav(
 
         gross = asset_ret * exposure_before
         denominator = 1.0 + gross
-        if abs(denominator) <= eps or actual_prev_position == "CASH":
+        if not math.isfinite(denominator) or denominator <= 0.0:
+            raise RuntimeError(f"NAV factor must remain finite and positive at {idx}")
+        if actual_prev_position == "CASH":
             drifted = 0.0
         else:
             drifted = exposure_before * (1.0 + asset_ret) / denominator
@@ -2640,7 +2679,7 @@ def _recompute_final_exposure_nav(
                 drifted = 0.0
 
         desired_final = hold_frac * tv_next if next_position != "CASH" else 0.0
-        desired_after_overheat = desired_final * oh_next
+        desired_after_overheat = min(desired_final * oh_next, hard_cap)
         raw_trade_target = out.at[idx, "trade_target"] if "trade_target" in out.columns else None
         has_base_trade = not (
             raw_trade_target is None
@@ -2651,7 +2690,7 @@ def _recompute_final_exposure_nav(
         fraction_changed = abs(hold_frac - frac_before) > eps
         scale_changed = abs(tv_next - tv_effective) > eps
         overheat_changed = abs(oh_next - oh_effective) > eps
-        should_rebalance = (
+        policy_rebalance = (
             has_base_trade
             or position_changed
             or fraction_changed
@@ -2659,8 +2698,10 @@ def _recompute_final_exposure_nav(
             or overheat_changed
             or pending_rebalance
         )
+        cap_rebalance = bool(drifted > hard_cap + eps)
+        should_rebalance = policy_rebalance or cap_rebalance
 
-        if should_rebalance:
+        if policy_rebalance:
             final_after_overheat = desired_after_overheat
             final_before_overheat = desired_final
             rebalance = final_after_overheat - drifted
@@ -2673,6 +2714,13 @@ def _recompute_final_exposure_nav(
                 sell = drifted if actual_prev_position != "CASH" else 0.0
                 buy = final_after_overheat if next_position != "CASH" else 0.0
                 day_turnover = abs(sell) + abs(buy)
+        elif cap_rebalance:
+            final_after_overheat = hard_cap
+            final_before_overheat = hard_cap / oh_next if abs(oh_next) > eps else 0.0
+            rebalance = hard_cap - drifted
+            buy = 0.0
+            sell = drifted - hard_cap
+            day_turnover = sell
         else:
             final_after_overheat = drifted
             final_before_overheat = final_after_overheat / oh_next if next_position != "CASH" and abs(oh_next) > eps else 0.0
@@ -2696,6 +2744,11 @@ def _recompute_final_exposure_nav(
             ]
         overlay_trade_blocked = bool(stale_assets)
         if overlay_trade_blocked:
+            if cap_rebalance:
+                raise RuntimeError(
+                    f"Cannot enforce max_lev hard cap with stale execution price at {idx}: "
+                    + ",".join(stale_assets)
+                )
             final_after_overheat = drifted
             final_before_overheat = (
                 drifted / oh_next if actual_prev_position != "CASH" and abs(oh_next) > eps else 0.0
@@ -2708,6 +2761,8 @@ def _recompute_final_exposure_nav(
 
         day_cost = day_turnover * float(one_way_cost)
         net = (1.0 + gross) * (1.0 - day_cost) - 1.0
+        if not math.isfinite(net) or 1.0 + net <= 0.0:
+            raise RuntimeError(f"NAV must remain finite and positive after costs at {idx}")
         actual_before = actual_prev_position if exposure_before > eps else "CASH"
         actual_next = next_position if final_after_overheat > eps else "CASH"
 
@@ -2726,6 +2781,12 @@ def _recompute_final_exposure_nav(
         actual_position_next_vals.append(actual_next)
         stale_blocked_vals.append(overlay_trade_blocked)
         stale_assets_vals.append(",".join(stale_assets))
+        # Attribute turnover to the hard cap only when the cap itself caused
+        # the rebalance. A coincident policy trade must not be double-counted.
+        cap_only_rebalance = bool(cap_rebalance and not policy_rebalance)
+        cap_rebalance_vals.append(cap_only_rebalance)
+        cap_turnover_vals.append(day_turnover if cap_only_rebalance else 0.0)
+        cap_cost_vals.append(day_cost if cap_only_rebalance else 0.0)
         carried_position = actual_next
         carried_exposure = final_after_overheat if actual_next != "CASH" else 0.0
 
@@ -2767,9 +2828,14 @@ def _recompute_final_exposure_nav(
     out["sell_delta"] = sell_delta
     out["turnover"] = turnover
     out["cost"] = cost
+    out["exposure_cap_rebalance"] = pd.Series(cap_rebalance_vals, index=out.index, dtype=bool)
+    out["exposure_cap_turnover"] = pd.Series(cap_turnover_vals, index=out.index, dtype=float)
+    out["exposure_cap_cost"] = pd.Series(cap_cost_vals, index=out.index, dtype=float)
     out["gross_return"] = gross_return
     out["return"] = net_return
     out["nav"] = (1.0 + net_return).cumprod()
+    if not np.isfinite(out["nav"].to_numpy(dtype=float)).all() or (out["nav"] <= 0.0).any():
+        raise RuntimeError("NAV must remain finite and positive")
     out["effective_trade_count"] = (turnover > 1e-12).cumsum()
     return out
 
@@ -2799,7 +2865,14 @@ def apply_target_vol_overlay(
     result["realized_vol"] = realized_vol
     ones = pd.Series(1.0, index=result.index, dtype=float)
     result = _recompute_final_exposure_nav(
-        result, effective_scale, next_scale, ones, ones, one_way_cost, price_ffill_flags
+        result,
+        effective_scale,
+        next_scale,
+        ones,
+        ones,
+        one_way_cost,
+        price_ffill_flags,
+        max_lev=max_lev,
     )
     result["target_vol"] = target_vol
     result["vol_window"] = vol_window
@@ -3222,6 +3295,7 @@ def apply_overheat_overlay(
         out["overheat_scale_next"],
         one_way_cost,
         price_ffill_flags,
+        max_lev=float(out["max_lev"].iloc[0]) if "max_lev" in out.columns and not out.empty else None,
     )
     return out
 
@@ -4085,9 +4159,7 @@ def prepare_daily_for_signal(
     live: bool,
     now: datetime | None = None,
 ) -> pd.DataFrame:
-    ordered = daily.copy()
-    ordered["date"] = pd.to_datetime(ordered["date"])
-    ordered = ordered.sort_values("date").reset_index(drop=True)
+    ordered = _validated_daily_frame(daily)
     if not live and len(ordered) >= 2 and _row_uses_unconfirmed_bar(ordered.iloc[-1], now):
         ordered = ordered.iloc[:-1].copy()
         latest_confirmed = pd.Timestamp(ordered["date"].iloc[-1]).normalize()
@@ -4465,6 +4537,10 @@ def _get_daily_for_today(force_refresh: bool = False, data_state: str = "confirm
             if cached is None:
                 raise
             cached_at, daily, source_name = cached
+            if data_state == "live":
+                cache_age = now - cached_at
+                if cache_age < timedelta(0) or cache_age > LIVE_CACHE_STALE_IF_ERROR_MAX_AGE:
+                    raise
             source_name = _refresh_failed_cache_note(source_name, cached_at, exc)
     else:
         daily, source_name = _cached_daily(date_key, data_state=data_state)
@@ -4593,13 +4669,28 @@ def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
 def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
     if "return" in sub.columns:
         ret = pd.to_numeric(sub["return"], errors="coerce")
-        if len(ret) > 1 and ret.iloc[1:].isna().any():
+        if ret.isna().any():
             missing_dates = ", ".join(
                 pd.Timestamp(value).date().isoformat()
                 for value in sub.loc[ret.isna(), "date"].iloc[:6]
             )
-            raise poe.BotError(f"missing return inside performance window: {missing_dates}")
-        ret = ret.fillna(0.0)
+            raise poe.BotError(
+                f"missing return inside performance window: {missing_dates}; return must be finite"
+            )
+        finite = np.isfinite(ret.to_numpy(dtype=float))
+        if not finite.all():
+            bad_dates = ", ".join(
+                pd.Timestamp(value).date().isoformat()
+                for value in sub.loc[~finite, "date"].iloc[:6]
+            )
+            raise poe.BotError(f"return must be finite inside performance window: {bad_dates}")
+        bankrupt = ret <= -1.0
+        if bankrupt.any():
+            bad_dates = ", ".join(
+                pd.Timestamp(value).date().isoformat()
+                for value in sub.loc[bankrupt, "date"].iloc[:6]
+            )
+            raise poe.BotError(f"return must be greater than -1 inside performance window: {bad_dates}")
         out = pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
         if not out.empty:
             out.iloc[0] = 0.0
@@ -4610,12 +4701,34 @@ def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
             pd.Timestamp(value).date().isoformat()
             for value in sub.loc[nav.isna(), "date"].iloc[:6]
         )
-        raise poe.BotError(f"missing nav inside performance window: {missing_dates}")
+        raise poe.BotError(
+            f"missing nav inside performance window: {missing_dates}; nav must be finite"
+        )
+    finite = np.isfinite(nav.to_numpy(dtype=float))
+    if not finite.all():
+        bad_dates = ", ".join(
+            pd.Timestamp(value).date().isoformat()
+            for value in sub.loc[~finite, "date"].iloc[:6]
+        )
+        raise poe.BotError(f"nav must be finite inside performance window: {bad_dates}")
+    nonpositive = nav <= 0.0
+    if nonpositive.any():
+        bad_dates = ", ".join(
+            pd.Timestamp(value).date().isoformat()
+            for value in sub.loc[nonpositive, "date"].iloc[:6]
+        )
+        raise poe.BotError(f"nav must be positive inside performance window: {bad_dates}")
     return nav.pct_change(fill_method=None).fillna(0.0)
 
 
 def _wealth_from_returns(ret: pd.Series) -> pd.Series:
-    return (1.0 + ret.astype(float)).cumprod()
+    values = ret.astype(float)
+    if not np.isfinite(values.to_numpy(dtype=float)).all() or (values <= -1.0).any():
+        raise poe.BotError("return must be finite and greater than -1")
+    wealth = (1.0 + values).cumprod()
+    if not np.isfinite(wealth.to_numpy(dtype=float)).all() or (wealth <= 0.0).any():
+        raise poe.BotError("wealth must remain finite and positive")
+    return wealth
 
 
 def _drawdown_from_wealth(wealth: pd.Series) -> pd.Series:
@@ -4625,6 +4738,7 @@ def _drawdown_from_wealth(wealth: pd.Series) -> pd.Series:
 
 
 def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> dict[str, object]:
+    daily = _validated_daily_frame(daily)
     start = pd.Timestamp(start).normalize()
     end = pd.Timestamp(end).normalize()
     sub = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
@@ -4961,6 +5075,63 @@ def classify_query(text: str) -> str:
 
 
 MANDATORY_PERFORMANCE_LABELS = {"full_sample", "10Y", "5Y", "3Y", "1Y"}
+MANDATORY_WINDOW_TRADING_DAYS = {
+    "10Y": 10 * TRADING_DAYS,
+    "5Y": 5 * TRADING_DAYS,
+    "3Y": 3 * TRADING_DAYS,
+    "1Y": TRADING_DAYS,
+}
+
+
+def _validated_daily_dates(daily: pd.DataFrame) -> pd.DataFrame:
+    if "date" not in daily.columns:
+        raise poe.BotError("daily data is missing date column")
+    out = daily.copy()
+    parsed = pd.to_datetime(out["date"], errors="coerce")
+    if parsed.isna().any():
+        raise poe.BotError("daily data contains invalid date")
+    normalized = parsed.dt.normalize()
+    duplicates = normalized.duplicated(keep=False)
+    if duplicates.any():
+        sample = ", ".join(
+            pd.Timestamp(value).date().isoformat()
+            for value in normalized.loc[duplicates].drop_duplicates().iloc[:6]
+        )
+        raise poe.BotError(f"duplicate normalized date in daily data: {sample}")
+    out["date"] = normalized
+    return out.sort_values("date").reset_index(drop=True)
+
+
+def _validated_daily_frame(daily: pd.DataFrame) -> pd.DataFrame:
+    out = _validated_daily_dates(daily)
+    for column in ("return", "nav", "wealth"):
+        if column not in out.columns:
+            continue
+        values = pd.to_numeric(out[column], errors="coerce")
+        finite = np.isfinite(values.to_numpy(dtype=float))
+        if not finite.all():
+            bad_dates = ", ".join(
+                pd.Timestamp(value).date().isoformat()
+                for value in out.loc[~finite, "date"].iloc[:6]
+            )
+            missing_prefix = f"missing {column} inside daily data; " if values.isna().any() else ""
+            raise poe.BotError(
+                f"{missing_prefix}{column} must be finite in daily data: {bad_dates}"
+            )
+        if column == "return":
+            valid_domain = values > -1.0
+            requirement = "greater than -1"
+        else:
+            valid_domain = values > 0.0
+            requirement = "positive"
+        if not valid_domain.all():
+            bad_dates = ", ".join(
+                pd.Timestamp(value).date().isoformat()
+                for value in out.loc[~valid_domain, "date"].iloc[:6]
+            )
+            raise poe.BotError(f"{column} must be {requirement} in daily data: {bad_dates}")
+        out[column] = values.astype(float)
+    return out
 
 
 def _default_performance_ranges(
@@ -5004,6 +5175,66 @@ def resolve_performance_ranges(
     return ranges
 
 
+def trading_day_window_start(index: pd.Index, end: pd.Timestamp, trading_days: int) -> pd.Timestamp:
+    if isinstance(trading_days, (bool, np.bool_)) or int(trading_days) <= 0:
+        raise ValueError("trading_days must be a positive integer")
+    sessions = pd.DatetimeIndex(pd.to_datetime(index)).normalize().unique().sort_values()
+    sessions = sessions[sessions <= pd.Timestamp(end).normalize()]
+    if len(sessions) < int(trading_days):
+        return pd.NaT
+    return pd.Timestamp(sessions[-int(trading_days)])
+
+
+def _default_performance_ranges_for_daily(
+    daily: pd.DataFrame,
+    latest: pd.Timestamp,
+    earliest: pd.Timestamp,
+) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
+    dates = pd.DatetimeIndex(_validated_daily_dates(daily)["date"])
+    ranges: list[tuple[str, pd.Timestamp, pd.Timestamp]] = [
+        ("full_sample", pd.Timestamp(earliest).normalize(), pd.Timestamp(latest).normalize())
+    ]
+    for label in ("10Y", "5Y", "3Y", "1Y"):
+        start = trading_day_window_start(dates, latest, MANDATORY_WINDOW_TRADING_DAYS[label])
+        ranges.append((label, start, pd.Timestamp(latest).normalize()))
+    ranges.append(("from_2020", EVAL_START, pd.Timestamp(latest).normalize()))
+    return ranges
+
+
+def resolve_performance_ranges_for_daily(
+    query: str,
+    daily: pd.DataFrame,
+    now=None,
+    latest_date=None,
+    earliest_date=None,
+) -> list[tuple[str, pd.Timestamp, pd.Timestamp]]:
+    validated = _validated_daily_dates(daily)
+    now = _bj_today_naive() if now is None else _normalize_query_date(now)
+    latest = (
+        pd.Timestamp(validated["date"].iloc[-1]).normalize()
+        if latest_date is None
+        else _normalize_query_date(latest_date)
+    )
+    earliest = (
+        pd.Timestamp(validated["date"].iloc[0]).normalize()
+        if earliest_date is None
+        else _normalize_query_date(earliest_date)
+    )
+    parsed = parse_all_date_ranges(query, now=now)
+    ranges = [(f"{s.date()}~{e.date()}", s, e) for s, e in parsed]
+    seen = {
+        (label, pd.Timestamp(start).normalize(), pd.Timestamp(end).normalize())
+        for label, start, end in ranges
+    }
+    for item in _default_performance_ranges_for_daily(validated, latest, earliest):
+        start_key = pd.NaT if pd.isna(item[1]) else pd.Timestamp(item[1]).normalize()
+        key = (item[0], start_key, pd.Timestamp(item[2]).normalize())
+        if key not in seen:
+            ranges.append(item)
+            seen.add(key)
+    return ranges
+
+
 def _exception_na_reason(exc: Exception) -> str:
     reason = str(exc).strip() or exc.__class__.__name__
     return reason.replace("|", "/")[:120]
@@ -5013,7 +5244,14 @@ def _mandatory_window_na_reason(
     label: str,
     start: pd.Timestamp,
     earliest: pd.Timestamp,
+    available_rows: int | None = None,
 ) -> str | None:
+    required_rows = MANDATORY_WINDOW_TRADING_DAYS.get(label)
+    if required_rows is not None and (
+        pd.isna(start) or (available_rows is not None and available_rows < required_rows)
+    ):
+        actual = 0 if available_rows is None else int(available_rows)
+        return f"insufficient history: {actual} unique trading days available; {required_rows} required"
     if label in {"10Y", "5Y", "3Y", "1Y"} and earliest > pd.Timestamp(start).normalize():
         return (
             f"insufficient history: first available {earliest.date().isoformat()} "
@@ -6004,7 +6242,13 @@ class SubDSixEtfV11Bot:
         daily = prepare_daily_for_performance(daily)
         earliest = pd.Timestamp(daily["date"].iloc[0])
         latest = pd.Timestamp(daily["date"].iloc[-1])
-        ranges = resolve_performance_ranges(query, latest_date=latest, earliest_date=earliest)
+        ranges = resolve_performance_ranges_for_daily(
+            query,
+            daily,
+            latest_date=latest,
+            earliest_date=earliest,
+        )
+        available_rows = int(pd.to_datetime(daily["date"]).dt.normalize().nunique())
         chart_range = ranges[0] if ranges else None
         with poe.start_message() as msg:
             if chart_range is not None:
@@ -6020,7 +6264,12 @@ class SubDSixEtfV11Bot:
             first_chart_range = None
             for label, start, end in ranges:
                 try:
-                    na_reason = _mandatory_window_na_reason(label, start, earliest)
+                    na_reason = _mandatory_window_na_reason(
+                        label,
+                        start,
+                        earliest,
+                        available_rows=available_rows,
+                    )
                     if na_reason is not None:
                         raise poe.BotError(na_reason)
                     m = calc_performance(daily, start, end)

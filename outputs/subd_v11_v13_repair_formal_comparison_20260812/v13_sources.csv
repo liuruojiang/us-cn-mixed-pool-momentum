@@ -1,0 +1,6 @@
+﻿code,name,source,adjustment,source_detail,first_date,last_date,first_used,rows,first,last,last_aligned
+QQQ,NASDAQ100_QQQ_PROXY,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-11-02,2026-08-11,2007-01-03,4972,,,2026-08-11
+GLD,GOLD_GLD_PROXY,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-11-02,2026-08-11,2007-01-03,4972,,,2026-08-11
+CN_CYB_399006,CHINEXT_INDEX_PROXY,akshare.stock_zh_index_daily,index close / price index,symbol=sz399006; no pre-2010 backfill,2010-06-01,2026-08-11,2010-06-01,3933,,,2026-08-11
+KMLM,MANAGED_FUTURES_KMLM_PROXY,Yahoo Finance chart API,total-return/adjusted-close,adjusted close; dynamic asset joins from own first usable date,2020-12-02,2026-08-11,2020-12-02,1428,,,2026-08-11
+159985.SZ,SOYMEAL_ETF,Tencent fqkline,qfq/front-adjusted,"qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001); dynamic asset joins from own first usable date",,,,1620,2019-12-05,2026-08-11,2026-08-11

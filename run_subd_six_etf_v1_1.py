@@ -300,6 +300,22 @@ def run_staged_entry(
         net_return = nav / rows[-1]["nav"] - 1.0 if rows else nav - 1.0
         score_row = {f"score_{code}": scores.get(code, math.nan) for code in subd.ASSETS}
         r2_row = {f"r2_{code}": r2_values.get(code, math.nan) for code in subd.ASSETS}
+        asset_return_row: dict[str, float] = {}
+        for code in subd.ASSETS:
+            if idx == 0:
+                code_return = 0.0
+            else:
+                previous = pd.to_numeric(prices.iloc[idx - 1].get(code, np.nan), errors="coerce")
+                current = pd.to_numeric(prices.iloc[idx].get(code, np.nan), errors="coerce")
+                code_return = (
+                    float(current / previous - 1.0)
+                    if pd.notna(previous)
+                    and pd.notna(current)
+                    and float(previous) > 0.0
+                    and float(current) > 0.0
+                    else math.nan
+                )
+            asset_return_row[f"asset_return_{code}"] = code_return
         ffill_row = {
             f"price_ffill_{code}": _price_is_forward_filled(price_ffill_flags, date, code)
             for code in subd.ASSETS
@@ -327,6 +343,7 @@ def run_staged_entry(
                 "blocked_trade_target": blocked_trade_target,
                 "stale_price_trade_assets": ",".join(stale_price_trade_assets),
                 "asset_return": asset_return,
+                **asset_return_row,
                 "gross_return": gross_return,
                 "asset_component": asset_component,
                 "turnover": turnover,
@@ -663,10 +680,11 @@ def _float_series(curve: pd.DataFrame, column: str, default: float) -> pd.Series
 def apply_target_vol_scale_rebalance_threshold(
     raw_next_scale: pd.Series,
     threshold: float = TARGET_VOL_SCALE_REBALANCE_THRESHOLD,
+    initial_scale: float = 1.0,
 ) -> pd.Series:
-    raw = raw_next_scale.astype(float).replace([np.inf, -np.inf], np.nan).fillna(1.0)
-    confirmed = []
-    last_confirmed = 1.0
+    raw = raw_next_scale.astype(float)
+    confirmed: list[float] = []
+    last_confirmed = float(initial_scale)
     for value in raw:
         value = float(value)
         if threshold <= 0 or abs(value - last_confirmed) >= threshold:
@@ -681,13 +699,115 @@ def _compute_target_vol_scales(
     vol_window: int,
     max_lev: float,
 ) -> tuple[pd.Series, pd.Series, pd.Series]:
-    base_ret = curve["return"].astype(float).fillna(0.0)
-    realized_vol = base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0) * math.sqrt(subd.TRADING_DAYS)
-    next_scale = (target_vol / realized_vol).replace([np.inf, -np.inf], max_lev)
-    next_scale = next_scale.clip(lower=0.0, upper=max_lev).fillna(1.0)
-    next_scale = apply_target_vol_scale_rebalance_threshold(next_scale)
-    effective_scale = next_scale.shift(1).fillna(1.0)
+    if isinstance(target_vol, (bool, np.bool_)):
+        raise ValueError("target_vol must be a finite positive number")
+    if isinstance(vol_window, (bool, np.bool_)) or not isinstance(vol_window, (int, np.integer)):
+        raise ValueError("vol_window must be an integer greater than 1")
+    if isinstance(max_lev, (bool, np.bool_)):
+        raise ValueError("max_lev must be a finite nonnegative number")
+
+    try:
+        target_vol = float(target_vol)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("target_vol must be a finite positive number") from exc
+    try:
+        max_lev = float(max_lev)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("max_lev must be a finite nonnegative number") from exc
+    vol_window = int(vol_window)
+    if not math.isfinite(target_vol) or target_vol <= 0.0:
+        raise ValueError("target_vol must be a finite positive number")
+    if vol_window <= 1:
+        raise ValueError("vol_window must be an integer greater than 1")
+    if not math.isfinite(max_lev) or max_lev < 0.0:
+        raise ValueError("max_lev must be a finite nonnegative number")
+
+    try:
+        base_ret = curve["return"].astype(float)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("return values must be finite") from exc
+    if not np.isfinite(base_ret.to_numpy()).all():
+        raise ValueError("return values must be finite")
+
+    initial_scale = min(1.0, max_lev)
+    with np.errstate(over="ignore", invalid="ignore"):
+        realized_vol = (
+            base_ret.rolling(vol_window, min_periods=vol_window).std(ddof=0)
+            * math.sqrt(subd.TRADING_DAYS)
+        )
+    post_warmup_vol = realized_vol.iloc[vol_window - 1 :]
+    if not np.isfinite(post_warmup_vol.to_numpy()).all():
+        raise ValueError("realized volatility must be finite after warmup")
+
+    complete_window = realized_vol.notna()
+    next_scale = pd.Series(initial_scale, index=curve.index, dtype=float)
+    positive_vol = complete_window & realized_vol.gt(0.0)
+    zero_vol = complete_window & realized_vol.eq(0.0)
+    next_scale.loc[positive_vol] = target_vol / realized_vol.loc[positive_vol]
+    next_scale.loc[zero_vol] = max_lev
+    next_scale = next_scale.clip(lower=0.0, upper=max_lev)
+    next_scale = apply_target_vol_scale_rebalance_threshold(
+        next_scale,
+        initial_scale=initial_scale,
+    )
+    effective_scale = next_scale.shift(1, fill_value=initial_scale)
     return realized_vol, effective_scale.astype(float), next_scale.astype(float)
+
+
+def _overlay_price_ffill_flags(
+    curve: pd.DataFrame,
+    price_ffill_flags: pd.DataFrame | None,
+) -> pd.DataFrame:
+    """Return a strict per-row stale-price mask for overlay trade legs."""
+    if not curve.index.is_unique:
+        raise ValueError("overlay ledger requires a unique curve index")
+    if price_ffill_flags is None:
+        attrs_mask = curve.attrs.get("price_ffill_flags")
+        if isinstance(attrs_mask, pd.DataFrame):
+            price_ffill_flags = attrs_mask
+        else:
+            embedded = pd.DataFrame(False, index=curve.index, columns=list(subd.ASSETS), dtype=bool)
+            for code in subd.ASSETS:
+                column = f"price_ffill_{code}"
+                if column not in curve.columns:
+                    continue
+                values = curve[column]
+                if values.isna().any() or not pd.api.types.is_bool_dtype(values.dtype):
+                    raise ValueError(f"{column} must contain non-null boolean values")
+                embedded[code] = values.to_numpy(dtype=bool)
+            return embedded
+
+    if not isinstance(price_ffill_flags, pd.DataFrame):
+        raise ValueError("price ffill mask must be a DataFrame")
+    flags = price_ffill_flags.copy()
+    if not flags.index.is_unique:
+        raise ValueError("price ffill mask index must be unique")
+    if flags.columns.has_duplicates:
+        raise ValueError("price ffill mask asset columns must be unique")
+    missing_assets = [code for code in subd.ASSETS if code not in flags.columns]
+    if missing_assets:
+        raise ValueError(f"price ffill mask is missing asset columns: {missing_assets}")
+    if isinstance(curve.index, pd.DatetimeIndex):
+        try:
+            curve_dates = pd.DatetimeIndex(curve.index).normalize()
+            flag_dates = pd.DatetimeIndex(flags.index).normalize()
+        except Exception as exc:
+            raise ValueError("price ffill mask index must contain valid dates") from exc
+        if not curve_dates.is_unique or not flag_dates.is_unique:
+            raise ValueError("price ffill mask requires unique normalized dates")
+        flags.index = flag_dates
+        if not flag_dates.equals(curve_dates):
+            raise ValueError("price ffill mask must exactly cover the curve index")
+        flags.index = curve.index
+    elif not flags.index.equals(curve.index):
+        raise ValueError("price ffill mask must exactly cover the curve index")
+    selected = flags.loc[:, list(subd.ASSETS)]
+    if selected.isna().any().any():
+        raise ValueError("price ffill mask must not contain NA values")
+    bad_dtypes = [code for code in subd.ASSETS if not pd.api.types.is_bool_dtype(selected[code].dtype)]
+    if bad_dtypes:
+        raise ValueError(f"price ffill mask columns must have boolean dtype: {bad_dtypes}")
+    return selected.astype(bool)
 
 
 def _recompute_final_exposure_nav(
@@ -697,14 +817,17 @@ def _recompute_final_exposure_nav(
     overheat_effective: pd.Series,
     overheat_next: pd.Series,
     one_way_cost: float,
+    price_ffill_flags: pd.DataFrame | None = None,
+    max_lev: float | None = None,
 ) -> pd.DataFrame:
     out = curve.copy()
-    if "base_gross_return" not in out.columns:
-        out["base_gross_return"] = out["gross_return"].astype(float).fillna(0.0)
+    ffill_flags = _overlay_price_ffill_flags(out, price_ffill_flags)
     if "base_return" not in out.columns:
         out["base_return"] = out["return"].astype(float).fillna(0.0)
     if "base_nav" not in out.columns:
         out["base_nav"] = out["nav"].astype(float)
+    if "base_gross_return" not in out.columns:
+        out["base_gross_return"] = out["gross_return"].astype(float).fillna(0.0)
     if "base_turnover" not in out.columns:
         out["base_turnover"] = _float_series(out, "turnover", 0.0)
     if "base_cost" not in out.columns:
@@ -720,6 +843,20 @@ def _recompute_final_exposure_nav(
     overheat_effective = overheat_effective.reindex(out.index).astype(float).fillna(1.0)
     overheat_next = overheat_next.reindex(out.index).astype(float).fillna(1.0)
 
+    if max_lev is None and "max_lev" in out.columns and not out.empty:
+        max_lev = out["max_lev"].iloc[0]
+    if isinstance(max_lev, (bool, np.bool_)):
+        raise ValueError("max_lev hard cap must be a finite nonnegative number")
+    if max_lev is None:
+        hard_cap = math.inf
+    else:
+        try:
+            hard_cap = float(max_lev)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("max_lev hard cap must be a finite nonnegative number") from exc
+        if not math.isfinite(hard_cap) or hard_cap < 0.0:
+            raise ValueError("max_lev hard cap must be a finite nonnegative number")
+
     if "asset_return" not in out.columns:
         base_fraction_col = "base_fraction_before" if "base_fraction_before" in out.columns else "fraction_before"
         base_fraction = _float_series(out, base_fraction_col, 0.0)
@@ -734,54 +871,238 @@ def _recompute_final_exposure_nav(
             index=out.index,
             dtype=float,
         )
-    asset_return = pd.to_numeric(out["asset_return"], errors="coerce").replace([np.inf, -np.inf], np.nan).fillna(0.0)
-
-    exposure_effective = fraction_before * target_vol_effective * overheat_effective
-    exposure_effective = exposure_effective.where(position_before != "CASH", 0.0)
-    final_exposure = holding_fraction * target_vol_next
-    final_exposure = final_exposure.where(position_next != "CASH", 0.0)
-    final_exposure_after_overheat = final_exposure * overheat_next
-
-    gross_return = asset_return * exposure_effective
-    drift_denominator = (1.0 + gross_return).replace(0.0, np.nan)
-    drifted_exposure = exposure_effective * (1.0 + asset_return) / drift_denominator
-    drifted_exposure = drifted_exposure.replace([np.inf, -np.inf], np.nan).fillna(0.0)
-    drifted_exposure = drifted_exposure.where(position_before != "CASH", 0.0)
-
-    same_asset = (position_before == position_next) & (position_before != "CASH")
-    rebalance_delta = final_exposure_after_overheat - drifted_exposure
-    buy_delta = pd.Series(
-        np.where(same_asset, np.maximum(rebalance_delta, 0.0), final_exposure_after_overheat),
-        index=out.index,
-        dtype=float,
+    asset_return = (
+        pd.to_numeric(out["asset_return"], errors="coerce")
+        .replace([np.inf, -np.inf], np.nan)
+        .fillna(0.0)
     )
-    sell_delta = pd.Series(
-        np.where(same_asset, np.maximum(-rebalance_delta, 0.0), drifted_exposure),
-        index=out.index,
-        dtype=float,
+
+    eps = 1e-12
+    exposure_effective_vals: list[float] = []
+    final_exposure_vals: list[float] = []
+    final_exposure_after_overheat_vals: list[float] = []
+    drifted_exposure_vals: list[float] = []
+    rebalance_delta_vals: list[float] = []
+    buy_delta_vals: list[float] = []
+    sell_delta_vals: list[float] = []
+    turnover_vals: list[float] = []
+    cost_vals: list[float] = []
+    gross_return_vals: list[float] = []
+    net_return_vals: list[float] = []
+    actual_position_before_vals: list[str] = []
+    actual_position_next_vals: list[str] = []
+    stale_blocked_vals: list[bool] = []
+    stale_assets_vals: list[str] = []
+    cap_rebalance_vals: list[bool] = []
+    cap_turnover_vals: list[float] = []
+    cap_cost_vals: list[float] = []
+    carried_position = "CASH"
+    carried_exposure = 0.0
+    pending_rebalance = False
+
+    for row_number, idx in enumerate(out.index):
+        prev_position = str(position_before.loc[idx])
+        next_position = str(position_next.loc[idx])
+        frac_before = float(fraction_before.loc[idx])
+        hold_frac = float(holding_fraction.loc[idx])
+        tv_effective = float(target_vol_effective.loc[idx])
+        tv_next = float(target_vol_next.loc[idx])
+        oh_effective = float(overheat_effective.loc[idx])
+        oh_next = float(overheat_next.loc[idx])
+        scheduled_exposure = (
+            frac_before * tv_effective * oh_effective if prev_position != "CASH" else 0.0
+        )
+        scheduled_exposure = min(scheduled_exposure, hard_cap)
+        if row_number == 0:
+            actual_prev_position = prev_position if scheduled_exposure > eps else "CASH"
+            exposure_before = scheduled_exposure
+        else:
+            actual_prev_position = carried_position
+            exposure_before = carried_exposure if carried_position != "CASH" else 0.0
+
+        if actual_prev_position == "CASH":
+            asset_ret = 0.0
+        else:
+            actual_return_col = f"asset_return_{actual_prev_position}"
+            if actual_return_col in out.columns:
+                actual_return = pd.to_numeric(
+                    pd.Series([out.at[idx, actual_return_col]]), errors="coerce"
+                ).iloc[0]
+                if pd.isna(actual_return) or not math.isfinite(float(actual_return)):
+                    raise RuntimeError(
+                        f"Missing finite asset return for actual carried position "
+                        f"{actual_prev_position} at {idx}"
+                    )
+                asset_ret = float(actual_return)
+            elif actual_prev_position == prev_position:
+                asset_ret = float(asset_return.loc[idx])
+            else:
+                raise RuntimeError(
+                    f"Missing asset return for actual carried position {actual_prev_position} at {idx}"
+                )
+
+        gross = asset_ret * exposure_before
+        denominator = 1.0 + gross
+        if not math.isfinite(denominator) or denominator <= 0.0:
+            raise RuntimeError(f"NAV factor must remain finite and positive at {idx}")
+        if actual_prev_position == "CASH":
+            drifted = 0.0
+        else:
+            drifted = exposure_before * (1.0 + asset_ret) / denominator
+            if not math.isfinite(drifted):
+                drifted = 0.0
+
+        desired_final = hold_frac * tv_next if next_position != "CASH" else 0.0
+        desired_after_overheat = min(desired_final * oh_next, hard_cap)
+        raw_trade_target = out.at[idx, "trade_target"] if "trade_target" in out.columns else None
+        has_base_trade = not (
+            raw_trade_target is None
+            or pd.isna(raw_trade_target)
+            or str(raw_trade_target).strip().lower() in {"", "none", "nan", "<na>"}
+        )
+        position_changed = prev_position != next_position
+        fraction_changed = abs(hold_frac - frac_before) > eps
+        scale_changed = abs(tv_next - tv_effective) > eps
+        overheat_changed = abs(oh_next - oh_effective) > eps
+        policy_rebalance = (
+            has_base_trade
+            or position_changed
+            or fraction_changed
+            or scale_changed
+            or overheat_changed
+            or pending_rebalance
+        )
+        cap_rebalance = bool(drifted > hard_cap + eps)
+        should_rebalance = policy_rebalance or cap_rebalance
+
+        if policy_rebalance:
+            final_after_overheat = desired_after_overheat
+            final_before_overheat = desired_final
+            rebalance = final_after_overheat - drifted
+            same_asset = actual_prev_position == next_position and actual_prev_position != "CASH"
+            if same_asset:
+                buy = max(rebalance, 0.0)
+                sell = max(-rebalance, 0.0)
+                day_turnover = abs(rebalance)
+            else:
+                sell = drifted if actual_prev_position != "CASH" else 0.0
+                buy = final_after_overheat if next_position != "CASH" else 0.0
+                day_turnover = abs(sell) + abs(buy)
+        elif cap_rebalance:
+            final_after_overheat = hard_cap
+            final_before_overheat = hard_cap / oh_next if abs(oh_next) > eps else 0.0
+            rebalance = hard_cap - drifted
+            buy = 0.0
+            sell = drifted - hard_cap
+            day_turnover = sell
+        else:
+            final_after_overheat = drifted
+            final_before_overheat = (
+                final_after_overheat / oh_next
+                if next_position != "CASH" and abs(oh_next) > eps
+                else 0.0
+            )
+            rebalance = 0.0
+            buy = 0.0
+            sell = 0.0
+            day_turnover = 0.0
+
+        stale_assets: list[str] = []
+        if should_rebalance and day_turnover > eps:
+            if actual_prev_position == next_position and actual_prev_position in subd.ASSETS:
+                stale_assets.append(actual_prev_position)
+            else:
+                if sell > eps and actual_prev_position in subd.ASSETS:
+                    stale_assets.append(actual_prev_position)
+                if buy > eps and next_position in subd.ASSETS:
+                    stale_assets.append(next_position)
+            stale_assets = [
+                code
+                for code in dict.fromkeys(stale_assets)
+                if bool(ffill_flags.at[idx, code])
+            ]
+        overlay_trade_blocked = bool(stale_assets)
+        if overlay_trade_blocked:
+            if cap_rebalance:
+                raise RuntimeError(
+                    f"Cannot enforce max_lev hard cap with stale execution price at {idx}: "
+                    + ",".join(stale_assets)
+                )
+            final_after_overheat = drifted
+            final_before_overheat = (
+                drifted / oh_next
+                if actual_prev_position != "CASH" and abs(oh_next) > eps
+                else 0.0
+            )
+            rebalance = buy = sell = day_turnover = 0.0
+            next_position = actual_prev_position
+            pending_rebalance = True
+        elif should_rebalance:
+            pending_rebalance = False
+
+        day_cost = day_turnover * float(one_way_cost)
+        net = (1.0 + gross) * (1.0 - day_cost) - 1.0
+        if not math.isfinite(net) or 1.0 + net <= 0.0:
+            raise RuntimeError(f"NAV must remain finite and positive after costs at {idx}")
+        actual_before = actual_prev_position if exposure_before > eps else "CASH"
+        actual_next = next_position if final_after_overheat > eps else "CASH"
+
+        exposure_effective_vals.append(exposure_before)
+        final_exposure_vals.append(final_before_overheat)
+        final_exposure_after_overheat_vals.append(final_after_overheat)
+        drifted_exposure_vals.append(drifted)
+        rebalance_delta_vals.append(rebalance)
+        buy_delta_vals.append(buy)
+        sell_delta_vals.append(sell)
+        turnover_vals.append(day_turnover)
+        cost_vals.append(day_cost)
+        gross_return_vals.append(gross)
+        net_return_vals.append(net)
+        actual_position_before_vals.append(actual_before)
+        actual_position_next_vals.append(actual_next)
+        stale_blocked_vals.append(overlay_trade_blocked)
+        stale_assets_vals.append(",".join(stale_assets))
+        # Attribute turnover to the hard cap only when the cap itself caused
+        # the rebalance.  A coincident policy rebalance would have incurred
+        # the same trade without the cap and must not be double-counted.
+        cap_only_rebalance = bool(cap_rebalance and not policy_rebalance)
+        cap_rebalance_vals.append(cap_only_rebalance)
+        cap_turnover_vals.append(day_turnover if cap_only_rebalance else 0.0)
+        cap_cost_vals.append(day_cost if cap_only_rebalance else 0.0)
+        carried_position = actual_next
+        carried_exposure = final_after_overheat if actual_next != "CASH" else 0.0
+
+    exposure_effective = pd.Series(exposure_effective_vals, index=out.index, dtype=float)
+    final_exposure = pd.Series(final_exposure_vals, index=out.index, dtype=float)
+    final_exposure_after_overheat = pd.Series(
+        final_exposure_after_overheat_vals, index=out.index, dtype=float
     )
-    turnover = pd.Series(
-        np.where(
-            same_asset,
-            rebalance_delta.abs(),
-            sell_delta.abs() + buy_delta.abs(),
-        ),
-        index=out.index,
-        dtype=float,
-    )
-    cost = turnover * float(one_way_cost)
-    net_return = (1.0 + gross_return) * (1.0 - cost) - 1.0
+    drifted_exposure = pd.Series(drifted_exposure_vals, index=out.index, dtype=float)
+    rebalance_delta = pd.Series(rebalance_delta_vals, index=out.index, dtype=float)
+    buy_delta = pd.Series(buy_delta_vals, index=out.index, dtype=float)
+    sell_delta = pd.Series(sell_delta_vals, index=out.index, dtype=float)
+    turnover = pd.Series(turnover_vals, index=out.index, dtype=float)
+    cost = pd.Series(cost_vals, index=out.index, dtype=float)
+    gross_return = pd.Series(gross_return_vals, index=out.index, dtype=float)
+    net_return = pd.Series(net_return_vals, index=out.index, dtype=float)
 
     out["base_position_before"] = position_before
     out["base_position_next"] = position_next
-    out["actual_position_before"] = pd.Series(
-        np.where(exposure_effective.abs() > 1e-12, position_before, "CASH"),
-        index=out.index,
+    out["actual_position_before"] = pd.Series(actual_position_before_vals, index=out.index)
+    out["actual_position_next"] = pd.Series(actual_position_next_vals, index=out.index)
+    prior_blocked = out.get(
+        "trade_blocked_by_stale_price", pd.Series(False, index=out.index)
+    ).fillna(False).astype(bool)
+    out["trade_blocked_by_stale_price"] = prior_blocked | pd.Series(
+        stale_blocked_vals, index=out.index, dtype=bool
     )
-    out["actual_position_next"] = pd.Series(
-        np.where(final_exposure_after_overheat.abs() > 1e-12, position_next, "CASH"),
-        index=out.index,
-    )
+    prior_assets = out.get(
+        "stale_price_trade_assets", pd.Series("", index=out.index)
+    ).fillna("").astype(str)
+    out["stale_price_trade_assets"] = [
+        ",".join(dict.fromkeys(filter(None, f"{old},{new}".split(","))))
+        for old, new in zip(prior_assets, stale_assets_vals)
+    ]
     out["target_vol_scale_effective"] = target_vol_effective
     out["target_vol_scale_next"] = target_vol_next
     out["weight"] = target_vol_next
@@ -797,9 +1118,14 @@ def _recompute_final_exposure_nav(
     out["sell_delta"] = sell_delta
     out["turnover"] = turnover
     out["cost"] = cost
+    out["exposure_cap_rebalance"] = pd.Series(cap_rebalance_vals, index=out.index, dtype=bool)
+    out["exposure_cap_turnover"] = pd.Series(cap_turnover_vals, index=out.index, dtype=float)
+    out["exposure_cap_cost"] = pd.Series(cap_cost_vals, index=out.index, dtype=float)
     out["gross_return"] = gross_return
     out["return"] = net_return
     out["nav"] = (1.0 + net_return).cumprod()
+    if not np.isfinite(out["nav"].to_numpy(dtype=float)).all() or (out["nav"] <= 0.0).any():
+        raise RuntimeError("NAV must remain finite and positive")
     out["effective_trade_count"] = (turnover > 1e-12).cumsum()
     return out
 
@@ -810,6 +1136,7 @@ def apply_target_vol_overlay(
     vol_window: int,
     max_lev: float,
     one_way_cost: float = ONE_WAY_COST,
+    price_ffill_flags: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     result = curve.copy()
     realized_vol, effective_scale, next_scale = _compute_target_vol_scales(
@@ -826,7 +1153,14 @@ def apply_target_vol_overlay(
     result["realized_vol"] = realized_vol
     ones = pd.Series(1.0, index=result.index, dtype=float)
     result = _recompute_final_exposure_nav(
-        result, effective_scale, next_scale, ones, ones, one_way_cost
+        result,
+        effective_scale,
+        next_scale,
+        ones,
+        ones,
+        one_way_cost,
+        price_ffill_flags=price_ffill_flags,
+        max_lev=max_lev,
     )
     result["target_vol"] = target_vol
     result["vol_window"] = vol_window
@@ -904,12 +1238,16 @@ def _set_if_present(frame: pd.DataFrame, idx: object, column: str, value: object
         frame.at[idx, column] = value
 
 
-def _apply_zero_overheat_execution_guard(out: pd.DataFrame) -> pd.DataFrame:
+def _apply_zero_overheat_execution_guard(
+    out: pd.DataFrame,
+    price_ffill_flags: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     required = {"position_before", "position", "fraction_before", "holding_fraction"}
     if not required.issubset(out.columns) or "overheat_scale_next" not in out.columns:
         return out
 
     guarded = out.copy()
+    ffill_flags = _overlay_price_ffill_flags(guarded, price_ffill_flags)
     for col in (
         "position_before",
         "position",
@@ -935,6 +1273,14 @@ def _apply_zero_overheat_execution_guard(out: pd.DataFrame) -> pd.DataFrame:
     guarded["actual_staged_initial_count"] = 0
     guarded["actual_staged_fill_count"] = 0
     guarded["staged_entry_event_count"] = 0
+    if "trade_blocked_by_stale_price" not in guarded.columns:
+        guarded["trade_blocked_by_stale_price"] = False
+    if "blocked_trade_target" not in guarded.columns:
+        guarded["blocked_trade_target"] = None
+    if "stale_price_trade_assets" not in guarded.columns:
+        guarded["stale_price_trade_assets"] = ""
+    if "overlay_blocked_trade_target" not in guarded.columns:
+        guarded["overlay_blocked_trade_target"] = None
 
     actual_position = "CASH"
     actual_fraction = 0.0
@@ -965,7 +1311,25 @@ def _apply_zero_overheat_execution_guard(out: pd.DataFrame) -> pd.DataFrame:
         staged_initial = False
         fill_on_down_day = False
 
-        if blocked_next:
+        stale_zero_exit = bool(
+            blocked_next
+            and actual_position in subd.ASSETS
+            and actual_fraction > eps
+            and bool(ffill_flags.at[idx, actual_position])
+        )
+        if stale_zero_exit:
+            new_fraction = actual_fraction
+            if actual_pending_target == actual_position:
+                state = "HALF_POSITION_WAIT_DOWN"
+            elif new_fraction >= 1.0 - eps:
+                state = "FULL_POSITION"
+            else:
+                state = "PARTIAL_POSITION"
+            _set_if_present(guarded, idx, "trade_fraction", new_fraction)
+            _set_if_present(guarded, idx, "pending_entry_target", actual_pending_target)
+            _set_if_present(guarded, idx, "pending_entry_since", actual_pending_since)
+            _set_if_present(guarded, idx, "pending_entry_days", actual_pending_days)
+        elif blocked_next:
             new_fraction = 0.0
             state = "BLOCKED_BY_OVERHEAT"
             _set_if_present(guarded, idx, "trade_fraction", 0.0)
@@ -990,7 +1354,32 @@ def _apply_zero_overheat_execution_guard(out: pd.DataFrame) -> pd.DataFrame:
             actual_pending_days = 0
         else:
             row_pending = _text_or_none(row.get("pending_entry_target"))
-            if actual_position != base_target or actual_fraction <= eps:
+            stale_initial_entry = bool(
+                actual_position == "CASH"
+                and actual_fraction <= eps
+                and bool(ffill_flags.at[idx, base_target])
+            )
+            if stale_initial_entry:
+                new_fraction = 0.0
+                state = "CASH"
+                guarded.at[idx, "trade_blocked_by_stale_price"] = True
+                existing_target = _text_or_none(guarded.at[idx, "blocked_trade_target"])
+                if existing_target is None:
+                    guarded.at[idx, "blocked_trade_target"] = base_target
+                guarded.at[idx, "overlay_blocked_trade_target"] = base_target
+                existing_assets = _text_or_none(guarded.at[idx, "stale_price_trade_assets"]) or ""
+                guarded.at[idx, "stale_price_trade_assets"] = ",".join(
+                    dict.fromkeys(filter(None, f"{existing_assets},{base_target}".split(",")))
+                )
+                _set_if_present(guarded, idx, "trade_target", None)
+                _set_if_present(guarded, idx, "trade_fraction", 0.0)
+                _set_if_present(guarded, idx, "pending_entry_target", None)
+                _set_if_present(guarded, idx, "pending_entry_since", None)
+                _set_if_present(guarded, idx, "pending_entry_days", 0)
+                actual_pending_target = None
+                actual_pending_since = None
+                actual_pending_days = 0
+            elif actual_position != base_target or actual_fraction <= eps:
                 new_fraction = min(base_fraction, INITIAL_ENTRY_FRACTION) if base_fraction > eps else 0.0
                 if new_fraction > eps:
                     _set_if_present(guarded, idx, "trade_target", base_target)
@@ -1080,6 +1469,7 @@ def apply_overheat_overlay(
     case: OverheatCase,
     one_way_cost: float,
     recovery_mode: Literal["same_side_or_exit", "exit_only"] = "same_side_or_exit",
+    price_ffill_flags: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     if (
         not math.isfinite(float(case.enter))
@@ -1189,7 +1579,7 @@ def apply_overheat_overlay(
     out["overheat_same_side"] = pd.Series(same_side_vals, index=out.index, dtype=bool)
     out["overheat_feature_missing"] = pd.Series(missing_feature_vals, index=out.index, dtype=bool)
     out["overheat_tc"] = 0.0
-    out = _apply_zero_overheat_execution_guard(out)
+    out = _apply_zero_overheat_execution_guard(out, price_ffill_flags)
     target_vol_effective = _float_series(out, "target_vol_scale_effective", 1.0)
     target_vol_next = _float_series(out, "target_vol_scale_next", 1.0)
     out = _recompute_final_exposure_nav(
@@ -1199,24 +1589,62 @@ def apply_overheat_overlay(
         out["overheat_scale_effective"],
         out["overheat_scale_next"],
         one_way_cost,
+        price_ffill_flags=price_ffill_flags,
+        max_lev=float(out["max_lev"].iloc[0]) if "max_lev" in out.columns and not out.empty else None,
     )
     return out
 
 
+def _validated_trading_dates(index: pd.Index, context: str) -> pd.DatetimeIndex:
+    try:
+        dates = pd.DatetimeIndex(index)
+    except Exception as exc:
+        raise ValueError(f"{context} must contain valid trading dates") from exc
+    if dates.hasnans:
+        raise ValueError(f"{context} must not contain missing trading dates")
+    dates = dates.normalize()
+    if not dates.is_unique:
+        duplicates = dates[dates.duplicated()].unique()
+        first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+        raise ValueError(f"{context} must contain unique trading dates; first duplicate={first}")
+    if not dates.is_monotonic_increasing:
+        raise ValueError(f"{context} must contain strictly increasing trading dates")
+    return dates
+
+
 def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
     if "return" in sub.columns:
-        ret = pd.to_numeric(sub["return"], errors="coerce").fillna(0.0)
-        return pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
+        ret = pd.to_numeric(sub["return"], errors="coerce")
+        if ret.isna().any() or not np.isfinite(ret.to_numpy(dtype=float)).all():
+            raise ValueError("return values must be finite inside performance window")
+        if (ret <= -1.0).any():
+            raise ValueError("return values must be greater than -1 inside performance window")
+        out = pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
+        if out.empty:
+            return out
+        out.iloc[0] = 0.0
+        return out
     nav = pd.to_numeric(sub["nav"], errors="coerce").astype(float)
-    return nav.pct_change().fillna(0.0)
+    if not np.isfinite(nav.to_numpy(dtype=float)).all() or (nav <= 0.0).any():
+        raise ValueError("nav values must be finite and positive inside performance window")
+    return nav.pct_change(fill_method=None).fillna(0.0)
 
 
 def _wealth_from_returns(ret: pd.Series) -> pd.Series:
-    return (1.0 + ret.astype(float)).cumprod()
+    values = ret.astype(float)
+    if not np.isfinite(values.to_numpy(dtype=float)).all() or (values <= -1.0).any():
+        raise ValueError("return values must be finite and greater than -1")
+    wealth = (1.0 + values).cumprod()
+    if not np.isfinite(wealth.to_numpy(dtype=float)).all() or (wealth <= 0.0).any():
+        raise ValueError("wealth must remain finite and positive")
+    return wealth
 
 
 def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str, object]:
+    _validated_trading_dates(curve.index, "performance curve index")
     sub = curve.loc[curve.index >= start].copy()
+    if sub.empty:
+        raise ValueError(f"No performance rows on or after {pd.Timestamp(start).date()}")
     ret = _daily_returns_for_window(sub)
     wealth = _wealth_from_returns(ret)
     years = len(sub) / subd.TRADING_DAYS
@@ -1225,6 +1653,8 @@ def summarize(curve: pd.DataFrame, start: pd.Timestamp, label: str) -> dict[str,
     final_exposure = sub[exposure_col].astype(float).fillna(0.0)
     overheat_col = "overheat_on_effective" if "overheat_on_effective" in sub.columns else "overheat_on"
     return {
+        "result_status": str(curve["result_status"].iloc[0]) if "result_status" in curve.columns else "unclassified",
+        "result_note": str(curve["result_note"].iloc[0]) if "result_note" in curve.columns else "",
         "version": curve["version"].iloc[0],
         "scenario": curve["scenario"].iloc[0],
         "window": label,
@@ -1275,13 +1705,21 @@ def tag_original(curve: pd.DataFrame) -> pd.DataFrame:
 
 
 def trading_day_window_start(index: pd.Index, end: pd.Timestamp, trading_days: int) -> pd.Timestamp:
-    ordered = pd.DatetimeIndex(index).sort_values()
-    eligible = ordered[ordered <= pd.Timestamp(end)]
+    if isinstance(trading_days, (bool, np.bool_)) or not isinstance(trading_days, (int, np.integer)):
+        raise ValueError("trading_days must be a positive integer")
+    trading_days = int(trading_days)
+    if trading_days <= 0:
+        raise ValueError("trading_days must be a positive integer")
+    ordered = _validated_trading_dates(index, "performance window index")
+    eligible = ordered[ordered <= pd.Timestamp(end).normalize()]
     if eligible.empty:
         raise ValueError(f"No trading dates on or before {end}")
-    pos = len(eligible) - 1
-    start_pos = max(0, pos - trading_days + 1)
-    return pd.Timestamp(eligible[start_pos])
+    if len(eligible) < trading_days:
+        raise ValueError(
+            f"performance window requires {trading_days} unique trading dates; "
+            f"only {len(eligible)} available"
+        )
+    return pd.Timestamp(eligible[-trading_days])
 
 
 def build_performance_windows(
@@ -1289,8 +1727,8 @@ def build_performance_windows(
     common_last: pd.Timestamp,
     eval_start: pd.Timestamp,
 ) -> dict[str, pd.Timestamp]:
-    ordered = pd.DatetimeIndex(index).sort_values()
-    eligible = ordered[ordered <= pd.Timestamp(common_last)]
+    ordered = _validated_trading_dates(index, "performance window index")
+    eligible = ordered[ordered <= pd.Timestamp(common_last).normalize()]
     if eligible.empty:
         raise ValueError(f"No trading dates on or before {common_last}")
     windows: dict[str, pd.Timestamp] = {
@@ -1305,17 +1743,48 @@ def build_performance_windows(
     return windows
 
 
+def classify_source_evidence(source: str) -> tuple[str, str]:
+    """Classify whether the selected adjustment mode can support formal results."""
+    canonicalizer = getattr(subd, "_canonical_source", None)
+    canonical = canonicalizer(source) if callable(canonicalizer) else str(source).strip().lower()
+    if canonical == "akshare_sina_raw":
+        return (
+            "diagnostic_only",
+            "DIAGNOSTIC ONLY: Sina raw/unadjusted closes are not eligible for formal strategy performance.",
+        )
+    if canonical == "akshare_em_qfq":
+        return (
+            "formal",
+            "FORMAL: qfq/front-adjusted ETF closes with the configured adjusted-source fallbacks.",
+        )
+    raise ValueError(f"Unsupported source: {source}")
+
+
+def attach_source_evidence(frame: pd.DataFrame, source: str) -> pd.DataFrame:
+    status, note = classify_source_evidence(source)
+    out = frame.copy()
+    out["result_status"] = status
+    out["result_note"] = note
+    return out
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run Sub-D six ETF V1.1 backtest.")
     parser.add_argument("--start-date", default=START_DATE.date().isoformat())
     parser.add_argument("--end-date", default=END_DATE.date().isoformat())
     parser.add_argument("--eval-start", default=EVAL_START.date().isoformat())
     parser.add_argument("--output-tag", default=None)
-    parser.add_argument("--source", choices=["sina", "eastmoney"], default="eastmoney")
+    parser.add_argument(
+        "--source",
+        choices=["akshare_sina_raw", "akshare_em_qfq", "sina", "eastmoney"],
+        default="akshare_em_qfq",
+        help="qfq/eastmoney is formal; raw/sina is explicitly diagnostic-only",
+    )
     return parser.parse_args()
 
 
 def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFrame]:
+    price_ffill_flags = _price_ffill_flags_for_prices(prices, list(subd.ASSETS))
     original = apply_target_vol_overlay(
         run_staged_entry(
             prices,
@@ -1328,6 +1797,7 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
         config.vol_window,
         config.max_lev,
         config.one_way_cost,
+        price_ffill_flags=price_ffill_flags,
     )
     staged = apply_target_vol_overlay(
         run_staged_entry(
@@ -1341,16 +1811,21 @@ def build_curves(prices: pd.DataFrame, config: subd.RunConfig) -> list[pd.DataFr
         config.vol_window,
         config.max_lev,
         config.one_way_cost,
+        price_ffill_flags=price_ffill_flags,
     )
     v11 = apply_overheat_overlay(
         staged,
         build_overheat_features(prices),
         OverheatCase("v1_1_staged_50_plus_ma60_overheat", OVERHEAT_ENTER, OVERHEAT_EXIT, OVERHEAT_DERISK_SCALE),
         config.one_way_cost,
+        price_ffill_flags=price_ffill_flags,
     )
     v11.insert(0, "version", VERSION)
     v11["scenario"] = "v1_1_staged_50_plus_ma60_overheat"
-    return [tag_original(original), v11]
+    return [
+        attach_source_evidence(curve, config.source)
+        for curve in (tag_original(original), v11)
+    ]
 
 
 def main() -> None:
@@ -1359,6 +1834,9 @@ def main() -> None:
     end_date = pd.Timestamp(args.end_date).normalize()
     eval_start = pd.Timestamp(args.eval_start).normalize()
     output_tag = args.output_tag or f"v1_1_{end_date.strftime('%Y%m%d')}"
+    result_status, result_note = classify_source_evidence(args.source)
+    if result_status == "diagnostic_only" and "diagnostic" not in output_tag.lower():
+        output_tag = f"{output_tag}_diagnostic"
     config = subd.RunConfig(
         source=args.source,
         one_way_cost=ONE_WAY_COST,
@@ -1375,15 +1853,18 @@ def main() -> None:
     curves = build_curves(prices, config)
     windows = build_performance_windows(prices.index, common_last, eval_start)
     summary = pd.DataFrame([summarize(curve, start, label) for curve in curves for label, start in windows.items()])
+    sources = attach_source_evidence(sources, config.source)
+    quality = attach_source_evidence(subd.data_quality(prices), config.source)
 
     prefix = f"subd_six_etf_{config.output_tag}"
     subd.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     pd.concat(curves).reset_index().to_csv(subd.OUTPUT_DIR / f"{prefix}_daily.csv", index=False, encoding="utf-8-sig")
     summary.to_csv(subd.OUTPUT_DIR / f"{prefix}_summary.csv", index=False, encoding="utf-8-sig")
     sources.to_csv(subd.OUTPUT_DIR / f"{prefix}_sources.csv", index=False, encoding="utf-8-sig")
-    subd.data_quality(prices).to_csv(subd.OUTPUT_DIR / f"{prefix}_data_quality.csv", index=False, encoding="utf-8-sig")
+    quality.to_csv(subd.OUTPUT_DIR / f"{prefix}_data_quality.csv", index=False, encoding="utf-8-sig")
 
-    print("SUBD SIX ETF V1.1 SUMMARY")
+    print(f"SUBD SIX ETF V1.1 SUMMARY [{result_status.upper()}]")
+    print(result_note)
     print(summary.to_string(index=False))
     print(f"\nWROTE {subd.OUTPUT_DIR / (prefix + '_summary.csv')}")
     print(f"WROTE {subd.OUTPUT_DIR / (prefix + '_daily.csv')}")

@@ -6,4 +6,4 @@ __pycache__/
 .codex_backups/
 .cn_official_cache/
 outputs/tmp/
-outputs/cn_trading_days_cache.csv
+outputs/cn_trading_days_cache*.csv

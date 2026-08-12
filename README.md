@@ -31,4 +31,6 @@ python .\run_subd_six_etf_v1_1.py
 python .\analyze_abcde_combo_20260509.py
 ```
 
-数据源规则见 `AGENTS.md`。两份 Poe 脚本的 A 股历史数据均优先使用 AkShare/Eastmoney qfq、已验证的 Tencent fqkline `qfqday/day` 和 Eastmoney HTTP qfq。仅当这三条链路对 `159985.SZ` 全部失败时，才允许使用新浪与新华财经原始日线的精确日期交集；该路径必须覆盖上市日、满足行数/重合率/最大价差和连续性门槛，并明确标记为 `raw/unadjusted cross-validated`。QVeris 相关材料只作为历史归档证据保留。
+数据源规则见 `AGENTS.md`。两份 Poe 脚本的正式 A 股历史路径只接受 AkShare/Eastmoney qfq、已验证的 Tencent fqkline `qfqday/day` 和 Eastmoney HTTP qfq；所有候选序列都经过连续性与覆盖范围校验。新浪与新华财经原始日线的精确日期交集仅保留为 `159985.SZ` 的诊断 helper，不得进入正式信号或绩效路径。QVeris 相关材料只作为历史归档证据保留。
+
+V1.1/V1.3 的 2026-08-12 对抗修复、正式同输入回测和回滚信息见 `docs/subd_v11_v13_adversarial_repair_20260812.md` 与 `outputs/subd_v11_v13_repair_formal_comparison_20260812/report.md`。

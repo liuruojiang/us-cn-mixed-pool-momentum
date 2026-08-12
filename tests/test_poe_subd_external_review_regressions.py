@@ -4547,7 +4547,7 @@ def test_live_force_refresh_reuses_same_state_cache_when_provider_refresh_fails(
     module = load_bot_module()
     module._cached_daily.cache_clear()
     now = datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ)
-    cached_at = datetime(2026, 6, 18, 14, 40, tzinfo=module.CN_TZ)
+    cached_at = now - module.LIVE_CACHE_STALE_IF_ERROR_MAX_AGE + pd.Timedelta(seconds=1)
     key = module._daily_cache_key("2026-06-18", "live")
     cached_daily = pd.DataFrame({"date": [pd.Timestamp("2026-06-18")], "marker": [7]})
     module._DAILY_CACHE[key] = (cached_at, cached_daily, "cached-live-qfq")
@@ -4690,6 +4690,296 @@ def test_weighted_slope_score_handles_extreme_prices_without_overflow(monkeypatc
 
     assert math.isnan(score)
     assert 0.0 <= r2 <= 1.0
+
+
+@pytest.mark.parametrize("prepare_name", ["prepare_daily_for_signal", "prepare_daily_for_performance"])
+def test_public_daily_preparation_rejects_normalized_duplicate_dates(prepare_name):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09"))
+    daily.loc[1, "date"] = pd.Timestamp("2026-06-08 15:00:00")
+
+    prepare = getattr(module, prepare_name)
+    kwargs = {"live": False} if prepare_name == "prepare_daily_for_signal" else {}
+    with pytest.raises(module.poe.BotError, match="(?i)duplicate.*date"):
+        prepare(daily, **kwargs)
+
+
+@pytest.mark.parametrize("prepare_name", ["prepare_daily_for_signal", "prepare_daily_for_performance"])
+@pytest.mark.parametrize(
+    ("column", "bad_value", "message"),
+    [
+        ("return", math.inf, "return.*finite"),
+        ("return", -1.0, "return.*greater than -1"),
+        ("nav", math.nan, "nav.*finite"),
+        ("nav", 0.0, "nav.*positive"),
+        ("wealth", -math.inf, "wealth.*finite"),
+        ("wealth", 0.0, "wealth.*positive"),
+    ],
+)
+def test_public_daily_preparation_rejects_invalid_performance_state(
+    prepare_name,
+    column,
+    bad_value,
+    message,
+):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09"))
+    if column == "wealth":
+        daily[column] = [1.0, 1.0]
+    daily.loc[1, column] = bad_value
+
+    prepare = getattr(module, prepare_name)
+    kwargs = {"live": False} if prepare_name == "prepare_daily_for_signal" else {}
+    with pytest.raises(module.poe.BotError, match=f"(?i){message}"):
+        prepare(daily, **kwargs)
+
+
+@pytest.mark.parametrize("bad_return", [math.nan, math.inf, -math.inf, -1.0, -1.01])
+def test_calc_performance_rejects_nonfinite_or_bankrupting_returns(bad_return):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09"))
+    daily.loc[1, "return"] = bad_return
+
+    with pytest.raises(module.poe.BotError, match="(?i)return.*finite|return.*greater than -1"):
+        module.calc_performance(daily, daily["date"].min(), daily["date"].max())
+
+
+@pytest.mark.parametrize("bad_nav", [math.nan, math.inf, -math.inf, 0.0, -1.0])
+def test_calc_performance_nav_fallback_rejects_nonfinite_or_nonpositive_nav(bad_nav):
+    module = load_bot_module()
+    daily = minimal_daily(module, dates=("2026-06-08", "2026-06-09")).drop(columns=["return"])
+    daily.loc[1, "nav"] = bad_nav
+
+    with pytest.raises(module.poe.BotError, match="(?i)nav.*finite|nav.*positive"):
+        module.calc_performance(daily, daily["date"].min(), daily["date"].max())
+
+
+def test_mandatory_windows_use_exact_unique_trading_day_counts():
+    module = load_bot_module()
+    dates = pd.bdate_range("2015-01-01", periods=2700)
+    daily = pd.DataFrame({"date": dates})
+
+    ranges = module.resolve_performance_ranges_for_daily(
+        "performance",
+        daily,
+        latest_date=dates[-1],
+        earliest_date=dates[0],
+    )
+    by_label = {label: (start, end) for label, start, end in ranges}
+
+    assert by_label["1Y"] == (dates[-252], dates[-1])
+    assert by_label["3Y"] == (dates[-756], dates[-1])
+    assert by_label["5Y"] == (dates[-1260], dates[-1])
+    assert by_label["10Y"] == (dates[-2520], dates[-1])
+
+
+def test_live_force_refresh_rejects_cache_older_than_stale_if_error_limit(monkeypatch):
+    module = load_bot_module()
+    module._cached_daily.cache_clear()
+    now = datetime(2026, 6, 18, 14, 55, tzinfo=module.CN_TZ)
+    cached_at = now - module.LIVE_CACHE_STALE_IF_ERROR_MAX_AGE - pd.Timedelta(seconds=1)
+    key = module._daily_cache_key("2026-06-18", "live")
+    module._DAILY_CACHE[key] = (
+        cached_at,
+        pd.DataFrame({"date": [pd.Timestamp("2026-06-18")], "marker": [7]}),
+        "cached-live-qfq",
+    )
+    monkeypatch.setattr(module, "_now_bj", lambda: now)
+    monkeypatch.setattr(
+        module,
+        "_call_build_v11_daily",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("provider down")),
+    )
+
+    with pytest.raises(RuntimeError, match="provider down"):
+        module._get_daily_for_today(force_refresh=True, data_state="live")
+
+
+def _hard_cap_curve(module, dates, asset_returns, scale=1.5):
+    asset = list(module.ASSETS)[0]
+    return pd.DataFrame(
+        {
+            "position_before": [asset] * len(dates),
+            "position": [asset] * len(dates),
+            "fraction_before": [1.0] * len(dates),
+            "holding_fraction": [1.0] * len(dates),
+            "trade_target": [None] * len(dates),
+            "asset_return": asset_returns,
+            f"asset_return_{asset}": asset_returns,
+            "gross_return": asset_returns,
+            "return": asset_returns,
+            "nav": np.cumprod(1.0 + np.asarray(asset_returns, dtype=float)),
+            "turnover": [0.0] * len(dates),
+            "cost": [0.0] * len(dates),
+        },
+        index=dates,
+    )
+
+
+def test_actual_exposure_hard_cap_creates_explicit_turnover_and_cost():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=2)
+    curve = _hard_cap_curve(module, dates, [0.0, -0.20])
+    scales = pd.Series(1.5, index=dates)
+    ones = pd.Series(1.0, index=dates)
+
+    out = module._recompute_final_exposure_nav(
+        curve,
+        scales,
+        scales,
+        ones,
+        ones,
+        one_way_cost=0.001,
+        max_lev=1.5,
+    )
+
+    uncapped_drift = 1.5 * 0.8 / 0.7
+    cap_turnover = uncapped_drift - 1.5
+    assert out.loc[dates[1], "final_exposure_after_overheat"] == pytest.approx(1.5)
+    assert out.loc[dates[1], "exposure_cap_rebalance"]
+    assert out.loc[dates[1], "exposure_cap_turnover"] == pytest.approx(cap_turnover)
+    assert out.loc[dates[1], "turnover"] == pytest.approx(cap_turnover)
+    assert out.loc[dates[1], "exposure_cap_cost"] == pytest.approx(cap_turnover * 0.001)
+
+
+def test_hard_cap_does_not_rebalance_without_signal_when_exposure_is_below_cap():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=2)
+    curve = _hard_cap_curve(module, dates, [0.0, 0.0])
+    scales = pd.Series(1.4, index=dates)
+    ones = pd.Series(1.0, index=dates)
+
+    out = module._recompute_final_exposure_nav(
+        curve,
+        scales,
+        scales,
+        ones,
+        ones,
+        one_way_cost=0.001,
+        max_lev=1.5,
+    )
+
+    assert out.loc[dates[1], "turnover"] == pytest.approx(0.0)
+    assert not out.loc[dates[1], "exposure_cap_rebalance"]
+
+
+def test_recompute_final_exposure_fails_closed_when_nav_factor_is_nonpositive():
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=2)
+    curve = _hard_cap_curve(module, dates, [0.0, -1.0], scale=1.0)
+    ones = pd.Series(1.0, index=dates)
+
+    with pytest.raises(RuntimeError, match="(?i)NAV.*positive"):
+        module._recompute_final_exposure_nav(
+            curve,
+            ones,
+            ones,
+            ones,
+            ones,
+            one_way_cost=0.0,
+            max_lev=1.0,
+        )
+
+
+@pytest.mark.parametrize("bad_cap", [math.inf, -math.inf, math.nan, True, np.bool_(False)])
+def test_recompute_final_exposure_rejects_nonfinite_or_boolean_explicit_hard_cap(bad_cap):
+    module = load_bot_module()
+    dates = pd.bdate_range("2026-01-01", periods=2)
+    curve = _hard_cap_curve(module, dates, [0.0, 0.0])
+    ones = pd.Series(1.0, index=dates)
+
+    with pytest.raises(ValueError, match="(?i)max_lev.*finite"):
+        module._recompute_final_exposure_nav(
+            curve,
+            ones,
+            ones,
+            ones,
+            ones,
+            one_way_cost=0.0,
+            max_lev=bad_cap,
+        )
+
+
+@pytest.mark.parametrize("loader_name", ["_load_akshare_eastmoney_qfq_one_close", "_load_eastmoney_one_close"])
+def test_primary_qfq_loaders_apply_continuity_validation(loader_name, monkeypatch):
+    module = load_bot_module()
+    code = list(module.ASSETS)[0]
+    dates = pd.to_datetime(["2026-01-01", "2026-01-02"])
+    calls = []
+    monkeypatch.setattr(module, "_validate_adjusted_close_continuity", lambda *args: calls.append(args))
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+
+    if loader_name == "_load_akshare_eastmoney_qfq_one_close":
+        frame = pd.DataFrame({"日期": dates, "收盘": [1.0, 1.01]})
+        monkeypatch.setattr(module, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(module.ak, "fund_etf_hist_em", lambda **kwargs: frame)
+    else:
+        rows = [
+            "2026-01-01,1,1,1,1,1,1,1,1,1,1",
+            "2026-01-02,1,1.01,1.01,1,1,1,1,1,1,1",
+        ]
+        response = SimpleNamespace(raise_for_status=lambda: None, json=lambda: {"data": {"klines": rows}})
+        monkeypatch.setattr(module, "_http_get", lambda *args, **kwargs: response)
+
+    getattr(module, loader_name)(code, dates[-1])
+    assert calls and calls[0][0] == code
+
+
+def test_research_qfq_loaders_validate_continuity_and_raw_is_diagnostic(monkeypatch):
+    module = load_research_module()
+    code = list(module.ASSETS)[0]
+    dates = pd.to_datetime(["2026-01-01", "2026-01-02"])
+    calls = []
+    monkeypatch.setattr(module, "validate_adjusted_close_continuity", lambda *args: calls.append(args))
+    monkeypatch.setattr(module.time, "sleep", lambda *_: None)
+    frame = pd.DataFrame({"日期": dates, "收盘": [1.0, 1.01]})
+    monkeypatch.setattr(module.ak, "fund_etf_hist_em", lambda **kwargs: frame)
+
+    module.load_akshare_eastmoney_qfq_one_close(code, dates[-1])
+    assert calls and calls[0][0] == code
+
+    raw_close = pd.Series([1.0, 1.01], index=dates, name=code)
+    monkeypatch.setattr(module, "load_akshare_sina_raw_one_close", lambda *args: raw_close)
+    _prices, sources = module.load_sina_close([code], dates[-1])
+    assert bool(sources.iloc[0]["diagnostic_only"]) is True
+    assert bool(sources.iloc[0]["formal_eligible"]) is False
+
+
+def test_formal_v11_load_close_rejects_raw_diagnostic_fallback(monkeypatch):
+    module = load_bot_module()
+    code = list(module.ASSETS)[0]
+    prices = pd.DataFrame({code: [1.0]}, index=[pd.Timestamp("2026-01-02")])
+    sources = pd.DataFrame(
+        [
+            {
+                "code": code,
+                "source": "AkShare Sina raw daily close",
+                "adjustment": module.ADJUSTMENT_CROSS_VALIDATED_RAW,
+            }
+        ]
+    )
+    monkeypatch.setattr(
+        module,
+        "_load_public_close_with_per_code_fallback",
+        lambda *args, **kwargs: (prices, sources),
+    )
+
+    with pytest.raises(RuntimeError, match="(?i)diagnostic-only"):
+        module.load_close(SimpleNamespace(end_date=pd.Timestamp("2026-01-02")))
+
+
+@pytest.mark.parametrize("module_loader", [load_bot_module, load_research_module])
+def test_weighted_slope_constant_tolerance_and_price_scale_invariance(module_loader):
+    module = module_loader()
+    constant = pd.Series(100.0 * (1.0 + np.linspace(0.0, 1e-14, module.LOOKBACK)))
+    score, r2 = module.weighted_slope_score_and_r2(constant)
+    assert math.isnan(score)
+    assert math.isnan(r2)
+
+    trend = pd.Series(np.exp(np.linspace(0.0, 0.10, module.LOOKBACK)))
+    base = module.weighted_slope_score_and_r2(trend)
+    scaled = module.weighted_slope_score_and_r2(trend * 1e12)
+    assert scaled == pytest.approx(base, rel=1e-12, abs=1e-12)
 
 
 def _reference_prices_for_live_quality(module, include_today=False):

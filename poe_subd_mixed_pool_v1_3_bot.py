@@ -190,6 +190,9 @@ LIVE_PRICE_LIMIT_RATIO_BY_CODE["159915.SZ"] = 0.20
 POST_CLOSE_FIXED_PRICE_EFFECTIVE_DATE = pd.Timestamp("2026-07-06")
 POST_CLOSE_FIXED_PRICE_EXECUTION_ENABLED = False
 DAILY_CACHE_TTL = timedelta(minutes=5)
+LIVE_CACHE_STALE_IF_ERROR_MAX_AGE = timedelta(minutes=2)
+DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS = 3
+WEIGHTED_SLOPE_CONSTANT_REL_TOL = 128.0 * np.finfo(float).eps
 TRADING_CALENDAR_CACHE_PATH = Path(
     f"outputs/cn_trading_days_cache_{START_DATE.strftime('%Y%m%d')}.csv"
 )
@@ -381,8 +384,6 @@ def _validate_qfq_sources(sources: pd.DataFrame) -> None:
     non_qfq: list[str] = []
     unapproved: list[str] = []
     for row in sources.itertuples(index=False):
-        if _is_approved_cross_validated_raw_source(row):
-            continue
         code = str(getattr(row, "code", "") or "").strip()
         source = str(getattr(row, "source", "") or "").strip()
         adjustment = str(getattr(row, "adjustment", "") or "").strip().lower()
@@ -424,6 +425,7 @@ def _load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> 
     close["日期"] = pd.to_datetime(close["日期"])
     close = close.set_index("日期")["收盘"].astype(float).sort_index()
     close = close.loc[:end_date]
+    _validate_adjusted_close_continuity(code, close, "akshare.fund_etf_hist_em")
     close.name = code
     return close
 
@@ -467,12 +469,24 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close["date"] = pd.to_datetime(close["date"])
     close = close.set_index("date")["close"].astype(float).sort_index()
     close = close.loc[:end_date]
+    _validate_adjusted_close_continuity(code, close, "Eastmoney push2his kline")
     close.name = code
     return close
 
 
 def _validate_adjusted_close_continuity(code: str, close: pd.Series, source: str) -> None:
-    returns = close.dropna().pct_change().abs().dropna()
+    values = pd.to_numeric(close, errors="coerce")
+    valid = values.notna()
+    if not valid.any():
+        raise RuntimeError(f"{source} returned no usable close values for {code}")
+    finite_positive = np.isfinite(values[valid].to_numpy(dtype=float)) & (values[valid] > 0).to_numpy()
+    if not finite_positive.all():
+        first_bad = values[valid].index[np.flatnonzero(~finite_positive)[0]]
+        raise RuntimeError(
+            f"{source} close quality check failed for {code}: "
+            f"non-finite or non-positive value at {pd.Timestamp(first_bad).date()}"
+        )
+    returns = values[valid].pct_change(fill_method=None).abs().dropna()
     if returns.empty:
         return
     bad = returns[returns > MAX_ADJUSTED_DAILY_ABS_RETURN]
@@ -1548,15 +1562,6 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
                 _load_eastmoney_one_close,
             ),
         ]
-        if code in CROSS_VALIDATED_RAW_CODES:
-            providers.append(
-                (
-                    SOURCE_SINA_CNFIN_CROSS_VALIDATED,
-                    ADJUSTMENT_CROSS_VALIDATED_RAW,
-                    SOURCE_DETAIL_SINA_CNFIN_CROSS_VALIDATED,
-                    _load_cross_validated_raw_one_close,
-                )
-            )
         for source_name, adjustment, source_detail, loader in providers:
             try:
                 close = loader(code, end_date)
@@ -1618,6 +1623,7 @@ def _fetch_yahoo_adj_close(ticker: str, start: pd.Timestamp, end: pd.Timestamp) 
             series = pd.Series(values, index=index, name=ticker, dtype="float64").dropna().sort_index()
             series = series[~series.index.duplicated(keep="last")]
             if not series.empty:
+                _validate_adjusted_close_continuity(ticker, series, "Yahoo Finance chart API")
                 return series
         except Exception as exc:
             last_error = exc
@@ -1651,6 +1657,7 @@ def _fetch_akshare_index_close_fallback(
     out = out[~out.index.duplicated(keep="last")]
     if out.empty:
         raise RuntimeError(f"akshare stock_zh_index_daily returned no rows in {beg}~{end} for {symbol}")
+    _validate_adjusted_close_continuity(name, out, "akshare.stock_zh_index_daily")
     out.attrs["source_name"] = "akshare.stock_zh_index_daily"
     out.attrs["source_detail"] = f"symbol={symbol}; no pre-2010 backfill"
     return out
@@ -1670,9 +1677,14 @@ def _fetch_cnfin_index_close_fallback(
     required_start = pd.Timestamp(beg).normalize()
     current_end = pd.Timestamp(end).normalize()
     rows: list[list[object]] = []
-    last_error = None
+    expected_fields: list[str] | None = None
+    last_error: Exception | None = None
+    pagination_complete = False
     for _page in range(10):
-        page_rows = None
+        page_rows: list[list[object]] | None = None
+        page_fields: list[str] | None = None
+        page_error: Exception | None = None
+        request_succeeded = False
         params = {
             "prod_code": prod_code,
             "candle_period": "6",
@@ -1686,36 +1698,81 @@ def _fetch_cnfin_index_close_fallback(
                 resp = _http_get(url, params=params, timeout=30, headers=HTTP_HEADERS)
                 resp.raise_for_status()
                 candle = (resp.json().get("data") or {}).get("candle") or {}
-                page_rows = candle.get(prod_code) or []
-                if page_rows:
-                    break
+                page_fields = list(candle.get("fields") or [])
+                payload_rows = candle.get(prod_code)
+                if payload_rows is None:
+                    raise RuntimeError(f"CNFin index kline missing payload for {prod_code}")
+                if not isinstance(payload_rows, list):
+                    raise RuntimeError(f"CNFin index kline returned invalid rows for {prod_code}")
+                page_rows = payload_rows
+                request_succeeded = True
+                page_error = None
+                break
             except Exception as exc:
+                page_error = exc
                 last_error = exc
             time.sleep(0.5 * attempt)
+        if not request_succeeded:
+            if rows:
+                raise RuntimeError(
+                    f"CNFin index kline refusing partial history for {prod_code} after provider failure: "
+                    f"{page_error}"
+                ) from page_error
+            raise RuntimeError(
+                f"CNFin index kline provider failure for {prod_code}: {page_error}"
+            ) from page_error
+        if page_rows is None:
+            raise RuntimeError(f"CNFin index kline internal pagination error for {prod_code}")
         if not page_rows:
             if not rows:
                 raise RuntimeError(f"CNFin index kline returned no data for {prod_code}; last_error={last_error}")
+            pagination_complete = True
             break
+        if not page_fields or "min_time" not in page_fields or "close_px" not in page_fields:
+            raise RuntimeError(f"CNFin index kline missing min_time/close_px for {prod_code}")
+        if expected_fields is None:
+            expected_fields = page_fields
+        elif page_fields != expected_fields:
+            raise RuntimeError(f"CNFin index kline fields changed during pagination for {prod_code}")
         rows = page_rows + rows
-        first_date = pd.Timestamp(str(page_rows[0][0])).normalize()
-        if len(page_rows) < 2001 or first_date <= required_start:
+        min_time_idx = page_fields.index("min_time")
+        page_dates = pd.to_datetime(
+            [str(row[min_time_idx]) for row in page_rows], errors="coerce"
+        )
+        if pd.isna(page_dates).any():
+            raise RuntimeError(f"CNFin index kline returned invalid date for {prod_code}")
+        first_date = pd.Timestamp(page_dates.min()).normalize()
+        if len(page_rows) < CNFIN_KLINE_PAGE_SIZE or first_date <= required_start:
+            pagination_complete = True
             break
-        current_end = first_date - pd.Timedelta(days=1)
-        if current_end < required_start:
-            break
+        next_end = first_date - pd.Timedelta(days=1)
+        if next_end >= current_end or next_end < required_start:
+            raise RuntimeError(f"CNFin index kline pagination stalled for {prod_code}")
+        current_end = next_end
         time.sleep(0.2)
-    frame = pd.DataFrame(rows)
-    if frame.shape[1] < 5:
-        raise RuntimeError(f"CNFin index kline missing close field for {prod_code}")
+    if not pagination_complete:
+        raise RuntimeError(
+            f"CNFin index kline pagination limit reached before required_start for {prod_code}"
+        )
+    if expected_fields is None:
+        raise RuntimeError(f"CNFin index kline returned no fields for {prod_code}")
+    frame = pd.DataFrame(rows, columns=expected_fields)
     out = pd.Series(
-        pd.to_numeric(frame.iloc[:, 4], errors="coerce").to_numpy(),
-        index=pd.to_datetime(frame.iloc[:, 0].astype(str), errors="coerce"),
+        pd.to_numeric(frame["close_px"], errors="coerce").to_numpy(),
+        index=pd.to_datetime(frame["min_time"].astype(str), errors="coerce"),
         name=name,
     ).dropna().sort_index()
     out = out[(out.index >= required_start) & (out.index <= pd.Timestamp(end).normalize())]
-    out = out[~out.index.duplicated(keep="last")]
+    if out.index.duplicated().any():
+        raise RuntimeError(f"CNFin index kline returned duplicate dates for {prod_code}")
     if out.empty:
         raise RuntimeError(f"CNFin index kline normalized to empty for {prod_code} in {beg}~{end}")
+    if out.index.min() > required_start:
+        raise RuntimeError(
+            f"CNFin index kline coverage does not reach required_start for {prod_code}: "
+            f"required_start={required_start.date()}, first={out.index.min().date()}"
+        )
+    _validate_adjusted_close_continuity(name, out, "CNFin quote kline")
     out.attrs["source_name"] = "CNFin quote kline"
     out.attrs["source_detail"] = f"prod_code={prod_code}; no pre-2010 backfill"
     return out
@@ -1746,6 +1803,7 @@ def _fetch_eastmoney_index_close(secid: str, beg: str, end: str, name: str) -> p
                     index=pd.to_datetime(frame.iloc[:, 0]),
                     name=name,
                 ).sort_index()
+                _validate_adjusted_close_continuity(name, out, "Eastmoney push2his kline")
                 out.attrs["source_name"] = "Eastmoney push2his kline"
                 out.attrs["source_detail"] = f"secid={secid}; no pre-2010 backfill"
                 return out
@@ -1773,6 +1831,11 @@ def _align_dynamic_proxy_prices(
 ) -> tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
     raw = raw_prices.copy()
     raw.index = pd.DatetimeIndex(raw.index).normalize()
+    if not raw.index.is_unique:
+        raise ValueError("raw proxy prices contain duplicate normalized dates")
+    calendar = pd.DatetimeIndex(calendar).normalize()
+    if not calendar.is_unique:
+        raise ValueError("proxy alignment calendar contains duplicate normalized dates")
     raw = raw.reindex(calendar)
     aligned = pd.DataFrame(index=calendar)
     last_by_asset: dict[str, pd.Timestamp] = {}
@@ -1797,6 +1860,23 @@ def _align_dynamic_proxy_prices(
         raise RuntimeError("No date has all core proxy assets available")
     start = pd.Timestamp(aligned.index[core_valid][0])
     common_last = min(pd.Timestamp(last_by_asset[code]) for code in CORE_ASSETS)
+    for code, expected_start in DYNAMIC_ASSETS.items():
+        last_valid = last_by_asset.get(code, pd.NaT)
+        if pd.isna(last_valid):
+            if common_last >= pd.Timestamp(expected_start).normalize():
+                raise RuntimeError(
+                    f"{code} has no usable history after expected dynamic start "
+                    f"{pd.Timestamp(expected_start).date()}"
+                )
+            continue
+        missing_tail_sessions = int(
+            ((calendar > pd.Timestamp(last_valid)) & (calendar <= common_last)).sum()
+        )
+        if missing_tail_sessions > DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS:
+            raise RuntimeError(
+                f"{code} dynamic asset tail is stale by {missing_tail_sessions} market sessions; "
+                f"maximum allowed is {DYNAMIC_ASSET_MAX_TAIL_MISSING_SESSIONS}"
+            )
     aligned = aligned.loc[start:common_last].copy()
     return aligned, common_last, last_by_asset
 
@@ -2155,23 +2235,36 @@ def _attach_confirmed_final_close_metadata(
 
 def weighted_slope_score_and_r2(window: pd.Series) -> tuple[float, float]:
     values = window.dropna().astype(float)
-    if len(values) != LOOKBACK or (values <= 0).any():
+    if (
+        len(values) != LOOKBACK
+        or not np.isfinite(values.to_numpy(dtype=float)).all()
+        or (values <= 0).any()
+    ):
         return math.nan, math.nan
-    y = np.log(values.to_numpy())
+    price_values = values.to_numpy(dtype=float)
+    price_scale = float(np.max(np.abs(price_values)))
+    price_range = float(np.ptp(price_values))
+    if price_range <= WEIGHTED_SLOPE_CONSTANT_REL_TOL * price_scale:
+        return math.nan, math.nan
+    y = np.log(price_values / price_values[0])
     x = np.arange(len(y), dtype=float)
     weights = np.arange(1, len(y) + 1, dtype=float)
     slope, intercept = np.polyfit(x, y, 1, w=np.sqrt(weights))
     fitted = slope * x + intercept
     y_bar = float(np.average(y, weights=weights))
     ss_tot = float(np.sum(weights * (y - y_bar) ** 2))
-    if ss_tot <= 0:
+    if not math.isfinite(ss_tot) or ss_tot <= np.finfo(float).tiny:
         return math.nan, math.nan
     ss_res = float(np.sum(weights * (y - fitted) ** 2))
-    r2 = max(0.0, 1.0 - ss_res / ss_tot)
+    if not math.isfinite(ss_res):
+        return math.nan, math.nan
+    r2 = min(1.0, max(0.0, 1.0 - ss_res / ss_tot))
     annual_log_return = float(slope) * TRADING_DAYS
     if not math.isfinite(annual_log_return) or annual_log_return > math.log(sys.float_info.max):
         return math.nan, r2
-    score = math.exp(annual_log_return) - 1.0
+    score = math.expm1(annual_log_return)
+    if not math.isfinite(score):
+        return math.nan, r2
     return score, r2
 
 
@@ -2197,9 +2290,17 @@ def calc_scores(
 
 
 def max_drawdown(nav: pd.Series) -> float:
-    values = nav.astype(float)
+    values = pd.to_numeric(nav, errors="coerce").astype(float)
+    if (
+        not np.isfinite(values.to_numpy(dtype=float)).all()
+        or (values <= 0.0).any()
+    ):
+        raise poe.BotError("nav must be finite and positive for max drawdown")
     peak = values.cummax()
-    return float((values / peak - 1.0).min())
+    result = float((values / peak - 1.0).min())
+    if not math.isfinite(result):
+        raise poe.BotError("max drawdown metric must be finite")
+    return result
 
 
 # ════════════════════════════════════════════════════════════════
@@ -4009,6 +4110,54 @@ def _build_config(end_date=None) -> RunConfig:
     )
 
 
+def _validate_daily_integrity(daily: pd.DataFrame) -> pd.DataFrame:
+    if not isinstance(daily, pd.DataFrame) or "date" not in daily.columns:
+        raise poe.BotError("daily data must contain a date column")
+    out = daily.copy()
+    normalized_dates: list[pd.Timestamp] = []
+    for value in out["date"]:
+        try:
+            timestamp = pd.Timestamp(value)
+            if pd.isna(timestamp):
+                raise ValueError("NaT")
+            if timestamp.tzinfo is not None:
+                timestamp = timestamp.tz_convert(CN_TZ).tz_localize(None)
+            normalized_dates.append(timestamp.normalize())
+        except Exception as exc:
+            raise poe.BotError(f"daily data contains invalid date: {value!r}") from exc
+    normalized_index = pd.DatetimeIndex(normalized_dates)
+    duplicate_mask = normalized_index.duplicated(keep=False)
+    if duplicate_mask.any():
+        duplicate_dates = ", ".join(
+            dict.fromkeys(value.date().isoformat() for value in normalized_index[duplicate_mask])
+        )
+        raise poe.BotError(f"daily data contains duplicate normalized date: {duplicate_dates}")
+    out["date"] = normalized_index
+
+    for column, positive in (("return", False), ("nav", True), ("wealth", True)):
+        if column not in out.columns:
+            continue
+        values = pd.to_numeric(out[column], errors="coerce")
+        finite = np.isfinite(values.to_numpy(dtype=float))
+        if not finite.all():
+            bad_dates = ", ".join(
+                out.loc[~finite, "date"].dt.date.astype(str).iloc[:6]
+            )
+            raise poe.BotError(f"{column} must be finite at every daily date: {bad_dates}")
+        if column == "return" and (values <= -1.0).any():
+            bad_dates = ", ".join(
+                out.loc[values <= -1.0, "date"].dt.date.astype(str).iloc[:6]
+            )
+            raise poe.BotError(f"return must be greater than -1 at every daily date: {bad_dates}")
+        if positive and (values <= 0.0).any():
+            bad_dates = ", ".join(
+                out.loc[values <= 0.0, "date"].dt.date.astype(str).iloc[:6]
+            )
+            raise poe.BotError(f"{column} must be positive at every daily date: {bad_dates}")
+        out[column] = values.astype(float)
+    return out
+
+
 def _normalize_daily(daily: pd.DataFrame) -> pd.DataFrame:
     out = daily.copy()
     if "date" not in out.columns:
@@ -4016,6 +4165,7 @@ def _normalize_daily(daily: pd.DataFrame) -> pd.DataFrame:
     out["date"] = pd.to_datetime(out["date"])
     out = out[out["version"].astype(str) == VERSION].copy()
     out = out[out["scenario"].astype(str) == V11_SCENARIO].copy()
+    out = _validate_daily_integrity(out)
     out = out.sort_values("date").reset_index(drop=True)
     if out.empty:
         raise poe.BotError("未找到 SubD mixed-pool v1.3 日度输出。")
@@ -4819,8 +4969,7 @@ def prepare_daily_for_signal(
     live: bool,
     now: datetime | None = None,
 ) -> pd.DataFrame:
-    ordered = daily.copy()
-    ordered["date"] = pd.to_datetime(ordered["date"])
+    ordered = _validate_daily_integrity(daily)
     ordered = ordered.sort_values("date").reset_index(drop=True)
     if not live and len(ordered) >= 2 and _row_uses_unconfirmed_bar(ordered.iloc[-1], now):
         ordered = ordered.iloc[:-1].copy()
@@ -5199,6 +5348,13 @@ def _get_daily_for_today(force_refresh: bool = False, data_state: str = "confirm
             if cached is None:
                 raise
             cached_at, daily, source_name = cached
+            if data_state == "live":
+                cache_age = now - cached_at
+                if (
+                    cache_age < timedelta(0)
+                    or cache_age > LIVE_CACHE_STALE_IF_ERROR_MAX_AGE
+                ):
+                    raise
             source_name = _refresh_failed_cache_note(source_name, cached_at, exc)
     else:
         daily, source_name = _cached_daily(date_key, data_state=data_state)
@@ -5327,52 +5483,103 @@ def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
 def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
     if "return" in sub.columns:
         ret = pd.to_numeric(sub["return"], errors="coerce")
-        if len(ret) > 1 and ret.iloc[1:].isna().any():
-            missing_dates = ", ".join(
+        finite = np.isfinite(ret.to_numpy(dtype=float))
+        if not finite.all():
+            bad_dates = ", ".join(
                 pd.Timestamp(value).date().isoformat()
-                for value in sub.loc[ret.isna(), "date"].iloc[:6]
+                for value in sub.loc[~finite, "date"].iloc[:6]
             )
-            raise poe.BotError(f"missing return inside performance window: {missing_dates}")
-        ret = ret.fillna(0.0)
+            raise poe.BotError(f"return must be finite inside performance window: {bad_dates}")
+        if (ret <= -1.0).any():
+            bad_dates = ", ".join(
+                pd.Timestamp(value).date().isoformat()
+                for value in sub.loc[ret <= -1.0, "date"].iloc[:6]
+            )
+            raise poe.BotError(
+                f"return must be greater than -1 inside performance window: {bad_dates}"
+            )
         out = pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
         if not out.empty:
             out.iloc[0] = 0.0
         return out
+    if "nav" not in sub.columns:
+        raise poe.BotError("performance daily data must contain return or nav")
     nav = pd.to_numeric(sub["nav"], errors="coerce").astype(float)
-    if nav.isna().any():
-        missing_dates = ", ".join(
+    finite = np.isfinite(nav.to_numpy(dtype=float))
+    if not finite.all():
+        bad_dates = ", ".join(
             pd.Timestamp(value).date().isoformat()
-            for value in sub.loc[nav.isna(), "date"].iloc[:6]
+            for value in sub.loc[~finite, "date"].iloc[:6]
         )
-        raise poe.BotError(f"missing nav inside performance window: {missing_dates}")
-    return nav.pct_change(fill_method=None).fillna(0.0)
+        raise poe.BotError(f"nav must be finite inside performance window: {bad_dates}")
+    if (nav <= 0.0).any():
+        bad_dates = ", ".join(
+            pd.Timestamp(value).date().isoformat()
+            for value in sub.loc[nav <= 0.0, "date"].iloc[:6]
+        )
+        raise poe.BotError(f"nav must be positive inside performance window: {bad_dates}")
+    out = nav.pct_change(fill_method=None).fillna(0.0)
+    if not np.isfinite(out.to_numpy(dtype=float)).all() or (out <= -1.0).any():
+        raise poe.BotError("nav-derived return must be finite and greater than -1")
+    return out
 
 
 def _wealth_from_returns(ret: pd.Series) -> pd.Series:
-    return (1.0 + ret.astype(float)).cumprod()
+    values = pd.to_numeric(ret, errors="coerce").astype(float)
+    if not np.isfinite(values.to_numpy(dtype=float)).all():
+        raise poe.BotError("return must be finite before wealth calculation")
+    if (values <= -1.0).any():
+        raise poe.BotError("return must be greater than -1 before wealth calculation")
+    with np.errstate(over="ignore", invalid="ignore"):
+        wealth = (1.0 + values).cumprod()
+    if (
+        not np.isfinite(wealth.to_numpy(dtype=float)).all()
+        or (wealth <= 0.0).any()
+    ):
+        raise poe.BotError("wealth must remain finite and positive")
+    return wealth
 
 
 def _drawdown_from_wealth(wealth: pd.Series) -> pd.Series:
-    wealth = wealth.astype(float)
+    wealth = pd.to_numeric(wealth, errors="coerce").astype(float)
+    if (
+        not np.isfinite(wealth.to_numpy(dtype=float)).all()
+        or (wealth <= 0.0).any()
+    ):
+        raise poe.BotError("wealth must be finite and positive for drawdown")
     peak = wealth.cummax()
-    return wealth / peak - 1.0
+    drawdown = wealth / peak - 1.0
+    if not np.isfinite(drawdown.to_numpy(dtype=float)).all():
+        raise poe.BotError("drawdown metric must be finite")
+    return drawdown
+
+
+def _validate_finite_metrics(metrics: dict[str, object], keys: Iterable[str]) -> None:
+    for key in keys:
+        try:
+            value = float(metrics[key])
+        except Exception as exc:
+            raise poe.BotError(f"performance metric {key} must be numeric") from exc
+        if not math.isfinite(value):
+            raise poe.BotError(f"performance metric {key} must be finite")
 
 
 def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> dict[str, object]:
     start = pd.Timestamp(start).normalize()
     end = pd.Timestamp(end).normalize()
-    sub = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
+    validated = _validate_daily_integrity(daily)
+    sub = validated[(validated["date"] >= start) & (validated["date"] <= end)].copy()
     if sub.empty:
         raise poe.BotError(f"在 {start.date()} 到 {end.date()} 期间没有 v1.1 数据。")
     ret = _daily_returns_for_window(sub)
     wealth = _wealth_from_returns(ret)
     years = max(len(sub) / TRADING_DAYS, 1.0 / TRADING_DAYS)
-    std = ret.std(ddof=0)
+    std = float(ret.std(ddof=0))
     drawdown = _drawdown_from_wealth(wealth)
     exposure_col = "exposure_effective" if "exposure_effective" in sub.columns else "final_exposure_after_overheat"
     final_exposure = sub[exposure_col].astype(float).fillna(0.0)
     overheat_col = "overheat_on_effective" if "overheat_on_effective" in sub.columns else "overheat_on"
-    return {
+    metrics = {
         "start": pd.Timestamp(sub["date"].iloc[0]).date().isoformat(),
         "end": pd.Timestamp(sub["date"].iloc[-1]).date().isoformat(),
         "rows": int(len(sub)),
@@ -5380,7 +5587,7 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
         "annual": float(wealth.iloc[-1] ** (1.0 / years) - 1.0),
         "maxdd": float(drawdown.min()),
         "vol": float(std * math.sqrt(TRADING_DAYS)),
-        "sharpe": float(ret.mean() / std * math.sqrt(TRADING_DAYS)) if std > 0 else math.nan,
+        "sharpe": float(ret.mean() / std * math.sqrt(TRADING_DAYS)) if std > 0 else 0.0,
         "trades": int((sub["turnover"].astype(float) > 1e-12).sum()),
         "avg_scale": float(sub["weight"].astype(float).mean()),
         "avg_final_exposure": float(final_exposure.mean()),
@@ -5388,13 +5595,17 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
         "zero_exposure_days": int((final_exposure <= 1e-12).sum()),
         "overheat_days": int(sub[overheat_col].astype(str).str.lower().eq("true").sum()),
     }
+    _validate_finite_metrics(
+        metrics,
+        ("total", "annual", "maxdd", "vol", "sharpe", "avg_scale", "avg_final_exposure"),
+    )
+    return metrics
 
 
 def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> list[dict[str, object]]:
     start = pd.Timestamp(start).normalize()
     end = pd.Timestamp(end).normalize()
-    df = daily.copy()
-    df["date"] = pd.to_datetime(df["date"])
+    df = _validate_daily_integrity(daily)
     sub = df[(df["date"] >= start) & (df["date"] <= end)].copy()
     if sub.empty:
         return []
@@ -5408,22 +5619,34 @@ def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Ti
         wealth = _wealth_from_returns(ret)
         std = ret.std(ddof=0)
         dd = _drawdown_from_wealth(wealth)
-        trades = int((part["turnover"].astype(float) > 1e-12).sum()) if "turnover" in part.columns else 0
-        exposure_col = "exposure_effective" if "exposure_effective" in part.columns else "final_exposure_after_overheat"
-        avg_exposure = float(part[exposure_col].astype(float).fillna(0.0).mean()) if exposure_col in part.columns else math.nan
-        rows.append(
-            {
-                "year": int(year),
-                "start": pd.Timestamp(part["date"].iloc[0]).date().isoformat(),
-                "end": pd.Timestamp(part["date"].iloc[-1]).date().isoformat(),
-                "rows": int(len(part)),
-                "return": float(wealth.iloc[-1] - 1.0),
-                "maxdd": float(dd.min()),
-                "vol": float(std * math.sqrt(TRADING_DAYS)),
-                "trades": trades,
-                "avg_exposure": avg_exposure,
-            }
+        trades = (
+            int((part["turnover"].astype(float) > 1e-12).sum())
+            if "turnover" in part.columns
+            else 0
         )
+        exposure_col = (
+            "exposure_effective"
+            if "exposure_effective" in part.columns
+            else "final_exposure_after_overheat"
+        )
+        avg_exposure = (
+            float(part[exposure_col].astype(float).fillna(0.0).mean())
+            if exposure_col in part.columns
+            else 0.0
+        )
+        metrics = {
+            "year": int(year),
+            "start": pd.Timestamp(part["date"].iloc[0]).date().isoformat(),
+            "end": pd.Timestamp(part["date"].iloc[-1]).date().isoformat(),
+            "rows": int(len(part)),
+            "return": float(wealth.iloc[-1] - 1.0),
+            "maxdd": float(dd.min()),
+            "vol": float(std * math.sqrt(TRADING_DAYS)),
+            "trades": trades,
+            "avg_exposure": avg_exposure,
+        }
+        _validate_finite_metrics(metrics, ("return", "maxdd", "vol", "avg_exposure"))
+        rows.append(metrics)
     return rows
 
 
@@ -6649,8 +6872,7 @@ def format_live_params_snapshot(
 def _nav_window(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     start = pd.Timestamp(start).normalize()
     end = pd.Timestamp(end).normalize()
-    daily = daily.copy()
-    daily["date"] = pd.to_datetime(daily["date"])
+    daily = _validate_daily_integrity(daily)
     sub = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
     if sub.empty:
         raise poe.BotError(f"在 {start.date()} 到 {end.date()} 期间没有净值数据。")

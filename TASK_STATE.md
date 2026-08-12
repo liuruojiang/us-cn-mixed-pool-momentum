@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-SubD V1.1/V1.3 Poe display, P1 correctness hardening, and the code-specific `159985.SZ` cross-validated fallback as of 2026-08-07.
+SubD V1.1/V1.3 Poe signal-service correctness, formal runner/Poe parity, and data-integrity hardening as of 2026-08-12.
 
 ## Key Paths
 
@@ -15,7 +15,8 @@ SubD V1.1/V1.3 Poe display, P1 correctness hardening, and the code-specific `159
 - Shared `159985.SZ` fallback tests: `tests/test_poe_subd_159985_cross_validated_fallback.py`
 - Formal-runner regression tests: `tests/test_subd_runner_regressions.py`
 - P1 and source-fallback record: `docs/poe_subd_p1_correctness_repair_20260711.md`
-- Cleanup/sync record: `docs/cleanup_test_files_20260807.md`
+- Current adversarial repair record: `docs/subd_v11_v13_adversarial_repair_20260812.md`
+- Formal old/new backtest report: `outputs/subd_v11_v13_repair_formal_comparison_20260812/report.md`
 - Target-vol comparison run: `quant_param_scan_runs/20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input/`
 
 ## Decisions Locked In
@@ -26,8 +27,10 @@ SubD V1.1/V1.3 Poe display, P1 correctness hardening, and the code-specific `159
 - Live signal requests must force a fresh live build; confirmed signal requests may use the confirmed cache.
 - A-share ETF execution timing is an explicit strategy assumption: realtime signal before close, same-day close execution. Do not relabel this as lookahead without changing the strategy premise.
 - QVeris is retired from the current formal path. Keep QVeris scripts/docs only as historical archive evidence.
-- The public historical close chain is AkShare/Eastmoney qfq, then validated Tencent fqkline `qfqday/day` with a continuity guard, then Eastmoney HTTP qfq. Only `159985.SZ` may use the final Sina/CNFin exact-date raw intersection after all qfq providers fail, with exact provenance and fail-closed validation.
+- The formal historical close chain is AkShare/Eastmoney qfq, validated Tencent fqkline `qfqday/day`, then Eastmoney HTTP qfq. Every accepted formal series passes coverage and continuity checks. The `159985.SZ` Sina/CNFin exact-date raw intersection remains a direct diagnostic helper only and must not enter formal signal or performance paths.
 - The formal runner forward-fills single-asset suspension/missing-close dates for NAV continuity, records `price_ffill_*`, and blocks same-day trade legs that depend on a forward-filled price.
+- V1.1 runner and Poe use the same carried-exposure ledger. Actual post-drift exposure is capped at `DEFAULT_MAX_LEV=1.5`; cap-only turnover and cost are auditable and NAV must remain finite and positive.
+- V1.3 remains a Poe signal service. Cross-market timing, calendar, and FX differences are advisory disclosures, not a global signal-suppression gate; neither Poe file submits broker orders.
 - User-facing performance tables must include `full_sample`, `10Y`, `5Y`, `3Y`, and `1Y`; `from_2020` can remain as an extra review window.
 
 ## Live/Confirmed Data Safety Notes
@@ -42,8 +45,8 @@ SubD V1.1/V1.3 Poe display, P1 correctness hardening, and the code-specific `159
 
 - Official raw/reference previous-close and exchange limit-up/limit-down fields are still not fully sourced; current live price bands are a fail-closed proxy based on the price matrix. This is separate from the unified成交成本 assumption.
 - QDII same-day EOD vendor lag can make 15:30+ confirmed signals unavailable; this is expected conservative behavior until a stronger final-close source is added.
-- The Sina/CNFin raw historical fallback is code-specific to `159985.SZ`; do not generalize it to other instruments or label it qfq. It must fail closed if either source, listing coverage, overlap, continuity, or the `0.001` maximum close-difference gate fails.
-- Fourteen V1.1 target-vol initial-scale/input-validation regression cases remain failing. Do not report the full pytest suite as green until that separate implementation is completed.
+- The Sina/CNFin raw diagnostic helper is code-specific to `159985.SZ`; do not generalize it, label it qfq, or reconnect it to either formal loader.
+- Financing cost above 1.0x remains excluded from V1.1. The 1.5x hard exposure cap and transaction cost are implemented, but financing should be added only through a separately reviewed strategy change.
 - `analyze_abcde_combo_20260509.py` still points at older fixed sleeve artifacts; refresh it separately before treating combo output as current formal evidence.
 
 ## Verification Commands
@@ -51,7 +54,9 @@ SubD V1.1/V1.3 Poe display, P1 correctness hardening, and the code-specific `159
 ```powershell
 python -m pytest tests -q
 python -m py_compile poe_subd_six_etf_v1_1_bot.py poe_subd_mixed_pool_v1_3_bot.py research_subd_six_etf_weighted_slope.py run_subd_six_etf_v1_1.py tests/test_poe_subd_159985_cross_validated_fallback.py tests/test_poe_subd_external_review_regressions.py tests/test_poe_subd_live_signal_freshness.py tests/test_poe_subd_mixed_pool_v1_3_regressions.py tests/test_poe_subd_trade_records.py tests/test_subd_runner_regressions.py
-python run_subd_six_etf_v1_1.py --end-date 2026-06-26 --output-tag codex_repair_20260628
+python run_subd_six_etf_v1_1.py --end-date 2026-08-11 --output-tag formal_recheck_20260812
 python D:\Codex\home\skills\quant-param-scan\scripts\check_quant_param_scan_artifacts.py --phase complete --strict quant_param_scan_runs\20260621_mixed_us_cn_momentum_subd_six_etf_v1_1_poe_bot_target_vol_target_vol_realized_vol_input
 git diff --check
 ```
+
+Latest full-suite result: `495 passed, 1 warning` on 2026-08-12. The warning is the upstream `fastapi_poe` Pydantic class-config deprecation.
