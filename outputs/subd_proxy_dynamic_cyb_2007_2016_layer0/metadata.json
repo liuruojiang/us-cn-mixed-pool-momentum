@@ -1,0 +1,65 @@
+{
+  "tag": "subd_proxy_dynamic_cyb_2007_2016_layer0",
+  "layer": "Layer 0",
+  "requested_start": "2007-01-01",
+  "effective_start": "2007-01-04",
+  "end_date": "2016-12-30",
+  "rows": 2432,
+  "proxy_assets": {
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY",
+    "CN_CYB_399006": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD"
+  },
+  "core_assets": {
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY"
+  },
+  "dynamic_asset": "CN_CYB_399006",
+  "dynamic_asset_first_price": "2010-06-01",
+  "first_score_dates": {
+    "QQQ": "2007-02-26",
+    "EWG": "2007-02-07",
+    "EWJ": "2007-02-07",
+    "GLD": "2007-02-07",
+    "CN_CYB_399006": "2010-07-28"
+  },
+  "ffill_counts_on_cn_calendar": {
+    "QQQ": 80,
+    "EWG": 80,
+    "EWJ": 80,
+    "GLD": 80,
+    "CN_CYB_399006": 0
+  },
+  "curve_mdd_periods": {
+    "v1_0_original_full_entry": {
+      "peak": "2015-11-25",
+      "trough": "2016-12-14",
+      "maxdd": -0.4217075403713003
+    },
+    "v1_1_staged_50_plus_ma60_overheat": {
+      "peak": "2016-03-10",
+      "trough": "2016-12-14",
+      "maxdd": -0.3696393710679621
+    }
+  },
+  "config": {
+    "lookback": 25,
+    "r2_threshold": 0.2,
+    "target_vol": 0.25,
+    "target_vol_rebalance_threshold": 0.075,
+    "switch_buffer": 1.05,
+    "v10_switch_buffer": 1.0,
+    "initial_entry_fraction": 0.5,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18,
+    "overheat_derisk_scale": 0.0,
+    "one_way_cost": 0.001,
+    "vol_window": 80,
+    "max_lev": 1.5
+  },
+  "command": "python run_subd_proxy_dynamic_cyb_layer0.py --start-date 2007-01-01 --end-date 2016-12-30 --tag subd_proxy_dynamic_cyb_2007_2016_layer0"
+}

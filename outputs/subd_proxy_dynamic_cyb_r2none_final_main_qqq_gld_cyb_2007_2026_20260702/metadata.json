@@ -1,0 +1,143 @@
+{
+  "tag": "subd_proxy_dynamic_cyb_r2none_final_main_qqq_gld_cyb_2007_2026_20260702",
+  "candidate": "lb_28_r2_none_buf_1p15_entry_0p25_decay_off_nav_enter_0p2_exit_0p05_scale_0p50_fixed_same_side_fixed_enter_0p15_exit_0p13_scale_0p00_same_side_or_exit",
+  "test_type": "final_main_reduced_proxy_pool_after_asset_removal",
+  "requested_start": "2007-01-01",
+  "split_date": "2017-01-01",
+  "requested_end": "2026-06-30",
+  "kept_assets": {
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY",
+    "CN_CYB_399006": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD"
+  },
+  "removed_assets": {
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "159985/soymeal": "not included in proxy run"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true
+  },
+  "source_summary": [
+    {
+      "mode": "insample_2007_2016_three_asset_pool",
+      "code": "QQQ",
+      "name": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first_available": "2006-11-02",
+      "first_used": "2007-01-03",
+      "last": "2016-12-30",
+      "rows": 2558,
+      "last_aligned": "2016-12-30",
+      "ffill_days_on_cn_calendar": 80
+    },
+    {
+      "mode": "insample_2007_2016_three_asset_pool",
+      "code": "GLD",
+      "name": "GOLD_GLD_ADJ_CLOSE_PROXY",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first_available": "2006-11-02",
+      "first_used": "2007-01-03",
+      "last": "2016-12-30",
+      "rows": 2558,
+      "last_aligned": "2016-12-30",
+      "ffill_days_on_cn_calendar": 80
+    },
+    {
+      "mode": "insample_2007_2016_three_asset_pool",
+      "code": "CN_CYB_399006",
+      "name": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD",
+      "source": "Eastmoney push2his kline secid=0.399006",
+      "adjustment": "index close / price index",
+      "first_available": "2010-06-01",
+      "first_used": "2010-06-01",
+      "last": "2016-12-30",
+      "rows": 1601,
+      "last_aligned": "2016-12-30",
+      "ffill_days_on_cn_calendar": 0
+    },
+    {
+      "mode": "oos_2017_2026_standalone_reset_three_asset_pool",
+      "code": "QQQ",
+      "name": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first_available": "2016-11-02",
+      "first_used": "2017-01-03",
+      "last": "2026-06-30",
+      "rows": 2426,
+      "last_aligned": "2026-06-30",
+      "ffill_days_on_cn_calendar": 78
+    },
+    {
+      "mode": "oos_2017_2026_standalone_reset_three_asset_pool",
+      "code": "GLD",
+      "name": "GOLD_GLD_ADJ_CLOSE_PROXY",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first_available": "2016-11-02",
+      "first_used": "2017-01-03",
+      "last": "2026-06-30",
+      "rows": 2426,
+      "last_aligned": "2026-06-30",
+      "ffill_days_on_cn_calendar": 78
+    },
+    {
+      "mode": "oos_2017_2026_standalone_reset_three_asset_pool",
+      "code": "CN_CYB_399006",
+      "name": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD",
+      "source": "Eastmoney push2his kline secid=0.399006",
+      "adjustment": "index close / price index",
+      "first_available": "2010-06-01",
+      "first_used": "2010-06-01",
+      "last": "2026-06-30",
+      "rows": 3903,
+      "last_aligned": "2026-06-30",
+      "ffill_days_on_cn_calendar": 0
+    },
+    {
+      "mode": "oos_2017_2026_continuous_state_from_2007_three_asset_pool",
+      "code": "QQQ",
+      "name": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first_available": "2006-11-02",
+      "first_used": "2007-01-03",
+      "last": "2026-06-30",
+      "rows": 4943,
+      "last_aligned": "2026-06-30",
+      "ffill_days_on_cn_calendar": 158
+    },
+    {
+      "mode": "oos_2017_2026_continuous_state_from_2007_three_asset_pool",
+      "code": "GLD",
+      "name": "GOLD_GLD_ADJ_CLOSE_PROXY",
+      "source": "Yahoo Finance chart API",
+      "adjustment": "adjusted close",
+      "first_available": "2006-11-02",
+      "first_used": "2007-01-03",
+      "last": "2026-06-30",
+      "rows": 4943,
+      "last_aligned": "2026-06-30",
+      "ffill_days_on_cn_calendar": 158
+    },
+    {
+      "mode": "oos_2017_2026_continuous_state_from_2007_three_asset_pool",
+      "code": "CN_CYB_399006",
+      "name": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD",
+      "source": "Eastmoney push2his kline secid=0.399006",
+      "adjustment": "index close / price index",
+      "first_available": "2010-06-01",
+      "first_used": "2010-06-01",
+      "last": "2026-06-30",
+      "rows": 3903,
+      "last_aligned": "2026-06-30",
+      "ffill_days_on_cn_calendar": 0
+    }
+  ],
+  "command": "python run_subd_proxy_dynamic_cyb_r2none_final_main_qqq_gld_cyb.py --start-date 2007-01-01 --split-date 2017-01-01 --end-date 2026-06-30 --tag subd_proxy_dynamic_cyb_r2none_final_main_qqq_gld_cyb_2007_2026_20260702",
+  "elapsed_sec": 49.384
+}

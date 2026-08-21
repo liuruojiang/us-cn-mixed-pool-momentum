@@ -1,0 +1,399 @@
+{
+  "run_id": "20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed",
+  "created_at": "2026-07-01T23:08:35+08:00",
+  "phase": "complete",
+  "project": "subd dynamic cyb proxy",
+  "strategy": "subd_v1_dynamic_cyb_2007_2016",
+  "subsystem": "r2_removed_branch",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_proxy_dynamic_cyb_r2none_layer3_switch_buffer_scan.py",
+  "git_branch": "codex/cleanup-test-files-sync",
+  "git_commit": "41fd8cbcf819868d8bcd47a9b4ca395980a41228",
+  "git_status_before": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_dynamic_cyb_2007_2016_two_line_carry_20260701.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2017_2026ytd_oos_return_diagnosis_20260701/\n?? outputs/subd_proxy_dynamic_cyb_2017_2026ytd_oos_two_lines_20260701/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/us_long_custom_20y_20260701/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_momentum_decay_layer6_score_peak_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_layer7_nav_drawdown_gate/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_standalone_layer7_nav_drawdown_gate_no_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_staged_entry_layer4_initial_entry_fraction/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_switch_buffer_layer3_switch_buffer/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_target_vol_layer5_target_vol/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_dynamic_cyb_layer2_r2_scan.py\n?? run_subd_proxy_dynamic_cyb_layer3_switch_buffer_scan.py\n?? run_subd_proxy_dynamic_cyb_layer4_staged_entry_scan.py\n?? run_subd_proxy_dynamic_cyb_layer5_target_vol_scan.py\n?? run_subd_proxy_dynamic_cyb_layer6_momentum_decay_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_standalone_scan.py\n?? run_subd_proxy_dynamic_cyb_layer8_overheat_three_directions_scan.py\n?? run_subd_proxy_dynamic_cyb_oos_return_diagnosis_2017_2026.py\n?? run_subd_proxy_dynamic_cyb_oos_two_lines_2017_2026.py\n?? run_subd_proxy_zz500_layer0.py\n?? run_us_long_custom_20y_chart.py",
+  "git_status_after": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_dynamic_cyb_2007_2016_two_line_carry_20260701.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2017_2026ytd_oos_return_diagnosis_20260701/\n?? outputs/subd_proxy_dynamic_cyb_2017_2026ytd_oos_two_lines_20260701/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/us_long_custom_20y_20260701/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_momentum_decay_layer6_score_peak_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_layer7_nav_drawdown_gate/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_standalone_layer7_nav_drawdown_gate_no_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_staged_entry_layer4_initial_entry_fraction/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_switch_buffer_layer3_switch_buffer/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_target_vol_layer5_target_vol/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_dynamic_cyb_layer2_r2_scan.py\n?? run_subd_proxy_dynamic_cyb_layer3_switch_buffer_scan.py\n?? run_subd_proxy_dynamic_cyb_layer4_staged_entry_scan.py\n?? run_subd_proxy_dynamic_cyb_layer5_target_vol_scan.py\n?? run_subd_proxy_dynamic_cyb_layer6_momentum_decay_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_standalone_scan.py\n?? run_subd_proxy_dynamic_cyb_layer8_overheat_three_directions_scan.py\n?? run_subd_proxy_dynamic_cyb_oos_return_diagnosis_2017_2026.py\n?? run_subd_proxy_dynamic_cyb_oos_two_lines_2017_2026.py\n?? run_subd_proxy_dynamic_cyb_r2none_layer3_switch_buffer_scan.py\n?? run_subd_proxy_zz500_layer0.py\n?? run_us_long_custom_20y_chart.py",
+  "scan_type": "layer3_grid_scan_after_r2_removed",
+  "parameter_group": "layer3_switch_buffer_after_r2_removed",
+  "baseline": {
+    "rule": "Layer2 reset to R2 removed; compare each switch buffer to same-lookback buffer=1.00",
+    "primary_candidate": "lb_28_r2_none_buf_1p00"
+  },
+  "candidate_grid": [
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.0
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.02
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.03
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.05
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.08
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.1
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.15
+    },
+    {
+      "lookback": 28,
+      "line_role": "layer1_primary_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.2
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.0
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.02
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.03
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.05
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.08
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.1
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.15
+    },
+    {
+      "lookback": 26,
+      "line_role": "layer1_left_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.2
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.0
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.02
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.03
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.05
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.08
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.1
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.15
+    },
+    {
+      "lookback": 30,
+      "line_role": "layer1_right_neighbor_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.2
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.0
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.02
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.03
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.05
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.08
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.1
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.15
+    },
+    {
+      "lookback": 32,
+      "line_role": "layer1_return_peak_watch_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.2
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.0
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.02
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.03
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.05
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.08
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.1
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.15
+    },
+    {
+      "lookback": 25,
+      "line_role": "original_lookback_r2_removed",
+      "r2_threshold": null,
+      "switch_buffer": 1.2
+    }
+  ],
+  "data_snapshot": {
+    "start": "2007-01-04",
+    "end": "2016-12-30",
+    "rows": 2432,
+    "calendar": "A-share trading-day cache",
+    "pool_rule": "QQQ/EWG/EWJ/GLD from 2007 start; CN_CYB_399006 joins from own data with no backfill",
+    "ffill_counts_on_cn_calendar": {
+      "QQQ": 80,
+      "EWG": 80,
+      "EWJ": 80,
+      "GLD": 80,
+      "CN_CYB_399006": 0
+    }
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed\\command_log.txt"
+  },
+  "decision": "carry_forward_r2_removed_lb28_buf1p15_keep_buf1p08_watch",
+  "stability_label": "primary_drawdown_pass_return_watch",
+  "execution_assumptions": {
+    "signal": "close-to-close weighted-slope ranking, score range 0..5, no R2 filter",
+    "switch_buffer_rule": "replace current holding only when best_score > current_score * switch_buffer",
+    "overlays": "none in this layer beyond switch buffer",
+    "mixed_market_calendar": "diagnostic A-share calendar with US proxy forward-filled; trades on stale trade legs blocked"
+  },
+  "pass_rule": {
+    "mdd_improve_eps_pp": 0.01,
+    "available_windows": [
+      "full",
+      "last_5y",
+      "last_3y",
+      "last_1y"
+    ],
+    "return_lag_tolerance_pp": {
+      "full": 1.0,
+      "last_5y": 1.0,
+      "last_3y": 3.0,
+      "last_1y": 3.0
+    }
+  },
+  "layer3_selection": {
+    "selected": {
+      "candidate": "lb_28_r2_none_buf_1p15",
+      "baseline_candidate": "lb_28_r2_none_buf_1p00",
+      "line_role": "layer1_primary_r2_removed",
+      "lookback": 28,
+      "r2_threshold": NaN,
+      "r2_label": "none",
+      "switch_buffer": 1.15,
+      "buffer_label": "1p15",
+      "ann_return_full": 0.11491130851448306,
+      "ann_vol_full": 0.22444958973510776,
+      "max_dd_full": -0.3222433917230325,
+      "sharpe_repo_full": 0.5972015657865328,
+      "trades_full": 234.0,
+      "cost_total_full": 0.399,
+      "turnover_total_full": 399.0,
+      "holding_day_ratio_full": 0.9095394736842105,
+      "buffer_blocked_days_full": 95.0,
+      "reason_full": "",
+      "ann_return_last_10y": NaN,
+      "ann_vol_last_10y": NaN,
+      "max_dd_last_10y": NaN,
+      "sharpe_repo_last_10y": NaN,
+      "trades_last_10y": NaN,
+      "cost_total_last_10y": NaN,
+      "turnover_total_last_10y": NaN,
+      "holding_day_ratio_last_10y": NaN,
+      "buffer_blocked_days_last_10y": NaN,
+      "reason_last_10y": "insufficient rows: 2432 < 2520 trading days",
+      "ann_return_last_5y": 0.040976545153037724,
+      "ann_vol_last_5y": 0.21982585732622903,
+      "max_dd_last_5y": -0.3222433917230324,
+      "sharpe_repo_last_5y": 0.2931564417734228,
+      "trades_last_5y": 131.0,
+      "cost_total_last_5y": 0.224,
+      "turnover_total_last_5y": 224.0,
+      "holding_day_ratio_last_5y": 0.9277777777777778,
+      "buffer_blocked_days_last_5y": 48.0,
+      "reason_last_5y": "",
+      "ann_return_last_3y": 0.0014005475517788746,
+      "ann_vol_last_3y": 0.2204848595347863,
+      "max_dd_last_3y": -0.32224339172303174,
+      "sharpe_repo_last_3y": 0.11742838097209428,
+      "trades_last_3y": 81.0,
+      "cost_total_last_3y": 0.136,
+      "turnover_total_last_3y": 136.0,
+      "holding_day_ratio_last_3y": 0.9325396825396826,
+      "buffer_blocked_days_last_3y": 28.0,
+      "reason_last_3y": "",
+      "ann_return_last_1y": -0.21561003179201366,
+      "ann_vol_last_1y": 0.20689390173258657,
+      "max_dd_last_1y": -0.2959389904536466,
+      "sharpe_repo_last_1y": -1.06838093875248,
+      "trades_last_1y": 28.0,
+      "cost_total_last_1y": 0.048,
+      "turnover_total_last_1y": 48.0,
+      "holding_day_ratio_last_1y": 0.9523809523809523,
+      "buffer_blocked_days_last_1y": 10.0,
+      "reason_last_1y": "",
+      "ann_delta_full_pp": 1.6336347512925231,
+      "mdd_improve_full_pp": 4.084573723256524,
+      "trade_delta_full": -28.0,
+      "ann_delta_last_10y_pp": NaN,
+      "mdd_improve_last_10y_pp": NaN,
+      "trade_delta_last_10y": NaN,
+      "ann_delta_last_5y_pp": 2.5995532795511034,
+      "mdd_improve_last_5y_pp": 4.084573723256424,
+      "trade_delta_last_5y": -12.0,
+      "ann_delta_last_3y_pp": 4.1512102076620145,
+      "mdd_improve_last_3y_pp": 4.084573723256502,
+      "trade_delta_last_3y": -7.0,
+      "ann_delta_last_1y_pp": 4.6324171795010916,
+      "mdd_improve_last_1y_pp": 3.6295653918980486,
+      "trade_delta_last_1y": 0.0,
+      "dd_improve_window_count": 4,
+      "return_tolerance_ok": true,
+      "full_mdd_improved": true,
+      "layer3_pass": true,
+      "pass_reason": "pass"
+    },
+    "decision": "carry_forward_r2_removed_switch_buffer_pass",
+    "stability_label": "primary_drawdown_pass"
+  },
+  "git_branch_after": "codex/cleanup-test-files-sync",
+  "git_commit_after": "41fd8cbcf819868d8bcd47a9b4ca395980a41228",
+  "command": "python run_subd_proxy_dynamic_cyb_r2none_layer3_switch_buffer_scan.py --start-date 2007-01-01 --end-date 2016-12-30 --run-folder quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer3_switch_buffer_after_r2_removed",
+  "elapsed_sec": 161.699,
+  "finalized_at": "2026-07-01T23:17:55+08:00"
+}

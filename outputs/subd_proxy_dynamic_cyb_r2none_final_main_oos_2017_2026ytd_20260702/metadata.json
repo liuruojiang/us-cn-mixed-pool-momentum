@@ -1,0 +1,28 @@
+{
+  "tag": "subd_proxy_dynamic_cyb_r2none_final_main_oos_2017_2026ytd_20260702",
+  "candidate": "lb_28_r2_none_buf_1p15_entry_0p25_decay_off_nav_enter_0p2_exit_0p05_scale_0p50_fixed_same_side_fixed_enter_0p15_exit_0p13_scale_0p00_same_side_or_exit",
+  "test_type": "final_main_oos_after_2007_2016_selection",
+  "warmup_start": "2007-01-01",
+  "metric_start": "2017-01-01",
+  "requested_end": "2026-06-30",
+  "standalone_effective_start": "2017-01-03",
+  "standalone_effective_end": "2026-06-30",
+  "standalone_rows": 2302,
+  "continuous_warmup_start": "2007-01-04",
+  "continuous_effective_metric_start": "2017-01-03",
+  "continuous_effective_end": "2026-06-30",
+  "continuous_metric_rows": 2302,
+  "proxy_assets": {
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY",
+    "CN_CYB_399006": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true
+  },
+  "command": "python run_subd_proxy_dynamic_cyb_r2none_final_main_oos_2017_2026.py --warmup-start 2007-01-01 --metric-start 2017-01-01 --end-date 2026-06-30 --tag subd_proxy_dynamic_cyb_r2none_final_main_oos_2017_2026ytd_20260702",
+  "elapsed_sec": 55.084
+}

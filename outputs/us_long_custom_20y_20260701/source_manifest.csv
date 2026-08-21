@@ -1,0 +1,12 @@
+symbol,first_date,last_date,rows,first_close,last_close,source,note
+SPY,2006-07-03,2026-06-30,5029,88.494675,746.77002,Yahoo Finance via yfinance auto_adjust=True,
+QQQ,2006-07-03,2026-06-30,5029,33.347115,736.400024,Yahoo Finance via yfinance auto_adjust=True,
+VT,2008-06-26,2026-06-30,4530,33.874264,156.949997,Yahoo Finance via yfinance auto_adjust=True,
+GLD,2006-07-03,2026-06-30,5029,62.18,368.380005,Yahoo Finance via yfinance auto_adjust=True,
+AGG,2006-07-03,2026-06-30,5029,52.327484,98.980003,Yahoo Finance via yfinance auto_adjust=True,
+DBC,2006-07-03,2026-06-30,5029,20.588303,26.66,Yahoo Finance via yfinance auto_adjust=True,
+BTC-USD,2014-09-17,2026-07-01,4306,457.334015,58301.0,Yahoo Finance via yfinance auto_adjust=True,
+EFA,2006-07-03,2026-06-30,5029,35.979572,103.879997,Yahoo Finance via yfinance auto_adjust=True,
+EEM,2006-07-03,2026-06-30,5029,21.116686,68.410004,Yahoo Finance via yfinance auto_adjust=True,
+BIL,2007-05-30,2026-06-30,4802,70.794579,91.639999,Yahoo Finance via yfinance auto_adjust=True,
+VT_PROXY,2006-07-03,2026-06-30,5029,30.770441,156.949997,"Synthetic before VT inception, Yahoo VT afterward",60% SPY / 30% EFA / 10% EEM before first VT date

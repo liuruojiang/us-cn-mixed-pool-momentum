@@ -1,0 +1,28 @@
+{
+  "tag": "subd_proxy_dynamic_cyb_2017_2026ytd_oos_two_lines_20260701",
+  "test_type": "oos_two_carried_lines",
+  "requested_start": "2017-01-01",
+  "requested_end": "2026-06-30",
+  "effective_start": "2017-01-03",
+  "effective_end": "2026-06-30",
+  "rows": 2302,
+  "proxy_assets": {
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY",
+    "CN_CYB_399006": "CHINEXT_INDEX_PROXY_DYNAMIC_ADD"
+  },
+  "score_max": 5.0,
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true
+  },
+  "calendar": "repo-local A-share trading-day cache",
+  "data_sources": {
+    "us_proxies": "Yahoo Finance chart API adjusted close",
+    "chinext": "Eastmoney push2his kline secid=0.399006 index close"
+  },
+  "command": "python run_subd_proxy_dynamic_cyb_oos_two_lines_2017_2026.py --start-date 2017-01-01 --end-date 2026-06-30 --tag subd_proxy_dynamic_cyb_2017_2026ytd_oos_two_lines_20260701",
+  "elapsed_sec": 36.886
+}

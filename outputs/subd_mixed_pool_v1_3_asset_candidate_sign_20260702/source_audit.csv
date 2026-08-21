@@ -1,0 +1,17 @@
+﻿code,label,kind,source_group,source,adjustment,detail,first_available,last,rows,last_aligned
+EWG,Germany / EWG,us_yahoo,SubD proxy research,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+EWJ,Japan / EWJ,us_yahoo,SubD proxy research,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+AGG,US Aggregate Bond / AGG,us_yahoo,recent final-main variant,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+EMXC_PROXY,EM ex-China / EEM->EMXC splice,emxc_splice,recent final-main variant + Sub-B,Yahoo Finance chart API,adjusted close splice,"EEM before 2017-08-01, EMXC scaled after first valid 2017-08-01, scale=0.875321",2006-10-13,2026-07-01,4958,2026-07-01
+SPY,S&P 500 / SPY,us_yahoo,US long custom,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+EFA,Developed ex-US proxy / EFA,us_yahoo,Sub-B VEA proxy,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+VT,World stocks / VT,us_yahoo,US long custom,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2008-06-26,2026-07-01,4531,2026-07-01
+DBC,Commodities / DBC,us_yahoo,Sub-B + US long custom,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+TLT,Long Treasury proxy / TLT,us_yahoo,Sub-B VGLT proxy / inflation check,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,2026-07-01
+UUP,US Dollar / UUP,us_yahoo,Sub-B macro,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2007-03-01,2026-07-01,4865,2026-07-01
+DBMF,Managed futures / DBMF,us_yahoo,Sub-B macro,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2019-05-08,2026-07-01,1797,2026-07-01
+KMLM,Managed futures / KMLM,us_yahoo,Sub-B macro,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2020-12-02,2026-07-01,1400,2026-07-01
+BTC-USD,Bitcoin / BTC-USD,us_yahoo,Sub-B IBIT proxy + US long custom,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2014-09-17,2026-07-02,4307,2026-07-02
+QQQ,Nasdaq100 / QQQ,us_yahoo,V1.3 baseline,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,
+GLD,Gold / GLD,us_yahoo,V1.3 baseline,Yahoo Finance chart API,total-return/adjusted-close,adjusted close,2006-10-13,2026-07-01,4958,
+CN_CYB_399006,ChiNext 399006 index proxy,cn_index_cyb,V1.3 baseline,akshare.stock_zh_index_daily,index close / price index,symbol=sz399006; no pre-2010 backfill,2010-06-01,2026-07-02,3905,

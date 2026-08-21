@@ -1,0 +1,59 @@
+{
+  "tag": "subd_proxy_zz500_2007_2016_layer0",
+  "layer": "Layer 0",
+  "formal_start": "2007-01-15",
+  "end_date": "2016-12-30",
+  "common_last": "2016-12-30",
+  "rows_after_start": 2425,
+  "proxy_assets": {
+    "CN_ZZ500_000905": "CSI500_INDEX_PROXY_FOR_A_SHARE_LEG",
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY"
+  },
+  "csi500_publication_date": "2007-01-15",
+  "csi500_factsheet_url": "https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/indices/detail/files/zh_CN/000905factsheet.pdf",
+  "last_by_asset": {
+    "CN_ZZ500_000905": "2016-12-30",
+    "QQQ": "2016-12-30",
+    "EWG": "2016-12-30",
+    "EWJ": "2016-12-30",
+    "GLD": "2016-12-30"
+  },
+  "ffill_counts_on_cn_calendar": {
+    "CN_ZZ500_000905": 0,
+    "QQQ": 79,
+    "EWG": 79,
+    "EWJ": 79,
+    "GLD": 79
+  },
+  "curve_mdd_periods": {
+    "v1_0_original_full_entry": {
+      "peak": "2015-05-22",
+      "trough": "2016-12-14",
+      "maxdd": -0.5366764217816502
+    },
+    "v1_1_staged_50_plus_ma60_overheat": {
+      "peak": "2015-05-22",
+      "trough": "2016-12-14",
+      "maxdd": -0.48163876457428734
+    }
+  },
+  "config": {
+    "lookback": 25,
+    "r2_threshold": 0.2,
+    "target_vol": 0.25,
+    "target_vol_rebalance_threshold": 0.075,
+    "switch_buffer": 1.05,
+    "v10_switch_buffer": 1.0,
+    "initial_entry_fraction": 0.5,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18,
+    "overheat_derisk_scale": 0.0,
+    "one_way_cost": 0.001,
+    "vol_window": 80,
+    "max_lev": 1.5
+  },
+  "command": "python run_subd_proxy_zz500_layer0.py --end-date 2016-12-30 --tag subd_proxy_zz500_2007_2016_layer0"
+}

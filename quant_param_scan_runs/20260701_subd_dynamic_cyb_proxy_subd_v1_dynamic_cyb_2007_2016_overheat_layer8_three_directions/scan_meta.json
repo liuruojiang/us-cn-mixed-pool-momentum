@@ -1,0 +1,387 @@
+{
+  "run_id": "20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions",
+  "created_at": "2026-07-01T22:01:45+08:00",
+  "phase": "complete",
+  "project": "subd_dynamic_cyb_proxy",
+  "strategy": "subd_v1_dynamic_cyb_2007_2016",
+  "subsystem": "two_line_carry",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_proxy_dynamic_cyb_layer8_overheat_three_directions_scan.py",
+  "git_branch": "codex/cleanup-test-files-sync",
+  "git_commit": "41fd8cbcf819868d8bcd47a9b4ca395980a41228",
+  "git_status_before": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_dynamic_cyb_2007_2016_two_line_carry_20260701.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/us_long_custom_20y_20260701/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_momentum_decay_layer6_score_peak_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_layer7_nav_drawdown_gate/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_standalone_layer7_nav_drawdown_gate_no_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_staged_entry_layer4_initial_entry_fraction/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_switch_buffer_layer3_switch_buffer/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_target_vol_layer5_target_vol/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_dynamic_cyb_layer2_r2_scan.py\n?? run_subd_proxy_dynamic_cyb_layer3_switch_buffer_scan.py\n?? run_subd_proxy_dynamic_cyb_layer4_staged_entry_scan.py\n?? run_subd_proxy_dynamic_cyb_layer5_target_vol_scan.py\n?? run_subd_proxy_dynamic_cyb_layer6_momentum_decay_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_standalone_scan.py\n?? run_subd_proxy_zz500_layer0.py\n?? run_us_long_custom_20y_chart.py",
+  "git_status_after": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_dynamic_cyb_2007_2016_two_line_carry_20260701.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/us_long_custom_20y_20260701/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_momentum_decay_layer6_score_peak_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_layer7_nav_drawdown_gate/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_nav_defense_standalone_layer7_nav_drawdown_gate_no_decay/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_staged_entry_layer4_initial_entry_fraction/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_switch_buffer_layer3_switch_buffer/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_target_vol_layer5_target_vol/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_dynamic_cyb_layer2_r2_scan.py\n?? run_subd_proxy_dynamic_cyb_layer3_switch_buffer_scan.py\n?? run_subd_proxy_dynamic_cyb_layer4_staged_entry_scan.py\n?? run_subd_proxy_dynamic_cyb_layer5_target_vol_scan.py\n?? run_subd_proxy_dynamic_cyb_layer6_momentum_decay_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_scan.py\n?? run_subd_proxy_dynamic_cyb_layer7_nav_defense_standalone_scan.py\n?? run_subd_proxy_dynamic_cyb_layer8_overheat_three_directions_scan.py\n?? run_subd_proxy_zz500_layer0.py\n?? run_us_long_custom_20y_chart.py",
+  "scan_type": "layer8_overheat_three_direction_scan",
+  "parameter_group": "layer8_overheat_three_directions",
+  "baseline": {
+    "rule": "two carried lines before adding new overheat; SCORE_MAX=5.0 for the score-veto baseline",
+    "candidates": [
+      "A_clean_scoremax_5_overheat_off",
+      "G_decay_nav_scoremax_5_overheat_off"
+    ]
+  },
+  "candidate_grid": [
+    "A_clean_scoremax_5_overheat_off",
+    "A_clean_fixed_same_side_fixed_enter_0p15_exit_0p13_scale_0p00_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p18_exit_0p16_scale_0p00_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p00_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p22_exit_0p2_scale_0p00_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p25_exit_0p22_scale_0p00_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p50_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p75_same_side_or_exit",
+    "A_clean_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p00_exit_only",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p85_xq0p6_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p85_xq0p6_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p85_xq0p7_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p85_xq0p7_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p85_xq0p8_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p85_xq0p8_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p9_xq0p6_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p9_xq0p6_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p9_xq0p7_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p9_xq0p7_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p9_xq0p8_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p9_xq0p8_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p95_xq0p6_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p95_xq0p6_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p95_xq0p7_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p95_xq0p7_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p95_xq0p8_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "A_clean_adaptive_quantile_adaptive_w252_eq0p95_xq0p8_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "A_clean_score_veto_scoremax_4",
+    "A_clean_score_veto_scoremax_6",
+    "A_clean_score_veto_scoremax_8",
+    "A_clean_score_veto_scoremax_inf",
+    "G_decay_nav_scoremax_5_overheat_off",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p15_exit_0p13_scale_0p00_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p18_exit_0p16_scale_0p00_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p00_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p22_exit_0p2_scale_0p00_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p25_exit_0p22_scale_0p00_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p50_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p75_same_side_or_exit",
+    "G_decay_nav_fixed_same_side_fixed_enter_0p2_exit_0p18_scale_0p00_exit_only",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p85_xq0p6_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p85_xq0p6_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p85_xq0p7_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p85_xq0p7_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p85_xq0p8_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p85_xq0p8_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p9_xq0p6_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p9_xq0p6_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p9_xq0p7_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p9_xq0p7_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p9_xq0p8_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p9_xq0p8_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p95_xq0p6_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p95_xq0p6_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p95_xq0p7_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p95_xq0p7_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p95_xq0p8_floor_0p1_0p05_scale_0p00_same_side_or_exit",
+    "G_decay_nav_adaptive_quantile_adaptive_w252_eq0p95_xq0p8_floor_0p1_0p05_scale_0p50_same_side_or_exit",
+    "G_decay_nav_score_veto_scoremax_4",
+    "G_decay_nav_score_veto_scoremax_6",
+    "G_decay_nav_score_veto_scoremax_8",
+    "G_decay_nav_score_veto_scoremax_inf"
+  ],
+  "data_snapshot": {
+    "start": "2007-01-04",
+    "end": "2016-12-30",
+    "rows": 2432,
+    "calendar": "A-share trading-day cache",
+    "pool_rule": "QQQ/EWG/EWJ/GLD from 2007 start; CN_CYB_399006 joins from own data with no backfill",
+    "ffill_counts_on_cn_calendar": {
+      "QQQ": 80,
+      "EWG": 80,
+      "EWJ": 80,
+      "GLD": 80,
+      "CN_CYB_399006": 0
+    }
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true,
+    "overheat_rebalance_cost_included": true
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions\\command_log.txt"
+  },
+  "decision": "do_not_add_layer8_overheat_keep_two_carried_lines",
+  "stability_label": "no_direction_pass_diagnostic",
+  "three_directions": {
+    "fixed_same_side": "fixed MA60 bias and 20-day bias momentum same-side thresholds",
+    "adaptive_quantile": "per-asset rolling 252-session bias quantile thresholds, same-side trigger",
+    "score_veto": "rebuild the signal with different SCORE_MAX values"
+  },
+  "fixed_same_side_grid": [
+    {
+      "enter": 0.15,
+      "exit": 0.13,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.18,
+      "exit": 0.16,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.2,
+      "exit": 0.18,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.22,
+      "exit": 0.2,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.25,
+      "exit": 0.22,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.2,
+      "exit": 0.18,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.2,
+      "exit": 0.18,
+      "derisk_scale": 0.75,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "enter": 0.2,
+      "exit": 0.18,
+      "derisk_scale": 0.0,
+      "recovery_mode": "exit_only"
+    }
+  ],
+  "adaptive_quantile_grid": [
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.85,
+      "exit_quantile": 0.6,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.85,
+      "exit_quantile": 0.6,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.85,
+      "exit_quantile": 0.7,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.85,
+      "exit_quantile": 0.7,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.85,
+      "exit_quantile": 0.8,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.85,
+      "exit_quantile": 0.8,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.9,
+      "exit_quantile": 0.6,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.9,
+      "exit_quantile": 0.6,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.9,
+      "exit_quantile": 0.7,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.9,
+      "exit_quantile": 0.7,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.9,
+      "exit_quantile": 0.8,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.9,
+      "exit_quantile": 0.8,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.95,
+      "exit_quantile": 0.6,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.95,
+      "exit_quantile": 0.6,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.95,
+      "exit_quantile": 0.7,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.95,
+      "exit_quantile": 0.7,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.95,
+      "exit_quantile": 0.8,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.0,
+      "recovery_mode": "same_side_or_exit"
+    },
+    {
+      "window": 252,
+      "min_periods": 126,
+      "enter_quantile": 0.95,
+      "exit_quantile": 0.8,
+      "min_enter": 0.1,
+      "min_exit": 0.05,
+      "derisk_scale": 0.5,
+      "recovery_mode": "same_side_or_exit"
+    }
+  ],
+  "score_max_grid": [
+    "4",
+    "5",
+    "6",
+    "8",
+    "inf"
+  ],
+  "execution_assumptions": {
+    "signal": "close-to-close weighted-slope ranking with fixed R2 threshold, switch buffer, and staged entry",
+    "A_clean": "no target-vol, no momentum decay, no NAV defense",
+    "G_decay_nav": "momentum decay plus NAV defense before testing overheat",
+    "overheat": "T close overheat state sets next-session scale; effective scale is shifted one session",
+    "adaptive_quantile_threshold": "rolling bias quantiles use prior sessions only via shift(1)",
+    "mixed_market_calendar": "diagnostic A-share calendar with US proxy forward-filled; base trades on stale trade legs blocked"
+  },
+  "pass_rule": {
+    "mdd_improve_eps_pp": 0.01,
+    "available_windows": [
+      "full",
+      "last_5y",
+      "last_3y",
+      "last_1y"
+    ],
+    "return_lag_tolerance_pp": {
+      "full": 1.0,
+      "last_5y": 1.0,
+      "last_3y": 3.0,
+      "last_1y": 3.0
+    }
+  },
+  "git_branch_after": "codex/cleanup-test-files-sync",
+  "git_commit_after": "41fd8cbcf819868d8bcd47a9b4ca395980a41228",
+  "command": "python run_subd_proxy_dynamic_cyb_layer8_overheat_three_directions_scan.py --start-date 2007-01-01 --end-date 2016-12-30 --run-folder quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_overheat_layer8_three_directions",
+  "elapsed_sec": 197.271,
+  "finalized_at": "2026-07-01T22:19:17+08:00"
+}

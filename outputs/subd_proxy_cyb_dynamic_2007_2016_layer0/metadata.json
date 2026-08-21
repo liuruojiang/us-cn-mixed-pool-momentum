@@ -1,0 +1,67 @@
+{
+  "tag": "subd_proxy_cyb_dynamic_2007_2016_layer0",
+  "layer": "Layer 0",
+  "start_date": "2007-01-04",
+  "end_date": "2016-12-30",
+  "common_last": "2016-12-30",
+  "rows_after_start": 2432,
+  "proxy_assets": {
+    "QQQ": "NASDAQ_QQQ_ADJ_CLOSE_PROXY",
+    "EWG": "GERMANY_EWG_ADJ_CLOSE_PROXY",
+    "EWJ": "JAPAN_EWJ_ADJ_CLOSE_PROXY",
+    "GLD": "GOLD_GLD_ADJ_CLOSE_PROXY",
+    "CN_CYB_399006": "CHINEXT_INDEX_PROXY_DYNAMIC_FROM_2010_06_01"
+  },
+  "dynamic_rule": "QQQ/EWG/EWJ/GLD from start; CN_CYB_399006 joins after 2010-06-01 and enough lookback.",
+  "cyb_publication_date": "2010-06-01",
+  "cyb_official_qa_url": "https://www.cnindex.com.cn/zh_information/notices_news/2010/201207/P020191213351726460465.pdf",
+  "first_valid_score_dates": {
+    "QQQ": "2007-02-26",
+    "EWG": "2007-02-07",
+    "EWJ": "2007-02-07",
+    "GLD": "2007-02-07",
+    "CN_CYB_399006": "2010-07-28"
+  },
+  "last_by_asset": {
+    "QQQ": "2016-12-30",
+    "EWG": "2016-12-30",
+    "EWJ": "2016-12-30",
+    "GLD": "2016-12-30",
+    "CN_CYB_399006": "2016-12-30"
+  },
+  "ffill_counts_on_cn_calendar": {
+    "QQQ": 80,
+    "EWG": 80,
+    "EWJ": 80,
+    "GLD": 80,
+    "CN_CYB_399006": 0
+  },
+  "curve_mdd_periods": {
+    "v1_0_original_full_entry": {
+      "peak": "2015-11-25",
+      "trough": "2016-12-14",
+      "maxdd": -0.4217073886289766
+    },
+    "v1_1_staged_50_plus_ma60_overheat": {
+      "peak": "2016-03-10",
+      "trough": "2016-12-14",
+      "maxdd": -0.36963880186261633
+    }
+  },
+  "config": {
+    "lookback": 25,
+    "r2_threshold": 0.2,
+    "target_vol": 0.25,
+    "target_vol_rebalance_threshold": 0.075,
+    "switch_buffer": 1.05,
+    "v10_switch_buffer": 1.0,
+    "initial_entry_fraction": 0.5,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18,
+    "overheat_derisk_scale": 0.0,
+    "one_way_cost": 0.001,
+    "vol_window": 80,
+    "max_lev": 1.5
+  },
+  "command": "python run_subd_proxy_cyb_dynamic_layer0.py --end-date 2016-12-30 --tag subd_proxy_cyb_dynamic_2007_2016_layer0"
+}
