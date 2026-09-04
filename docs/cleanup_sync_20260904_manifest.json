@@ -1,0 +1,162 @@
+{
+  "date": "2026-09-04",
+  "scope": "generated caches and byte-identical duplicate acceptance images only",
+  "targets": [
+    {
+      "path": ".pytest_cache",
+      "kind": "generated_cache",
+      "bytes": 8479
+    },
+    {
+      "path": "__pycache__",
+      "kind": "generated_cache",
+      "bytes": 2430421
+    },
+    {
+      "path": "tests\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 1606167
+    },
+    {
+      "path": "quant_comparison_runs\\20260904_subd_selected_score_max_5p5\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 10849
+    },
+    {
+      "path": "quant_comparison_runs\\20260904_subd_selected_vs_original_v11\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 17995
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 12692
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_enter_with_2pp_hysteresis\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 17135
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 14264
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 15272
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 14706
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 15551
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 16121
+    },
+    {
+      "path": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 15543
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback_25_30_fine_rescan\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 1690
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_recency_weight_exponent\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 15232
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_max_overheat_veto\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 12400
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 16885
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_absolute_momentum_floor\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 12415
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_subd_floor_0p5_r2\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 29135
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_subd_no_floor_r2\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 28751
+    },
+    {
+      "path": "quant_param_scan_runs\\20260904_subd_no_floor_score_max\\__pycache__",
+      "kind": "generated_cache",
+      "bytes": 24158
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133544.png",
+      "kind": "duplicate_png",
+      "bytes": 131593
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133349.png",
+      "kind": "duplicate_png",
+      "bytes": 131593
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133154.png",
+      "kind": "duplicate_png",
+      "bytes": 131593
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133041.png",
+      "kind": "duplicate_png",
+      "bytes": 131593
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133543.png",
+      "kind": "duplicate_png",
+      "bytes": 103063
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133153.png",
+      "kind": "duplicate_png",
+      "bytes": 103063
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133542.png",
+      "kind": "duplicate_png",
+      "bytes": 121401
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133348.png",
+      "kind": "duplicate_png",
+      "bytes": 121401
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133152.png",
+      "kind": "duplicate_png",
+      "bytes": 121401
+    },
+    {
+      "path": "outputs\\subd_six_etf_v1_3_acceptance_20260904\\subd_v13_nav_20260904_133040.png",
+      "kind": "duplicate_png",
+      "bytes": 121401
+    }
+  ],
+  "total_bytes": 5553963
+}

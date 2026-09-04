@@ -1,0 +1,16 @@
+init_quant_param_scan_run.py
+run_id=20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine
+project=mixed-us-cn-momentum
+strategy=SubD pure momentum core
+subsystem=six-etf mixed pool
+parameter_group=SCORE_MIN 0p2 to 1p0 fine
+repo=D:\动量策略\美股A股混合池子动量策略
+
+command=python -X utf8 quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine/run_scan.py
+command=python -X utf8 quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine/summarize.py
+command=python -X utf8 quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine/validate_width.py
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T10:48:36+08:00
+decision=keep_zero_baseline_0p5_primary_0p6_confirmation_pending_user
+stability_label=narrow_0p5_0p6_neighbor_support

@@ -1,0 +1,23 @@
+init_quant_param_scan_run.py
+run_id=20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction
+project=mixed-us-cn-momentum
+strategy=SubD V1.1 clean momentum base plus staged entry
+subsystem=six-etf mixed pool
+parameter_group=INITIAL_ENTRY_FRACTION
+repo=D:\动量策略\美股A股混合池子动量策略
+
+run_scan.py
+command=python -X utf8 quant_param_scan_runs\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction\run_scan.py
+working_directory=D:\动量策略\美股A股混合池子动量策略
+input=frozen qfq snapshot from same-session formal scan
+base=R2 0.20; Switch Buffer 1.00; one-way cost 0.001; all other overlays disabled
+result=success
+candidates=11
+window_rows=55
+elapsed_sec=69.298
+max_parity_diff=7.105427357601002e-15
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-03T21:54:22+08:00
+decision=promote_candidate
+stability_label=wide_stable

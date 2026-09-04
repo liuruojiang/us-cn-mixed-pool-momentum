@@ -1,0 +1,7 @@
+code,name,source,adjustment,source_detail,first,last,rows
+159915.SZ,CYB100_ETF,Tencent fqkline,qfq/front-adjusted,qfqday,2011-12-09,2026-09-02,3577
+159941.SZ,NASDAQ_ETF,Tencent fqkline,qfq/front-adjusted,qfqday,2015-07-13,2026-09-03,2710
+513030.SH,GERMANY_ETF,Tencent fqkline,qfq/front-adjusted,"qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)",2014-09-05,2026-09-03,2914
+513520.SH,NIKKEI_ETF,Tencent fqkline,qfq/front-adjusted,"qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)",2019-06-25,2026-09-03,1748
+159985.SZ,SOYMEAL_ETF,Tencent fqkline,qfq/front-adjusted,"qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)",2019-12-05,2026-09-03,1637
+518880.SH,GOLD_ETF,Tencent fqkline,qfq/front-adjusted,qfqday,2013-07-29,2026-09-03,3187

@@ -1,0 +1,5 @@
+check,metric,max_abs_diff
+scale_1_off_vs_pure_base,return,2.393918396847994e-16
+scale_1_off_vs_pure_base,nav,1.4956924587750109e-12
+scale_1_off_vs_pure_base,turnover,0.0
+scale_1_off_vs_pure_base,exposure_effective,0.0

@@ -1,0 +1,142 @@
+{
+  "run_id": "20260904_subd_floor_0p5_r2",
+  "created_at": "2026-09-04T11:28:51+08:00",
+  "phase": "complete",
+  "project": "mixed-us-cn-momentum",
+  "strategy": "SubD score floor 0.5",
+  "subsystem": "six-etf",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_six_etf_v1_1.py",
+  "git_branch": "codex/previous-research-sync-20260821",
+  "git_commit": "6bf19204abca54f5ff7d15ec1708cf03a0412669",
+  "git_status_before": "?? docs/subd_v11_naive_simplification_decisions_20260903.md\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_enter_with_2pp_hysteresis/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback_25_30_fine_rescan/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_recency_weight_exponent/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_max_overheat_veto/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_absolute_momentum_floor/\n?? quant_param_scan_runs/20260904_subd_no_floor_r2/\n?? quant_param_scan_runs/20260904_subd_no_floor_score_max/",
+  "git_status_after": "?? docs/subd_v11_naive_simplification_decisions_20260903.md\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_enter_with_2pp_hysteresis/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback_25_30_fine_rescan/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_recency_weight_exponent/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_max_overheat_veto/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_0p2_to_1p0_fine/\n?? quant_param_scan_runs/20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_min_absolute_momentum_floor/\n?? quant_param_scan_runs/20260904_subd_floor_0p5_r2/\n?? quant_param_scan_runs/20260904_subd_no_floor_r2/\n?? quant_param_scan_runs/20260904_subd_no_floor_score_max/",
+  "scan_type": "single_parameter",
+  "parameter_group": "R2_THRESHOLD",
+  "baseline": {
+    "score_min": 0.5,
+    "score_max": 5,
+    "lookback": 25,
+    "recency_weight": "t^1",
+    "r2": "off",
+    "switch_buffer": 1,
+    "initial_entry_fraction": 1,
+    "overheat": "off",
+    "target_vol": "off",
+    "max_leverage": 1,
+    "cash_return": 0
+  },
+  "candidate_grid": [
+    "off",
+    0,
+    0.01,
+    0.025,
+    0.05,
+    0.075,
+    0.1,
+    0.125,
+    0.15,
+    0.175,
+    0.2,
+    0.225,
+    0.25,
+    0.275,
+    0.3,
+    0.325,
+    0.35,
+    0.375,
+    0.4,
+    0.45,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+  ],
+  "data_snapshot": {
+    "source_run": "20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer",
+    "price_snapshot": "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz",
+    "start": "2011-12-09",
+    "end": "2026-09-02",
+    "rows": 3578,
+    "adjustment": "qfq/front-adjusted",
+    "reuse_reason": "same-session frozen matched panel for exact comparability",
+    "actual_source": "Tencent fqkline frozen qfq snapshot",
+    "full_sample_status": "historical expanding available-asset pool; not fixed-six common-history formal evidence",
+    "calendar": "China ETF trading calendar,Asia/Shanghai"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "commission_and_slippage": "aggregate",
+    "open_impact": "not separately modeled",
+    "financing": 0,
+    "borrow": 0,
+    "execution": "close signal and close trade; new holding earns next-row return",
+    "hedge": "none",
+    "liquidity_price_limits_T1": "not independently simulated; existing stale-price trade guard retained"
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260904_subd_floor_0p5_r2\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260904_subd_floor_0p5_r2\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260904_subd_floor_0p5_r2\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260904_subd_floor_0p5_r2\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260904_subd_floor_0p5_r2\\command_log.txt"
+  },
+  "decision": "watchlist",
+  "stability_label": "narrow_stable",
+  "warnings": [
+    "Full sample uses inherited available-asset pool before all six ETFs existed; not fixed-six common-history evidence",
+    "Overlapping retrospective windows are not independent OOS",
+    "Frozen historical snapshot ends 2026-09-02; not a current live refresh"
+  ],
+  "cache_write_risk": "none: frozen Tencent qfq panel; no refresh or proxy extension",
+  "source_change_rule": "research_only_no_source_change",
+  "validation_plan": {
+    "baseline": "saved score_min_0p5; off=0; cached/uncached0.20; runner/Poe0.20; strict Score>0.5",
+    "tolerance": 1e-12,
+    "rule": "Full/10Y/5Y CAGR loss<=1pp, 3Y/1Y<=3pp; Full DD improves and >=3 windows DD improves; adjacent support; no widened tolerance"
+  },
+  "research_status": "user-requested conditional branch, no-floor mainline unchanged",
+  "parity_check": {
+    "checks": [
+      "accepted_floor_0p5",
+      "zero_vs_off",
+      "cached_vs_uncached_0.20",
+      "runner_vs_poe_0.20"
+    ],
+    "daily_thresholds": [
+      "off",
+      0.2
+    ],
+    "max_abs_diff": 3.552713678800501e-15,
+    "passed": true
+  },
+  "elapsed_sec": 133.11,
+  "validation_results": {
+    "passed": true,
+    "metric_parity_max_abs_diff": 1.0297318553398327e-14,
+    "negative_best_score_days_baseline": 0,
+    "source_sha256": {
+      "D:\\动量策略\\美股A股混合池子动量策略\\research_subd_six_etf_weighted_slope.py": "287ca3b0505f86e115075c3f676fa5d4818eb89313c4949af281c534f2866c0d",
+      "D:\\动量策略\\美股A股混合池子动量策略\\run_subd_six_etf_v1_1.py": "d2abe0952a3f12944b9ac32939bb8d429de38a73103825a430d09c2a709dd6b4",
+      "D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_1_bot.py": "2852005eab272a4992c6d120cebea9bedc24170cd742adf932ad38a642d139ad",
+      "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz": "0cc4af45158d6aaab4594b869b79309a96e8e3cc2f21a0205c38128913bec2aa"
+    },
+    "production_module_defaults_readonly": {
+      "score_min": 0,
+      "score_max": 5
+    }
+  },
+  "source_hashes": {
+    "D:\\动量策略\\美股A股混合池子动量策略\\research_subd_six_etf_weighted_slope.py": "287ca3b0505f86e115075c3f676fa5d4818eb89313c4949af281c534f2866c0d",
+    "D:\\动量策略\\美股A股混合池子动量策略\\run_subd_six_etf_v1_1.py": "d2abe0952a3f12944b9ac32939bb8d429de38a73103825a430d09c2a709dd6b4",
+    "D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_1_bot.py": "2852005eab272a4992c6d120cebea9bedc24170cd742adf932ad38a642d139ad",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz": "0cc4af45158d6aaab4594b869b79309a96e8e3cc2f21a0205c38128913bec2aa"
+  },
+  "watchlist": [
+    "r2_0.250",
+    "r2_0.275"
+  ],
+  "carried_mainline": "no floor; cap5; R2off; unchanged",
+  "finalized_at": "2026-09-04T11:33:08+08:00"
+}

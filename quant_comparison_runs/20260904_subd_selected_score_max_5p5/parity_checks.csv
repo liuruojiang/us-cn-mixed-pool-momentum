@@ -1,0 +1,11 @@
+check,field,max_abs_diff
+baseline_vs_saved,return,9.974659986866641e-17
+baseline_vs_saved,nav,7.105427357601002e-15
+baseline_vs_saved,cost,0.0
+baseline_vs_saved,turnover,0.0
+baseline_vs_saved,fraction_before,0.0
+selected_runner_vs_poe,return,0.0
+selected_runner_vs_poe,nav,0.0
+selected_runner_vs_poe,cost,0.0
+selected_runner_vs_poe,turnover,0.0
+selected_runner_vs_poe,fraction_before,0.0

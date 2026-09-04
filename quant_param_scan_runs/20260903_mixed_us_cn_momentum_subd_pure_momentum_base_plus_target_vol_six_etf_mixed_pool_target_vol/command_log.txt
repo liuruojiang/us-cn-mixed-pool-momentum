@@ -1,0 +1,25 @@
+init_quant_param_scan_run.py
+run_id=20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol
+project=mixed-us-cn-momentum
+strategy=SubD pure momentum base plus target vol
+subsystem=six-etf mixed pool
+parameter_group=TARGET_VOL with W80 max1.5 DB7.5pp
+repo=D:\动量策略\美股A股混合池子动量策略
+
+run_scan.py
+command=python -X utf8 quant_param_scan_runs\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\run_scan.py
+working_directory=D:\动量策略\美股A股混合池子动量策略
+base=pure momentum; R2 off; Buffer 1.00; full entry; overheat off; one-way cost 0.001
+scanned=TARGET_VOL off and 5% to 100%
+fixed=vol window 80; max leverage 1.5; scale rebalance threshold 0.075
+excluded=financing cost; no hedge; no target-vol companion-parameter tuning
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-03T22:45:23+08:00
+decision=recommend_off_pending_user_confirmation
+stability_label=no_pareto_improvement
+
+user_decision_update
+date=2026-09-03
+decision=confirmed_off
+scope=V1.1 naive-mainline research decision; production source unchanged

@@ -24,7 +24,7 @@ def load_module(path: Path, name: str):
     return module
 
 
-@pytest.fixture(params=[(V11_PATH, "review_v11"), (V13_PATH, "review_v13")])
+@pytest.fixture(params=[(V11_PATH, "review_v11"), (V13_PATH, "review_v13"), (ROOT / "poe_subd_six_etf_v1_3_bot.py", "review_six_v13")])
 def bot_module(request):
     path, name = request.param
     return load_module(path, name)

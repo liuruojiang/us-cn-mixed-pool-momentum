@@ -1,0 +1,70 @@
+{
+  "run_id": "20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale",
+  "created_at": "2026-09-03T22:03:57+08:00",
+  "phase": "complete",
+  "project": "mixed-us-cn-momentum",
+  "strategy": "SubD pure momentum base plus overheat",
+  "subsystem": "six-etf mixed pool",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_six_etf_v1_1.py",
+  "git_branch": "codex/previous-research-sync-20260821",
+  "git_commit": "6bf19204abca54f5ff7d15ec1708cf03a0412669",
+  "git_status_before": "?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "git_status_after": "?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "scan_type": "single_parameter",
+  "parameter_group": "OVERHEAT_DERISK_SCALE",
+  "baseline": {
+    "candidate": "scale_1.00_off",
+    "overheat_derisk_scale": 1.0,
+    "r2_threshold": null,
+    "switch_buffer": 1.0,
+    "initial_entry_fraction": 1.0
+  },
+  "candidate_grid": [
+    1.0,
+    0.9,
+    0.75,
+    0.5,
+    0.25,
+    0.1,
+    0.0
+  ],
+  "data_snapshot": {
+    "source_run": "20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer",
+    "base_run": "20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off",
+    "start": "2011-12-09",
+    "end": "2026-09-02",
+    "rows": 3578,
+    "adjustment": "qfq/front-adjusted"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "overheat_enter": 0.2,
+    "overheat_exit": 0.18,
+    "bias_ma": 60,
+    "bias_momentum_days": 20,
+    "other_overlays": "disabled"
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale\\command_log.txt"
+  },
+  "decision": "watchlist",
+  "stability_label": "data_sensitive",
+  "parity_check": {
+    "max_abs_diff": 1.4956924587750109e-12,
+    "nav_tolerance": 1e-10,
+    "non_nav_tolerance": 1e-12,
+    "passed": true
+  },
+  "elapsed_sec": 25.44,
+  "event_concentration": {
+    "episodes": 13,
+    "positive_episodes": 9,
+    "top3_alpha_share": 0.682763573949064
+  },
+  "finalized_at": "2026-09-03T22:10:59+08:00"
+}

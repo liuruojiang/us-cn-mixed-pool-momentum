@@ -1,0 +1,24 @@
+init_quant_param_scan_run.py
+run_id=20260904_subd_no_floor_r2
+project=mixed-us-cn-momentum
+strategy=SubD no score floor
+subsystem=six-etf
+parameter_group=R2_THRESHOLD
+repo=D:\动量策略\美股A股混合池子动量策略
+
+Working directory: D:\动量策略\美股A股混合池子动量策略
+python -X utf8 D:/Codex/home/skills/quant-param-scan/scripts/init_quant_param_scan_run.py --root quant_param_scan_runs --project mixed-us-cn-momentum --strategy 'SubD no score floor' --subsystem six-etf --parameter-group R2_THRESHOLD --repo . --entrypoint run_subd_six_etf_v1_1.py --date 2026-09-04 --slug subd_no_floor_r2
+python -X utf8 quant_param_scan_runs/20260904_subd_no_floor_r2/run_scan.py
+python -X utf8 quant_param_scan_runs/20260904_subd_no_floor_r2/verify_results.py
+python -X utf8 -m py_compile quant_param_scan_runs/20260904_subd_no_floor_r2/run_scan.py quant_param_scan_runs/20260904_subd_no_floor_r2/verify_results.py
+git diff --check
+git diff --exit-code -- research_subd_six_etf_weighted_slope.py run_subd_six_etf_v1_1.py poe_subd_six_etf_v1_1_bot.py
+
+Scan exit0; elapsed132.833 sec.25 candidates,125 rows. Baseline/cached/uncached/Poe parity PASS.
+verify_results.py exit0; official metric parity and integrity PASS.
+py_compile, git diff --check, production diff --exit-code PASS. No production or shared decision-doc edits.
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T11:22:23+08:00
+decision=watchlist
+stability_label=narrow_stable

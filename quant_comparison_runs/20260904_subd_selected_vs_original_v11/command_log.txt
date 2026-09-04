@@ -1,0 +1,8 @@
+Working directory: D:\动量策略\美股A股混合池子动量策略
+python -X utf8 quant_comparison_runs/20260904_subd_selected_vs_original_v11/run_comparison.py
+python -X utf8 -m py_compile quant_comparison_runs/20260904_subd_selected_vs_original_v11/run_comparison.py
+git diff --check
+git diff --exit-code -- research_subd_six_etf_weighted_slope.py run_subd_six_etf_v1_1.py poe_subd_six_etf_v1_1_bot.py
+
+run_comparison.py exit0; elapsed90.902sec; 10 metric rows; all parity and integrity assertions passed.
+py_compile and git diff --check passed. Production code hashes identical before/after.

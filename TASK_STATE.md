@@ -2,12 +2,16 @@
 
 ## Current Focus
 
-SubD V1.1/V1.3 Poe signal-service correctness, formal runner/Poe parity, and data-integrity hardening as of 2026-08-12.
+Six-ETF naive V1.3 delivery and research synchronization as of 2026-09-04. Original six-ETF V1.1 and the separate mixed-proxy-pool V1.3 remain unchanged. New six-ETF V1.3 is locally verified; poe.com hosted deployment/testing is not yet performed.
 
 ## Key Paths
 
 - V1.1 Poe bot entrypoint: `poe_subd_six_etf_v1_1_bot.py`
 - V1.3 mixed-pool Poe bot entrypoint: `poe_subd_mixed_pool_v1_3_bot.py`
+- V1.3 six-ETF naive Poe bot: `poe_subd_six_etf_v1_3_bot.py`
+- Six-ETF V1.3 specification and acceptance: `docs/subd_six_etf_v1_3_20260904.md`
+- Six-ETF research decisions: `docs/subd_v11_naive_simplification_decisions_20260903.md`
+- Six-ETF V1.3 tests: `tests/test_poe_subd_six_etf_v1_3.py`, `tests/test_poe_subd_six_etf_v1_3_safety.py`
 - Formal local runner: `run_subd_six_etf_v1_1.py`
 - Research module: `research_subd_six_etf_weighted_slope.py`
 - Regression tests: `tests/test_poe_subd_external_review_regressions.py`
@@ -21,16 +25,17 @@ SubD V1.1/V1.3 Poe signal-service correctness, formal runner/Poe parity, and dat
 
 ## Decisions Locked In
 
-- Production target-vol remains the existing strategy-return realized-vol policy, including cash days, until a separate strategy-change review explicitly promotes a new policy.
+- New six-ETF V1.3 uses 25-day linear-weighted log slope, Top1, strict `0.5 < Score < 5.5`, `R2 >= 0.25`, full entry, Buffer=1, no target-vol/overheat/staging, no leverage, cash yield 0, one-way cost 0.001. Its saved frozen-panel 3578-row curve matches the selected research line. Do not transfer mixed-pool settings into it.
+- Original six-ETF V1.1 target-vol remains the existing strategy-return realized-vol policy, including cash days; the new V1.3 does not change V1.1.
 - The non-cash asset-return realized-vol variant is research-only. The 2026-06-21 comparison lowered return and drawdown, with little Sharpe improvement, and was finalized as `keep_default_pending_user_review`.
-- The 50% staged entry / wait-for-down-day rule was intentionally left unchanged.
+- Original V1.1 retains the 50% staged entry / wait-for-down-day rule; the new six-ETF V1.3 disables it.
 - Live signal requests must force a fresh live build; confirmed signal requests may use the confirmed cache.
 - A-share ETF execution timing is an explicit strategy assumption: realtime signal before close, same-day close execution. Do not relabel this as lookahead without changing the strategy premise.
 - QVeris is retired from the current formal path. Keep QVeris scripts/docs only as historical archive evidence.
 - The formal historical close chain is AkShare/Eastmoney qfq, validated Tencent fqkline `qfqday/day`, then Eastmoney HTTP qfq. Every accepted formal series passes coverage and continuity checks. The `159985.SZ` Sina/CNFin exact-date raw intersection remains a direct diagnostic helper only and must not enter formal signal or performance paths.
 - The formal runner forward-fills single-asset suspension/missing-close dates for NAV continuity, records `price_ffill_*`, and blocks same-day trade legs that depend on a forward-filled price.
 - V1.1 runner and Poe use the same carried-exposure ledger. Actual post-drift exposure is capped at `DEFAULT_MAX_LEV=1.5`; cap-only turnover and cost are auditable and NAV must remain finite and positive.
-- V1.3 remains a Poe signal service. Cross-market timing, calendar, and FX differences are advisory disclosures, not a global signal-suppression gate; neither Poe file submits broker orders.
+- Mixed-pool V1.3 remains a Poe signal service with cross-market timing/calendar/FX disclosures. All three Poe scripts provide model signals, not broker orders.
 - User-facing performance tables must include `full_sample`, `10Y`, `5Y`, `3Y`, and `1Y`; `from_2020` can remain as an extra review window.
 
 ## Live/Confirmed Data Safety Notes
@@ -59,4 +64,4 @@ python D:\Codex\home\skills\quant-param-scan\scripts\check_quant_param_scan_arti
 git diff --check
 ```
 
-Latest full-suite result: `495 passed, 1 warning` on 2026-08-12. The warning is the upstream `fastapi_poe` Pydantic class-config deprecation.
+Full-suite acceptance on 2026-09-04: `566 passed, 1 skipped, 1 warning`. The skip is opt-in network testing, separately passed for all seven Poe queries using real data. The warning is the upstream `fastapi_poe` Pydantic class-config deprecation. This is local Poe-compatible testing, not a hosted-Poe result. Cleanup and remote-sync evidence: `docs/cleanup_sync_20260904.md`.

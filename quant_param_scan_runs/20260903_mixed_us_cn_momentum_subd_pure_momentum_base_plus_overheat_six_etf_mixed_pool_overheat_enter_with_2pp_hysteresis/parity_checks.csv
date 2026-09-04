@@ -1,0 +1,5 @@
+check,metric,max_abs_diff
+enter_0.20_vs_prior_scale_scan,return,9.974659986866641e-17
+enter_0.20_vs_prior_scale_scan,nav,3.552713678800501e-15
+enter_0.20_vs_prior_scale_scan,turnover,0.0
+enter_0.20_vs_prior_scale_scan,exposure_effective,0.0

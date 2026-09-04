@@ -1,0 +1,13 @@
+candidate,score_max,full_cagr_retention_vs_5,passes_full_80pct,return_wins,dd_wins,passes_predeclared_dd_rule
+score_max_2,2.0,0.38519391413938575,False,0,0,False
+score_max_3,3.0,0.6628383275065584,False,0,2,False
+score_max_4,4.0,0.7949916621437584,False,0,2,False
+score_max_4p5,4.5,0.8896669983231503,True,1,2,False
+score_max_5,5.0,1.0,True,0,0,False
+score_max_5p5,5.5,1.0279292140506584,True,5,2,False
+score_max_6,6.0,1.000180069678036,True,3,3,True
+score_max_6p5,6.5,0.9485364303397487,True,0,2,False
+score_max_7,7.0,0.9651770617355219,True,1,4,False
+score_max_8,8.0,1.039997787016749,True,4,3,False
+score_max_10,10.0,1.001966678079209,True,3,3,False
+score_max_inf,inf,0.9538269333172812,True,0,0,False

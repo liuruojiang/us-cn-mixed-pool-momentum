@@ -1,0 +1,25 @@
+init_quant_param_scan_run.py
+run_id=20260904_subd_no_floor_score_max
+project=mixed-us-cn-momentum
+strategy=SubD no score floor
+subsystem=six-etf
+parameter_group=SCORE_MAX
+repo=D:\动量策略\美股A股混合池子动量策略
+
+Working directory: D:\动量策略\美股A股混合池子动量策略
+python -X utf8 D:/Codex/home/skills/quant-param-scan/scripts/init_quant_param_scan_run.py --root quant_param_scan_runs --project mixed-us-cn-momentum --strategy 'SubD no score floor' --subsystem six-etf --parameter-group SCORE_MAX --repo . --entrypoint run_subd_six_etf_v1_1.py --date 2026-09-04 --slug subd_no_floor_score_max
+python -X utf8 quant_param_scan_runs/20260904_subd_no_floor_score_max/run_scan.py
+python -X utf8 quant_param_scan_runs/20260904_subd_no_floor_score_max/verify_results.py
+python -X utf8 -m py_compile quant_param_scan_runs/20260904_subd_no_floor_score_max/run_scan.py quant_param_scan_runs/20260904_subd_no_floor_score_max/verify_results.py
+git diff --check
+git diff --exit-code -- research_subd_six_etf_weighted_slope.py run_subd_six_etf_v1_1.py poe_subd_six_etf_v1_1_bot.py
+
+run_scan.py: exit 0; elapsed_sec=192.016; 12 candidates; 60 window rows; parity PASS.
+verify_results.py: exit 0; integrity/official metric parity PASS.
+py_compile, git diff --check, production git diff --exit-code: exit 0.
+No production or shared decision document edits. No remote data refresh.
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T11:15:08+08:00
+decision=keep_default
+stability_label=narrow_stable

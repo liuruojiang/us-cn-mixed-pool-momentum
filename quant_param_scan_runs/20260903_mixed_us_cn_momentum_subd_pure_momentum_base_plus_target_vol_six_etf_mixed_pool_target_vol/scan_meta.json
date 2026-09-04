@@ -1,0 +1,73 @@
+{
+  "run_id": "20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol",
+  "created_at": "2026-09-03T22:40:16+08:00",
+  "phase": "complete",
+  "project": "mixed-us-cn-momentum",
+  "strategy": "SubD pure momentum base plus target vol",
+  "subsystem": "six-etf mixed pool",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_six_etf_v1_1.py",
+  "git_branch": "codex/previous-research-sync-20260821",
+  "git_commit": "6bf19204abca54f5ff7d15ec1708cf03a0412669",
+  "git_status_before": "?? docs/subd_v11_naive_simplification_decisions_20260903.md\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_enter_with_2pp_hysteresis/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "git_status_after": "?? docs/subd_v11_naive_simplification_decisions_20260903.md\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_derisk_scale/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_overheat_six_etf_mixed_pool_overheat_enter_with_2pp_hysteresis/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "scan_type": "single_parameter",
+  "parameter_group": "TARGET_VOL with W80 max1.5 DB7.5pp",
+  "baseline": {
+    "candidate": "target_vol_off",
+    "target_vol": null
+  },
+  "candidate_grid": [
+    null,
+    0.05,
+    0.075,
+    0.1,
+    0.125,
+    0.15,
+    0.175,
+    0.2,
+    0.225,
+    0.25,
+    0.275,
+    0.3,
+    0.35,
+    0.4,
+    0.45,
+    0.5,
+    0.6,
+    0.75,
+    1.0
+  ],
+  "data_snapshot": {
+    "source_run": "20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer",
+    "base_run": "20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_staged_entry_six_etf_mixed_pool_initial_entry_fraction_r2_off",
+    "start": "2011-12-09",
+    "end": "2026-09-02",
+    "rows": 3578,
+    "adjustment": "qfq/front-adjusted"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "financing_cost": 0.0,
+    "vol_window": 80,
+    "max_leverage": 1.5,
+    "scale_rebalance_threshold": 0.075,
+    "pure_base": true
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_pure_momentum_base_plus_target_vol_six_etf_mixed_pool_target_vol\\command_log.txt"
+  },
+  "decision": "confirmed_off",
+  "stability_label": "no_pareto_improvement",
+  "parity_check": {
+    "off_vs_pure_base_and_current_runner_vs_poe_nav_max_abs_diff": 0.0,
+    "other_max_abs_diff": 0.0,
+    "passed": true
+  },
+  "elapsed_sec": 19.421,
+  "finalized_at": "2026-09-03T22:45:23+08:00"
+}

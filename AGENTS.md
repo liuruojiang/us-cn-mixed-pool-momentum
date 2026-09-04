@@ -12,6 +12,8 @@ Use this repo-local file as the source of workspace guidance for the mixed US/A-
 
 ## Local Scan Notes
 
+- Disambiguate the two V1.3 families: `poe_subd_six_etf_v1_3_bot.py` is the six-China-listed-ETF naive strategy; `poe_subd_mixed_pool_v1_3_bot.py` is the older mixed proxy pool. Never substitute or overwrite one with the other. Current six-ETF parameters and verification are in `docs/subd_six_etf_v1_3_20260904.md`.
+
 - For Sub-D / weighted-slope / ETF-pool experiments, keep same data slices, cost assumptions, and execution timing when comparing against Strategy A, ADK, or other sleeves.
 - Preserve docs records for accepted conclusions; old `outputs/` files are diagnostic unless rebuilt or cited as preserved evidence.
 - New strategy tests and candidate promotions must follow `docs/new_strategy_test_standard_process.md`; every display/report must include full sample, 10Y, 5Y, 3Y, and 1Y annualized return plus max drawdown, or explicit `N/A` reasons.
