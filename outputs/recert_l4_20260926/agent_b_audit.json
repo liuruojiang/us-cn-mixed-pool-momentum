@@ -1,0 +1,99 @@
+{
+  "data_end": "2026-09-24",
+  "rows": 3594,
+  "formal_rebuild_parity": {
+    "position_before_mismatches": 0,
+    "position_mismatches": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "gross_return_max_abs": 3.209238430557093e-16,
+    "return_max_abs": 4.0766001685454967e-16,
+    "nav_max_abs": 1.5631940186722204e-13
+  },
+  "arms": {
+    "formal_rebuilt": {
+      "filters": {
+        "score_lower_strict": 0.5,
+        "score_upper_strict": 5.5,
+        "r2_min_inclusive": 0.25
+      },
+      "end_nav": 44.18887388573983,
+      "trade_days": 379,
+      "two_sided_switches": 194,
+      "turnover_sum": 573.0,
+      "cost_rate_sum": 0.573,
+      "fee_amount_initial_capital_units": 5.443363483159965,
+      "cash_days": 1150,
+      "stale_blocked_days": [],
+      "new_eligible_asset_days": 0,
+      "days_with_new_eligible_asset": 0,
+      "desired_diff_days_vs_formal": 0,
+      "position_diff_days_vs_formal": 0,
+      "first_desired_diff": null,
+      "same_path_no_cost_end_nav": 78.41020738962371
+    },
+    "lower_off": {
+      "filters": {
+        "score_lower_strict": "off",
+        "score_upper_strict": 5.5,
+        "r2_min_inclusive": 0.25
+      },
+      "end_nav": 46.45269467049193,
+      "trade_days": 497,
+      "two_sided_switches": 410,
+      "turnover_sum": 907.0,
+      "cost_rate_sum": 0.907,
+      "fee_amount_initial_capital_units": 7.93871656383278,
+      "cash_days": 311,
+      "stale_blocked_days": [],
+      "new_eligible_asset_days": 5414,
+      "days_with_new_eligible_asset": 2705,
+      "desired_diff_days_vs_formal": 839,
+      "position_diff_days_vs_formal": 839,
+      "first_desired_diff": "2012-01-16",
+      "same_path_no_cost_end_nav": 115.15730921586695
+    },
+    "upper_off": {
+      "filters": {
+        "score_lower_strict": 0.5,
+        "score_upper_strict": "off",
+        "r2_min_inclusive": 0.25
+      },
+      "end_nav": 33.211792939396716,
+      "trade_days": 281,
+      "two_sided_switches": 130,
+      "turnover_sum": 411.0,
+      "cost_rate_sum": 0.41100000000000003,
+      "fee_amount_initial_capital_units": 3.8739468966766006,
+      "cash_days": 1017,
+      "stale_blocked_days": [],
+      "new_eligible_asset_days": 349,
+      "days_with_new_eligible_asset": 345,
+      "desired_diff_days_vs_formal": 345,
+      "position_diff_days_vs_formal": 345,
+      "first_desired_diff": "2012-02-22",
+      "same_path_no_cost_end_nav": 50.1110187694863
+    },
+    "r2_off": {
+      "filters": {
+        "score_lower_strict": 0.5,
+        "score_upper_strict": 5.5,
+        "r2_min_inclusive": "off"
+      },
+      "end_nav": 29.27560789768392,
+      "trade_days": 382,
+      "two_sided_switches": 201,
+      "turnover_sum": 583.0,
+      "cost_rate_sum": 0.583,
+      "fee_amount_initial_capital_units": 4.151742081423366,
+      "cash_days": 1073,
+      "stale_blocked_days": [],
+      "new_eligible_asset_days": 301,
+      "days_with_new_eligible_asset": 273,
+      "desired_diff_days_vs_formal": 101,
+      "position_diff_days_vs_formal": 101,
+      "first_desired_diff": "2012-02-13",
+      "same_path_no_cost_end_nav": 52.470324991389916
+    }
+  }
+}

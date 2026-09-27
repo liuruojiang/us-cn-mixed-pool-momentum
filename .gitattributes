@@ -1,1 +1,6 @@
 quant_param_scan_runs/20260529_subd_v11_target_vol_max_lev/daily_curves.csv filter=lfs diff=lfs merge=lfs -text
+poe_subd_six_etf_v1_3_bot.py -text
+outputs/recert_l8_20260927/agent_a_matrix.csv -text
+outputs/recert_l8_20260927/agent_a_freeze_protocol.md -text
+quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/parameter_matrix.csv -text
+quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/freeze_protocol.md -text

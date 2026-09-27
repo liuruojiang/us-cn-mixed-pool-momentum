@@ -1,0 +1,248 @@
+{
+  "prices_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "flags_sha256": "39c1d4afc5dc73d59ee3742dc4e275a87ab6f400ecfc7b709796e83c46486ee1",
+  "formal_daily_sha256": "d3934020b79fcd8ef6dbcef6467a71af8b49f4eeffcbe9067f34233d85159ff2",
+  "formal_parity": {
+    "position_before_mismatch": 0,
+    "position_mismatch": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "gross_return_max_abs": 3.209238430557093e-16,
+    "return_max_abs": 3.86843335142828e-16,
+    "nav_max_abs": 1.5631940186722204e-13
+  },
+  "rows": 3594,
+  "cutoff": "2026-09-24",
+  "arms": {
+    "formal_independent": {
+      "setting": [
+        0.5,
+        5.5,
+        0.25
+      ],
+      "new_eligible_asset_days": 0,
+      "new_eligible_days": 0,
+      "newly_eligible_asset_wins_days": 0,
+      "first_new_eligible_date": null,
+      "wanted_diff_days": 0,
+      "first_wanted_diff_date": null,
+      "position_diff_days": 0,
+      "first_position_diff_date": null,
+      "first_wanted_event": null,
+      "trade_days": 379,
+      "turnover_sum": 573.0,
+      "cost_fraction_sum": 0.573,
+      "last_nav": 44.18887388573983,
+      "stale_trade_blocks": 0,
+      "inactive_trigger_invariant": true
+    },
+    "floor_off": {
+      "setting": [
+        "-inf",
+        5.5,
+        0.25
+      ],
+      "new_eligible_asset_days": 5414,
+      "new_eligible_days": 2705,
+      "newly_eligible_asset_wins_days": 839,
+      "first_new_eligible_date": "2012-01-16",
+      "wanted_diff_days": 839,
+      "first_wanted_diff_date": "2012-01-16",
+      "position_diff_days": 839,
+      "first_position_diff_date": "2012-01-16",
+      "first_wanted_event": {
+        "date": "2012-01-16",
+        "formal_wanted": "CASH",
+        "arm_wanted": "159915.SZ",
+        "formal_before": "CASH",
+        "arm_before": "CASH",
+        "newly_eligible": [
+          {
+            "asset": "159915.SZ",
+            "score": -0.8582814025688498,
+            "r2": 0.6672407163849381
+          }
+        ],
+        "winner_score": -0.8582814025688498
+      },
+      "trade_days": 497,
+      "turnover_sum": 907.0,
+      "cost_fraction_sum": 0.907,
+      "last_nav": 46.45269467049193,
+      "stale_trade_blocks": 0,
+      "inactive_trigger_invariant": true
+    },
+    "ceiling_off": {
+      "setting": [
+        0.5,
+        "inf",
+        0.25
+      ],
+      "new_eligible_asset_days": 349,
+      "new_eligible_days": 345,
+      "newly_eligible_asset_wins_days": 345,
+      "first_new_eligible_date": "2012-02-22",
+      "wanted_diff_days": 345,
+      "first_wanted_diff_date": "2012-02-22",
+      "position_diff_days": 345,
+      "first_position_diff_date": "2012-02-22",
+      "first_wanted_event": {
+        "date": "2012-02-22",
+        "formal_wanted": "CASH",
+        "arm_wanted": "159915.SZ",
+        "formal_before": "159915.SZ",
+        "arm_before": "159915.SZ",
+        "newly_eligible": [
+          {
+            "asset": "159915.SZ",
+            "score": 5.635006590101865,
+            "r2": 0.8888358876205005
+          }
+        ],
+        "winner_score": 5.635006590101865
+      },
+      "trade_days": 281,
+      "turnover_sum": 411.0,
+      "cost_fraction_sum": 0.41100000000000003,
+      "last_nav": 33.211792939396716,
+      "stale_trade_blocks": 0,
+      "inactive_trigger_invariant": true
+    },
+    "r2_off": {
+      "setting": [
+        0.5,
+        5.5,
+        null
+      ],
+      "new_eligible_asset_days": 301,
+      "new_eligible_days": 273,
+      "newly_eligible_asset_wins_days": 101,
+      "first_new_eligible_date": "2012-02-13",
+      "wanted_diff_days": 101,
+      "first_wanted_diff_date": "2012-02-13",
+      "position_diff_days": 101,
+      "first_position_diff_date": "2012-02-13",
+      "first_wanted_event": {
+        "date": "2012-02-13",
+        "formal_wanted": "CASH",
+        "arm_wanted": "159915.SZ",
+        "formal_before": "CASH",
+        "arm_before": "CASH",
+        "newly_eligible": [
+          {
+            "asset": "159915.SZ",
+            "score": 0.8735749134700779,
+            "r2": 0.13780219422630402
+          }
+        ],
+        "winner_score": 0.8735749134700779
+      },
+      "trade_days": 382,
+      "turnover_sum": 583.0,
+      "cost_fraction_sum": 0.583,
+      "last_nav": 29.27560789768391,
+      "stale_trade_blocks": 0,
+      "inactive_trigger_invariant": true
+    }
+  },
+  "prefix_no_future_data_through": "2024-12-31",
+  "other_independent_agent_parity": {
+    "formal_independent": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.1051550219984847e-16,
+      "return_max_abs": 3.157196726277789e-16,
+      "nav_max_abs": 1.7763568394002505e-14
+    },
+    "floor_off": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.174543961037557e-16,
+      "return_max_abs": 3.7643499428696714e-16,
+      "nav_max_abs": 7.105427357601002e-15
+    },
+    "ceiling_off": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.144186300207963e-16,
+      "return_max_abs": 4.154662724964453e-16,
+      "nav_max_abs": 8.881784197001252e-15
+    },
+    "r2_off": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.209238430557093e-16,
+      "return_max_abs": 4.119968255444917e-16,
+      "nav_max_abs": 2.1316282072803006e-14
+    }
+  },
+  "main_runner_parity": {
+    "formal_independent": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.209238430557093e-16,
+      "return_max_abs": 3.86843335142828e-16,
+      "nav_max_abs": 1.5631940186722204e-13
+    },
+    "floor_off": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.217912047936977e-16,
+      "return_max_abs": 4.0592529337857286e-16,
+      "nav_max_abs": 1.2434497875801753e-13
+    },
+    "ceiling_off": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.183217578417441e-16,
+      "return_max_abs": 4.0592529337857286e-16,
+      "nav_max_abs": 7.815970093361102e-14
+    },
+    "r2_off": {
+      "position_before_mismatch": 0,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "gross_return_max_abs": 3.200564813177209e-16,
+      "return_max_abs": 3.642919299551295e-16,
+      "nav_max_abs": 1.3500311979441904e-13
+    }
+  },
+  "main_activation_parity": {
+    "floor_off": {
+      "new_eligible_asset_days": 0,
+      "new_eligible_days": 0,
+      "best_candidate_diff_days": 0,
+      "position_diff_days": 0,
+      "first_best_candidate_diff_matches": true
+    },
+    "ceiling_off": {
+      "new_eligible_asset_days": 0,
+      "new_eligible_days": 0,
+      "best_candidate_diff_days": 0,
+      "position_diff_days": 0,
+      "first_best_candidate_diff_matches": true
+    },
+    "r2_off": {
+      "new_eligible_asset_days": 0,
+      "new_eligible_days": 0,
+      "best_candidate_diff_days": 0,
+      "position_diff_days": 0,
+      "first_best_candidate_diff_matches": true
+    }
+  }
+}

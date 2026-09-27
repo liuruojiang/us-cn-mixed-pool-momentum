@@ -1,0 +1,41 @@
+{
+  "formal_code_sha256": "21a5867f51367d215a6f9913dafae1a462bf2316f7c59e7a860d43448c63ee72",
+  "matrix_sha256": "12fb6719c38f10078bedf908eac8a46d64ac26b633e8b237546d4e42f107fff4",
+  "protocol_sha256": "93362ab6ce21681d4be412d8f250ccc8213ae7bc5e634fb1cff80d714b56146c",
+  "price_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "flags_sha256": "39c1d4afc5dc73d59ee3742dc4e275a87ab6f400ecfc7b709796e83c46486ee1",
+  "parity": [
+    {
+      "tag": "formal_vs_L2",
+      "rows": 3594,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 7.105427357601002e-15
+    },
+    {
+      "tag": "score_floor_off_vs_L4",
+      "rows": 3594,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 7.105427357601002e-15
+    },
+    {
+      "tag": "score_ceiling_off_vs_L4",
+      "rows": 3594,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 7.105427357601002e-15
+    },
+    {
+      "tag": "r2_off_vs_L4",
+      "rows": 3594,
+      "position_mismatch": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 7.105427357601002e-15
+    }
+  ]
+}

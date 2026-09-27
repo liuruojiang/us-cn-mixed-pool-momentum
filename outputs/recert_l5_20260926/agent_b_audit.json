@@ -1,0 +1,183 @@
+{
+  "source": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l1_20260926",
+  "end_date": "2026-09-24",
+  "rows": 3594,
+  "arms": {
+    "000": {
+      "gates_on": [
+        false,
+        false,
+        false
+      ],
+      "end_nav": 25.18948271302358,
+      "trade_days": 238,
+      "two_leg_swaps": 237,
+      "turnover_sum": 475.0,
+      "fee_amount_initial_capital_units": 3.56558460207222,
+      "cash_days": 24,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "001": {
+      "gates_on": [
+        false,
+        false,
+        true
+      ],
+      "end_nav": 36.84429901227492,
+      "trade_days": 391,
+      "two_leg_swaps": 318,
+      "turnover_sum": 709.0,
+      "fee_amount_initial_capital_units": 7.031221180568488,
+      "cash_days": 261,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "010": {
+      "gates_on": [
+        false,
+        true,
+        false
+      ],
+      "end_nav": 32.09423570126755,
+      "trade_days": 339,
+      "two_leg_swaps": 332,
+      "turnover_sum": 671.0,
+      "fee_amount_initial_capital_units": 4.880566729355605,
+      "cash_days": 60,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "011": {
+      "gates_on": [
+        false,
+        true,
+        true
+      ],
+      "end_nav": 46.45269467049154,
+      "trade_days": 497,
+      "two_leg_swaps": 410,
+      "turnover_sum": 907.0,
+      "fee_amount_initial_capital_units": 7.938716563832723,
+      "cash_days": 311,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "100": {
+      "gates_on": [
+        true,
+        false,
+        false
+      ],
+      "end_nav": 22.08349963457462,
+      "trade_days": 282,
+      "two_leg_swaps": 133,
+      "turnover_sum": 415.0,
+      "fee_amount_initial_capital_units": 2.8096444662551967,
+      "cash_days": 941,
+      "stale_block_days": 0,
+      "max_accounting_error": 3.552713678800501e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "101": {
+      "gates_on": [
+        true,
+        false,
+        true
+      ],
+      "end_nav": 33.211792939396815,
+      "trade_days": 281,
+      "two_leg_swaps": 130,
+      "turnover_sum": 411.0,
+      "fee_amount_initial_capital_units": 3.8739468966766077,
+      "cash_days": 1017,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "110": {
+      "gates_on": [
+        true,
+        true,
+        false
+      ],
+      "end_nav": 29.275607897683894,
+      "trade_days": 382,
+      "two_leg_swaps": 201,
+      "turnover_sum": 583.0,
+      "fee_amount_initial_capital_units": 4.15174208142336,
+      "cash_days": 1073,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    },
+    "111": {
+      "gates_on": [
+        true,
+        true,
+        true
+      ],
+      "end_nav": 44.188873885740044,
+      "trade_days": 379,
+      "two_leg_swaps": 194,
+      "turnover_sum": 573.0,
+      "fee_amount_initial_capital_units": 5.443363483159991,
+      "cash_days": 1150,
+      "stale_block_days": 0,
+      "max_accounting_error": 7.105427357601002e-15,
+      "min_cash": 0.0,
+      "min_shares": 0.0
+    }
+  },
+  "prior_layer_parity": {
+    "111": {
+      "position_before_mismatch_days": 0,
+      "position_mismatch_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 1.3500311979441904e-13
+    },
+    "011": {
+      "position_before_mismatch_days": 0,
+      "position_mismatch_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 3.623767952376511e-13
+    },
+    "101": {
+      "position_before_mismatch_days": 0,
+      "position_mismatch_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 6.039613253960852e-14
+    },
+    "110": {
+      "position_before_mismatch_days": 0,
+      "position_mismatch_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "nav_max_abs": 1.2079226507921703e-13
+    }
+  },
+  "separate_nav_stacking_counterexample": {
+    "first_position_disagreement": "2012-01-16",
+    "formal_position": "CASH",
+    "floor_off_position": "159915.SZ",
+    "separate_full_capital_required": 2.0,
+    "allowed_single_capital": 1.0,
+    "half_and_half_end_nav": 45.320784278115795,
+    "unified_all_gates_off_end_nav": 25.18948271302358,
+    "difference": 20.131301565092215
+  }
+}

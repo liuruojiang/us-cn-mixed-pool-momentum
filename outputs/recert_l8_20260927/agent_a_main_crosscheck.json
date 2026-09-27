@@ -1,0 +1,1444 @@
+{
+  "summary": {
+    "paths": 27,
+    "path_days": 97038,
+    "categorical_mismatch_days": 0,
+    "binary_mismatch_days": 0,
+    "max_nav_abs": 4.831690603168681e-13,
+    "max_return_abs": 5.134781488891349e-16,
+    "numeric_gt_1e_9": 0
+  },
+  "details": {
+    "formal_111": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.000340419503146e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.3500311979441904e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_011": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.134781488891349e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 3.623767952376511e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_101": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.000340419503146e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 6.039613253960852e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_110": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.2079226507921703e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_001": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.004677228193088e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.9184653865522705e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_010": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.030698080332741e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.2079226507921703e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_100": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 3.9985376121265404e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.6342482922482304e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "gate_000": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 3.999621814299026e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.1013412404281553e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "weight_p0": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 6.750155989720952e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "lookback_29": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.004677228193088e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 9.592326932761353e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "lookback_24": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0184188481996443e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.030698080332741e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 7.815970093361102e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "lookback_26": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.0133508455729725e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.9184653865522705e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "weight_p075": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.2789769243681803e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "weight_p125": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.004677228193088e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 7.815970093361102e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "floor_04": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.004677228193088e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.0658141036401503e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "floor_06": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 2.2737367544323206e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "ceiling_525": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0184188481996443e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.134781488891349e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.0658141036401503e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "ceiling_575": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 7.815970093361102e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "r2_0225": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.0245584642661925e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 2.3447910280083306e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "r2_0275": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.0133508455729725e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 2.5579538487363607e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "buffer_102": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.0245584642661925e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 4.831690603168681e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "buffer_103": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.134781488891349e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.8474111129762605e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "buffer_105": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.000340419503146e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 4.192202140984591e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "ceiling_525_buffer_105": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.000340419503146e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.8474111129762605e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "ceiling_525_r2_off": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 5.0133508455729725e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 1.1368683772161603e-13,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "weight_p0_lookback_29": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0184188481996443e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 8.43769498715119e-15,
+          "first_gt_1e_9": null
+        }
+      }
+    },
+    "legacy_clean_base": {
+      "rows": 3594,
+      "categorical": {
+        "position_before": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "best_candidate": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "position": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_target": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "binary": {
+        "buffer_blocked": {
+          "mismatch_days": 0,
+          "first_difference": null
+        },
+        "trade_blocked_by_stale_price": {
+          "mismatch_days": 0,
+          "first_difference": null
+        }
+      },
+      "numeric": {
+        "turnover": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "cost": {
+          "max_abs": 0.0,
+          "first_gt_1e_9": null
+        },
+        "gross_return": {
+          "max_abs": 3.0531133177191805e-16,
+          "first_gt_1e_9": null
+        },
+        "return": {
+          "max_abs": 4.996003610813204e-16,
+          "first_gt_1e_9": null
+        },
+        "nav": {
+          "max_abs": 9.237055564881302e-14,
+          "first_gt_1e_9": null
+        }
+      }
+    }
+  }
+}

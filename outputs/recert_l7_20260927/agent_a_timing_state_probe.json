@@ -1,0 +1,44 @@
+{
+  "input_rows": 3594,
+  "input_last": "2026-09-24",
+  "prefix_rows": 3578,
+  "prefix_last": "2026-09-02",
+  "prefix_categorical_differences": {
+    "position_before": 0,
+    "position": 0,
+    "trade_target": 0
+  },
+  "prefix_numeric_max_abs_differences": {
+    "turnover": 0.0,
+    "cost": 0.0,
+    "return": 0.0,
+    "nav": 0.0
+  },
+  "wrong_reset_first_difference": {
+    "date": "2026-09-03",
+    "formal_position_before": "159985.SZ",
+    "reset_position_before": "CASH",
+    "formal_nav": 44.99303233824909,
+    "reset_nav": 1.0,
+    "formal_score_available": true,
+    "reset_score_available": false
+  },
+  "confirmed_signal_before_1530": "2026-09-23",
+  "confirmed_signal_after_1530": "2026-09-24",
+  "weekend_status": {
+    "signal_date": "2026-09-24",
+    "expected_confirmed_session": "2026-09-24",
+    "signal_valid": true,
+    "calendar_available": true,
+    "raw_signal_has_trade": true,
+    "delayed_execution": true,
+    "model_execution_price_available": false,
+    "strategy_actionable_now": false,
+    "tradable": false,
+    "execution_note": "市场今日休市；执行前应在下一交易日重新确认价格。",
+    "label": "市场今日休市；使用上一交易日确认收盘"
+  },
+  "mixed_scenario_rejected": true,
+  "report_actual_trade_label": "- 上次实际成交日: **2026-09-24**",
+  "broker_fill_source_present": false
+}

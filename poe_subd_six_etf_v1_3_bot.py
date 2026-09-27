@@ -4686,7 +4686,7 @@ def latest_signal(daily: pd.DataFrame) -> dict[str, object]:
     }
 
 
-def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
+def _daily_returns_for_window(sub: pd.DataFrame, *, rebase_first: bool = True) -> pd.Series:
     if "return" in sub.columns:
         ret = pd.to_numeric(sub["return"], errors="coerce")
         if ret.isna().any():
@@ -4712,7 +4712,7 @@ def _daily_returns_for_window(sub: pd.DataFrame) -> pd.Series:
             )
             raise poe.BotError(f"return must be greater than -1 inside performance window: {bad_dates}")
         out = pd.Series(ret.to_numpy(dtype=float), index=sub.index, dtype=float)
-        if not out.empty:
+        if rebase_first and not out.empty:
             out.iloc[0] = 0.0
         return out
     nav = pd.to_numeric(sub["nav"], errors="coerce").astype(float)
@@ -4764,10 +4764,14 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
     sub = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
     if sub.empty:
         raise poe.BotError(f"在 {start.date()} 到 {end.date()} 期间没有 v1.3 数据。")
+    if len(sub) < 2:
+        raise poe.BotError("绩效窗口至少需要两个已形成净值的交易日。")
     ret = _daily_returns_for_window(sub)
     wealth = _wealth_from_returns(ret)
-    years = max(len(sub) / TRADING_DAYS, 1.0 / TRADING_DAYS)
-    std = ret.std(ddof=0)
+    # The first NAV is the window's already-formed base, not a return observation.
+    change_returns = ret.iloc[1:]
+    years = len(change_returns) / TRADING_DAYS
+    std = change_returns.std(ddof=0)
     drawdown = _drawdown_from_wealth(wealth)
     exposure_col = "exposure_effective" if "exposure_effective" in sub.columns else "final_exposure_after_overheat"
     final_exposure = sub[exposure_col].astype(float).fillna(0.0)
@@ -4780,7 +4784,7 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
         "annual": float(wealth.iloc[-1] ** (1.0 / years) - 1.0),
         "maxdd": float(drawdown.min()),
         "vol": float(std * math.sqrt(TRADING_DAYS)),
-        "sharpe": float(ret.mean() / std * math.sqrt(TRADING_DAYS)) if std > 0 else math.nan,
+        "sharpe": float(change_returns.mean() / std * math.sqrt(TRADING_DAYS)) if std > 0 else math.nan,
         "trades": int((sub["turnover"].astype(float) > 1e-12).sum()),
         "avg_scale": float(sub["weight"].astype(float).mean()),
         "avg_final_exposure": float(final_exposure.mean()),
@@ -4795,11 +4799,12 @@ def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Ti
     end = pd.Timestamp(end).normalize()
     df = daily.copy()
     df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date")
+    # Calendar-year returns include the first session's move from the prior close.
+    df["_report_return"] = _daily_returns_for_window(df, rebase_first=False).to_numpy(dtype=float)
     sub = df[(df["date"] >= start) & (df["date"] <= end)].copy()
     if sub.empty:
         return []
-    sub = sub.sort_values("date")
-    sub["_report_return"] = _daily_returns_for_window(sub).to_numpy(dtype=float)
     rows: list[dict[str, object]] = []
     for year, part in sub.groupby(sub["date"].dt.year):
         if part.empty:
@@ -4807,7 +4812,7 @@ def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Ti
         ret = part["_report_return"].astype(float)
         wealth = _wealth_from_returns(ret)
         std = ret.std(ddof=0)
-        dd = _drawdown_from_wealth(wealth)
+        dd = wealth / wealth.cummax().clip(lower=1.0) - 1.0
         trades = int((part["turnover"].astype(float) > 1e-12).sum()) if "turnover" in part.columns else 0
         exposure_col = "exposure_effective" if "exposure_effective" in part.columns else "final_exposure_after_overheat"
         avg_exposure = float(part[exposure_col].astype(float).fillna(0.0).mean()) if exposure_col in part.columns else math.nan
@@ -5397,19 +5402,19 @@ def _last_base_signal_date(daily: pd.DataFrame) -> str:
     return pd.Timestamp(changed.iloc[-1]["date"]).date().isoformat()
 
 
-def _last_actual_trade_date(daily: pd.DataFrame) -> str:
+def _last_model_trade_date(daily: pd.DataFrame) -> str:
     ordered = daily.sort_values("date")
     if "turnover" not in ordered.columns:
-        return "no actual trade"
+        return "no model trade"
     turnover = pd.to_numeric(ordered["turnover"], errors="coerce").fillna(0.0)
     changed = ordered[turnover > 1e-12]
     if changed.empty:
-        return "no actual trade"
+        return "no model trade"
     return pd.Timestamp(changed.iloc[-1]["date"]).date().isoformat()
 
 
 def _last_signal_date(daily: pd.DataFrame) -> str:
-    return _last_actual_trade_date(daily)
+    return _last_model_trade_date(daily)
 
 
 def _trade_note(row: pd.Series) -> str:
@@ -5736,7 +5741,7 @@ def _format_signal_report_compact(
     fill_on_down = _bool(row.get("actual_fill_on_down_day", row.get("fill_on_down_day")))
     staged_initial = _bool(row.get("actual_staged_initial", row.get("staged_initial")))
     last_base_signal = _last_base_signal_date(ordered)
-    last_actual_trade = _last_actual_trade_date(ordered)
+    last_model_trade = _last_model_trade_date(ordered)
 
     target_position_label = "若现在收盘目标持仓" if data_status["uses_unconfirmed_bar"] else "收盘后目标持仓"
     target_exposure_label = "若现在收盘目标敞口" if data_status["uses_unconfirmed_bar"] else "收盘后目标敞口"
@@ -5796,7 +5801,7 @@ def _format_signal_report_compact(
         lines.append(f"- 目标turnover: **{_fmt_pct(turnover)}**，成本: **{_fmt_pct(cost, 3)}**")
     lines.append(f"- 执行状态: **{data_status['execution_note']}**")
     lines.append(f"- 上次底层调仓信号: **{last_base_signal}**")
-    lines.append(f"- 上次实际成交日: **{last_actual_trade}**")
+    lines.append(f"- 上次模型调仓日: **{last_model_trade}**（纸面记录，非券商成交）")
     lines.append(f"- {_entry_state_text(row, pending_target, pending_days, fill_on_down, staged_initial)}")
     lines.append(
         f"- 参数: 基础仓位 **{_fmt_pct(holding_fraction)}** | "
@@ -6074,11 +6079,20 @@ def _nav_window(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> 
     sub = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
     if sub.empty:
         raise poe.BotError(f"在 {start.date()} 到 {end.date()} 期间没有净值数据。")
+    if len(sub) < 2:
+        raise poe.BotError("净值曲线至少需要两个已形成净值的交易日。")
     sub = sub.sort_values("date")
     ret = _daily_returns_for_window(sub)
     sub["nav_norm"] = _wealth_from_returns(ret).to_numpy(dtype=float)
     sub["drawdown"] = _drawdown_from_wealth(sub["nav_norm"])
     return sub
+
+
+def nav_curve_csv_bytes(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> bytes:
+    sub = _nav_window(daily, start, end)
+    points = sub[["date", "nav_norm", "drawdown"]].copy()
+    points["date"] = pd.to_datetime(points["date"]).dt.date.astype(str)
+    return points.to_csv(index=False).encode("utf-8-sig")
 
 
 def render_nav_curve_png(
@@ -6135,15 +6149,30 @@ def render_nav_curve_png(
 
 def _write_nav_curve(msg, daily: pd.DataFrame, label: str, start: pd.Timestamp, end: pd.Timestamp):
     try:
+        window = _nav_window(daily, start, end)
+        actual_start = pd.Timestamp(window["date"].iloc[0]).date()
+        actual_end = pd.Timestamp(window["date"].iloc[-1]).date()
         chart_bytes = render_nav_curve_png(daily, label, start, end)
+        chart_name = f"subd_v13_nav_{actual_start}_{actual_end}.png"
         msg.attach_file(
-            name=f"subd_v13_nav_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+            name=chart_name,
             contents=chart_bytes,
             content_type="image/png",
             is_inline=False,
         )
     except Exception as exc:
         msg.write(f"> 净值曲线图片生成失败: {str(exc)[:120]}\n")
+        return
+    csv_name = f"subd_v13_nav_{actual_start}_{actual_end}.csv"
+    try:
+        msg.attach_file(
+            name=csv_name,
+            contents=nav_curve_csv_bytes(daily, start, end),
+            content_type="text/csv; charset=utf-8",
+        )
+        msg.write(f"📎 净值曲线逐日CSV: **{csv_name}**\n")
+    except Exception as exc:
+        msg.write(f"📎 净值曲线逐日CSV: N/A: {_exception_na_reason(exc)}\n")
 
 
 def _query_wants_nav_curve(query: str) -> bool:
@@ -6279,7 +6308,7 @@ class SubDSixEtfV13Bot:
                         raise poe.BotError(na_reason)
                     m = calc_performance(daily, start, end)
                     if first_chart_range is None:
-                        first_chart_range = (label, start, end)
+                        first_chart_range = (label, pd.Timestamp(m["start"]), pd.Timestamp(m["end"]))
                     msg.write(
                         f"| {label} | {m['start']}~{m['end']} | {m['rows']} | "
                         f"{_fmt_pct(m['total'])} | {_fmt_pct(m['annual'])} | "
@@ -6300,6 +6329,7 @@ class SubDSixEtfV13Bot:
                     yearly = calc_yearly_performance(daily, EVAL_START, latest)
                     yearly_table = format_yearly_performance_table(yearly)
                     if yearly_table:
+                        msg.write("年度收益包含每年首个交易日相对上一交易日的收益；回撤包含年初基点。\n\n")
                         msg.write(yearly_table)
                         msg.write("\n")
                 except Exception as exc:

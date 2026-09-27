@@ -1,0 +1,14 @@
+{
+  "rows": 3594,
+  "cutoff": "2026-09-24",
+  "baseline_last_nav": 19.654249115777215,
+  "formal_last_nav": 44.18887388573992,
+  "position_diff_days": 841,
+  "first_position_diff_date": "2012-02-09",
+  "baseline_trade_days": 388,
+  "formal_trade_days": 379,
+  "baseline_double_swaps": 309,
+  "formal_double_swaps": 194,
+  "baseline_stale_trade_blocks": 0,
+  "formal_stale_trade_blocks": 0
+}

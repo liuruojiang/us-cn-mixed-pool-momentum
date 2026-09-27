@@ -1,0 +1,147 @@
+{
+  "metrics": [
+    {
+      "window": "Full",
+      "start": "2011-12-09",
+      "end": "2026-09-24",
+      "rows": 3594,
+      "annual": 0.3042600113995433,
+      "annual_nav_anchor_n_minus_1": 0.3043564408483701,
+      "maxdd": -0.22006724591954296,
+      "trades": 379
+    },
+    {
+      "window": "10Y",
+      "start": "2016-05-16",
+      "end": "2026-09-24",
+      "rows": 2520,
+      "annual": 0.3570021743214027,
+      "annual_nav_anchor_n_minus_1": 0.35716663958151207,
+      "maxdd": -0.16309804295217378,
+      "trades": 306
+    },
+    {
+      "window": "5Y",
+      "start": "2021-07-19",
+      "end": "2026-09-24",
+      "rows": 1260,
+      "annual": 0.5420322237026565,
+      "annual_nav_anchor_n_minus_1": 0.5425627803742443,
+      "maxdd": -0.15962238350856606,
+      "trades": 155
+    },
+    {
+      "window": "3Y",
+      "start": "2023-08-15",
+      "end": "2026-09-24",
+      "rows": 756,
+      "annual": 0.657909287485692,
+      "annual_nav_anchor_n_minus_1": 0.6590198158316625,
+      "maxdd": -0.1433795586170049,
+      "trades": 107
+    },
+    {
+      "window": "1Y",
+      "start": "2025-09-11",
+      "end": "2026-09-24",
+      "rows": 252,
+      "annual": 0.6293883003857372,
+      "annual_nav_anchor_n_minus_1": 0.632560607523885,
+      "maxdd": -0.1354158401392188,
+      "trades": 46
+    }
+  ],
+  "trades": 379,
+  "switches": 194,
+  "fees_total_currency": 5.443363483159965,
+  "stale_trade_blocks": [],
+  "first_trade": "2012-02-14",
+  "latest_position": "159941.SZ",
+  "latest_nav": 44.18887388573983,
+  "no_cost_same_path_latest_nav": 78.41020738962466,
+  "adversarial_t_plus_1_close": {
+    "latest_nav": 25.258922621147313,
+    "metrics": [
+      {
+        "window": "Full",
+        "start": "2011-12-09",
+        "end": "2026-09-24",
+        "rows": 3594,
+        "annual": 0.25410218867104795,
+        "annual_nav_anchor_n_minus_1": 0.25418122086579475,
+        "maxdd": -0.21276345058317914,
+        "trades": 378
+      },
+      {
+        "window": "10Y",
+        "start": "2016-05-16",
+        "end": "2026-09-24",
+        "rows": 2520,
+        "annual": 0.3096647260635803,
+        "annual_nav_anchor_n_minus_1": 0.3098049915280945,
+        "maxdd": -0.21276345058318058,
+        "trades": 305
+      },
+      {
+        "window": "5Y",
+        "start": "2021-07-19",
+        "end": "2026-09-24",
+        "rows": 1260,
+        "annual": 0.416710415149814,
+        "annual_nav_anchor_n_minus_1": 0.41710244195384893,
+        "maxdd": -0.19403224573519773,
+        "trades": 154
+      },
+      {
+        "window": "3Y",
+        "start": "2023-08-15",
+        "end": "2026-09-24",
+        "rows": 756,
+        "annual": 0.5512075671587664,
+        "annual_nav_anchor_n_minus_1": 0.5521098591478206,
+        "maxdd": -0.18634583586654863,
+        "trades": 106
+      },
+      {
+        "window": "1Y",
+        "start": "2025-09-11",
+        "end": "2026-09-24",
+        "rows": 252,
+        "annual": 0.119330159082915,
+        "annual_nav_anchor_n_minus_1": 0.11983299141325054,
+        "maxdd": -0.18634583586654796,
+        "trades": 45
+      }
+    ],
+    "first_changed_date": "2012-02-14"
+  },
+  "formal_parity": {
+    "rows": 3594,
+    "exact_mismatches": {
+      "position_before": 0,
+      "candidate": 0,
+      "position": 0,
+      "trade_blocked_by_stale_price": 0,
+      "turnover": 0,
+      "cost": 0
+    },
+    "numerical": {
+      "asset_return": {
+        "max_abs": 9.952975943416931e-17,
+        "first_nonclose_date": null
+      },
+      "gross_return": {
+        "max_abs": 3.209238430557093e-16,
+        "first_nonclose_date": null
+      },
+      "return": {
+        "max_abs": 4.0766001685454967e-16,
+        "first_nonclose_date": null
+      },
+      "nav": {
+        "max_abs": 1.5631940186722204e-13,
+        "first_nonclose_date": null
+      }
+    }
+  }
+}

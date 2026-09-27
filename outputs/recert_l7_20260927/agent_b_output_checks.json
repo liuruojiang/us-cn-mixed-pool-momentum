@@ -1,0 +1,139 @@
+{
+  "input": "L1 2026-09-24 capture -> L2 formal replay and independent cash/shares ledger",
+  "source_sha256": "21a5867f51367d215a6f9913dafae1a462bf2316f7c59e7a860d43448c63ee72",
+  "l1_aligned_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "cutoff": "2026-09-24",
+  "daily_rows": 3594,
+  "last_signal_asset": "159941.SZ",
+  "last_signal_turnover": 1.0,
+  "last_signal_cost": 0.001,
+  "window_metrics": [
+    {
+      "window": "Full",
+      "start": "2011-12-09",
+      "end": "2026-09-24",
+      "rows": 3594,
+      "annual_display": 0.3043,
+      "annual_formal_n": 0.3042600113995426,
+      "annual_independent_n_minus_1": 0.3043564408483701,
+      "display_understates_pp": 0.009642944882748417,
+      "maxdd_display": -0.22010000000000002,
+      "maxdd_independent": -0.22006724591954296,
+      "trades": 379
+    },
+    {
+      "window": "10Y",
+      "start": "2016-05-16",
+      "end": "2026-09-24",
+      "rows": 2520,
+      "annual_display": 0.35700000000000004,
+      "annual_formal_n": 0.3570021743214036,
+      "annual_independent_n_minus_1": 0.35716663958151207,
+      "display_understates_pp": 0.016446526010849283,
+      "maxdd_display": -0.1631,
+      "maxdd_independent": -0.16309804295217445,
+      "trades": 306
+    },
+    {
+      "window": "5Y",
+      "start": "2021-07-19",
+      "end": "2026-09-24",
+      "rows": 1260,
+      "annual_display": 0.542,
+      "annual_formal_n": 0.5420322237026576,
+      "annual_independent_n_minus_1": 0.5425627803742443,
+      "display_understates_pp": 0.0530556671586746,
+      "maxdd_display": -0.15960000000000002,
+      "maxdd_independent": -0.15962238350856606,
+      "trades": 155
+    },
+    {
+      "window": "3Y",
+      "start": "2023-08-15",
+      "end": "2026-09-24",
+      "rows": 756,
+      "annual_display": 0.6579,
+      "annual_formal_n": 0.6579092874856916,
+      "annual_independent_n_minus_1": 0.6590198158316625,
+      "display_understates_pp": 0.11105283459709181,
+      "maxdd_display": -0.1434,
+      "maxdd_independent": -0.1433795586170047,
+      "trades": 107
+    },
+    {
+      "window": "1Y",
+      "start": "2025-09-11",
+      "end": "2026-09-24",
+      "rows": 252,
+      "annual_display": 0.6294,
+      "annual_formal_n": 0.6293883003857403,
+      "annual_independent_n_minus_1": 0.632560607523885,
+      "display_understates_pp": 0.31723071381446477,
+      "maxdd_display": -0.1354,
+      "maxdd_independent": -0.1354158401392186,
+      "trades": 46
+    }
+  ],
+  "full_csv_events": 379,
+  "full_csv_switches": 194,
+  "full_csv_date_first": "2026-09-24",
+  "full_csv_date_last": "2012-02-14",
+  "recent_csv_actual_last": "2026-09-24",
+  "recent_csv_filename": "subd_v13_trade_records_2026-07-27_2026-09-27.csv",
+  "nav_curve_csv_present": false,
+  "actual_trade_date_label_is_model_turnover_only": true,
+  "png_size": [
+    1634,
+    959
+  ],
+  "attachments": {
+    "表现": [
+      {
+        "name": "subd_v13_nav_20260927_101022.png",
+        "type": "image/png",
+        "bytes": 120726,
+        "sha256": "076dc981331c2bd54a70b0154dfef8455b323d58bb541f4398c92cb7bc5c4e1a"
+      },
+      {
+        "name": "subd_v13_trade_records_2011-12-09_2026-09-24.csv",
+        "type": "text/csv; charset=utf-8",
+        "bytes": 361622,
+        "sha256": "149514dd038245686055f00c8f5852104979facd1d75e684a4b6c0fc99afe1b5"
+      }
+    ],
+    "信号": [],
+    "交易记录 过去两个月": [
+      {
+        "name": "subd_v13_nav_20260927_101024.png",
+        "type": "image/png",
+        "bytes": 101478,
+        "sha256": "b14da08f8af1d5ca487ba1569713b919904d982fa0fc93ba0f397505e5ba8ea5"
+      },
+      {
+        "name": "subd_v13_trade_records_2026-07-27_2026-09-27.csv",
+        "type": "text/csv; charset=utf-8",
+        "bytes": 9794,
+        "sha256": "75139975b8b887985245c4cb1c0e751fff29e0d1fb38f9ec6dd62224a8bf167d"
+      }
+    ],
+    "净值曲线 过去两年": [
+      {
+        "name": "subd_v13_nav_20260927_101025.png",
+        "type": "image/png",
+        "bytes": 131818,
+        "sha256": "be12bd0f4f5a289e28a9f03b2e71b095c0836adaf2accf2ad522854b516909d5"
+      },
+      {
+        "name": "subd_v13_trade_records_2024-09-27_2026-09-27.csv",
+        "type": "text/csv; charset=utf-8",
+        "bytes": 83507,
+        "sha256": "e6c58f8f6709e61f0fe446132632e461b177dd286fa5f1086d4cea3f3fa6e249"
+      }
+    ]
+  },
+  "nan_injection": {
+    "rejected_before_render": true,
+    "error": "missing return inside daily data; return must be finite in daily data: 2026-09-24",
+    "attachment_count": 0
+  }
+}

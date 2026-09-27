@@ -1,0 +1,272 @@
+{
+  "formal_111": {
+    "position_days": 2444,
+    "end_nav": 44.188873885740044,
+    "trade_days": 379,
+    "turnover_sum": 573.0,
+    "fee_cash_units": 5.443363483159991,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "gate_011": {
+    "position_days": 3283,
+    "end_nav": 46.45269467049154,
+    "trade_days": 497,
+    "turnover_sum": 907.0,
+    "fee_cash_units": 7.938716563832723,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "gate_101": {
+    "position_days": 2577,
+    "end_nav": 33.211792939396815,
+    "trade_days": 281,
+    "turnover_sum": 411.0,
+    "fee_cash_units": 3.8739468966766077,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "gate_110": {
+    "position_days": 2521,
+    "end_nav": 29.275607897683894,
+    "trade_days": 382,
+    "turnover_sum": 583.0,
+    "fee_cash_units": 4.15174208142336,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "gate_001": {
+    "position_days": 3333,
+    "end_nav": 36.84429901227492,
+    "trade_days": 391,
+    "turnover_sum": 709.0,
+    "fee_cash_units": 7.031221180568488,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "gate_010": {
+    "position_days": 3534,
+    "end_nav": 32.09423570126755,
+    "trade_days": 339,
+    "turnover_sum": 671.0,
+    "fee_cash_units": 4.880566729355605,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "gate_100": {
+    "position_days": 2653,
+    "end_nav": 22.08349963457462,
+    "trade_days": 282,
+    "turnover_sum": 415.0,
+    "fee_cash_units": 2.8096444662551967,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 3.552713678800501e-15
+  },
+  "gate_000": {
+    "position_days": 3570,
+    "end_nav": 25.18948271302358,
+    "trade_days": 238,
+    "turnover_sum": 475.0,
+    "fee_cash_units": 3.56558460207222,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "weight_p0": {
+    "position_days": 2452,
+    "end_nav": 12.513205180652522,
+    "trade_days": 343,
+    "turnover_sum": 510.0,
+    "fee_cash_units": 2.244180588260423,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 3.552713678800501e-15
+  },
+  "lookback_29": {
+    "position_days": 2419,
+    "end_nav": 20.58523719301789,
+    "trade_days": 311,
+    "turnover_sum": 476.0,
+    "fee_cash_units": 2.8008940674819356,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 3.552713678800501e-15
+  },
+  "lookback_24": {
+    "position_days": 2448,
+    "end_nav": 39.4502561029381,
+    "trade_days": 403,
+    "turnover_sum": 615.0,
+    "fee_cash_units": 5.132994125217513,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "lookback_26": {
+    "position_days": 2438,
+    "end_nav": 32.64220422849173,
+    "trade_days": 361,
+    "turnover_sum": 549.0,
+    "fee_cash_units": 4.375433848714734,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "weight_p075": {
+    "position_days": 2446,
+    "end_nav": 38.441174182925415,
+    "trade_days": 361,
+    "turnover_sum": 553.0,
+    "fee_cash_units": 5.2212965901255775,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 1.0658141036401503e-14
+  },
+  "weight_p125": {
+    "position_days": 2448,
+    "end_nav": 38.636174065272925,
+    "trade_days": 410,
+    "turnover_sum": 623.0,
+    "fee_cash_units": 4.94218128215384,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "floor_04": {
+    "position_days": 2563,
+    "end_nav": 45.33149618147273,
+    "trade_days": 387,
+    "turnover_sum": 599.0,
+    "fee_cash_units": 6.01339789893248,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 1.4210854715202004e-14
+  },
+  "floor_06": {
+    "position_days": 2294,
+    "end_nav": 39.33681148155585,
+    "trade_days": 382,
+    "turnover_sum": 556.0,
+    "fee_cash_units": 4.893457429203283,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "ceiling_525": {
+    "position_days": 2440,
+    "end_nav": 45.09095991964514,
+    "trade_days": 386,
+    "turnover_sum": 585.0,
+    "fee_cash_units": 5.659183779420747,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 1.4210854715202004e-14
+  },
+  "ceiling_575": {
+    "position_days": 2453,
+    "end_nav": 36.26223948948918,
+    "trade_days": 370,
+    "turnover_sum": 561.0,
+    "fee_cash_units": 4.644386338540863,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "r2_0225": {
+    "position_days": 2466,
+    "end_nav": 37.18997366372908,
+    "trade_days": 384,
+    "turnover_sum": 579.0,
+    "fee_cash_units": 4.671220269993343,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "r2_0275": {
+    "position_days": 2422,
+    "end_nav": 40.68864510328894,
+    "trade_days": 381,
+    "turnover_sum": 575.0,
+    "fee_cash_units": 5.24624396816277,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "buffer_102": {
+    "position_days": 2444,
+    "end_nav": 43.42085567256717,
+    "trade_days": 376,
+    "turnover_sum": 567.0,
+    "fee_cash_units": 5.276541216505228,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "buffer_103": {
+    "position_days": 2444,
+    "end_nav": 43.897561851533226,
+    "trade_days": 376,
+    "turnover_sum": 567.0,
+    "fee_cash_units": 5.326637805759612,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 1.4210854715202004e-14
+  },
+  "buffer_105": {
+    "position_days": 2444,
+    "end_nav": 44.5179941752616,
+    "trade_days": 375,
+    "turnover_sum": 565.0,
+    "fee_cash_units": 5.388490391016232,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "ceiling_525_buffer_105": {
+    "position_days": 2440,
+    "end_nav": 45.42679897772887,
+    "trade_days": 382,
+    "turnover_sum": 577.0,
+    "fee_cash_units": 5.608011815124455,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 1.4210854715202004e-14
+  },
+  "ceiling_525_r2_off": {
+    "position_days": 2518,
+    "end_nav": 30.213847293523887,
+    "trade_days": 389,
+    "turnover_sum": 595.0,
+    "fee_cash_units": 4.307130908682222,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  },
+  "weight_p0_lookback_29": {
+    "position_days": 2426,
+    "end_nav": 3.0987879836095518,
+    "trade_days": 272,
+    "turnover_sum": 397.0,
+    "fee_cash_units": 0.7420569439742624,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 8.881784197001252e-16
+  },
+  "legacy_clean_base": {
+    "position_days": 3215,
+    "end_nav": 19.65424911577729,
+    "trade_days": 388,
+    "turnover_sum": 697.0,
+    "fee_cash_units": 3.29155591443121,
+    "min_cash": 0.0,
+    "min_shares": 0.0,
+    "max_account_bridge_abs": 7.105427357601002e-15
+  }
+}

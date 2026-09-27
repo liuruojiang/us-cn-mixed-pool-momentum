@@ -1,0 +1,4 @@
+arm,new_eligible_asset_days,days_with_new_eligible_asset,best_candidate_diff_days,newly_eligible_asset_is_best_days,position_diff_days,trade_target_diff_days,first_best_candidate_diff,first_position_diff,first_trade_target_diff,raw_score_max_abs_diff
+score_floor_off,5414,2705,839,839,839,308,2012-01-16,2012-01-16,2012-01-16,0.0
+score_ceiling_off,349,345,345,345,345,103,2012-02-22,2012-02-22,2012-02-22,0.0
+r2_off,301,273,101,101,101,130,2012-02-13,2012-02-13,2012-02-13,0.0

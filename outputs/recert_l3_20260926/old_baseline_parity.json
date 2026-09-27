@@ -1,0 +1,40 @@
+{
+  "rows": 3578,
+  "last_date": "2026-09-02",
+  "string_mismatch": {
+    "position_before": 0,
+    "position": 0,
+    "trade_target": 0,
+    "best_candidate": 0
+  },
+  "max_abs_diff": {
+    "fraction_before": 0.0,
+    "holding_fraction": 0.0,
+    "turnover": 0.0,
+    "cost": 0.0,
+    "return": 9.974659986866641e-17,
+    "nav": 3.552713678800501e-15,
+    "gross_return": 9.974659986866641e-17,
+    "asset_return": 9.974659986866641e-17,
+    "best_candidate_score": 8.881784197001252e-16,
+    "current_score": 8.881784197001252e-16
+  },
+  "na_mismatch": {
+    "fraction_before": 0,
+    "holding_fraction": 0,
+    "turnover": 0,
+    "cost": 0,
+    "return": 0,
+    "nav": 0,
+    "gross_return": 0,
+    "asset_return": 0,
+    "best_candidate_score": 0,
+    "current_score": 0
+  },
+  "old_file_sha256": "3b54c1b36f08e39c770c7cec0a113b8eda24f289a767b0e31bb0c7dffe50196a",
+  "formal_code_sha256": "21a5867f51367d215a6f9913dafae1a462bf2316f7c59e7a860d43448c63ee72",
+  "price_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "flags_sha256": "39c1d4afc5dc73d59ee3742dc4e275a87ab6f400ecfc7b709796e83c46486ee1",
+  "baseline_daily_sha256": "a7150bf48c3e3a2623767a853a43fc659ea83840a0ac42395d751e225f68fc1d",
+  "matched_metrics_sha256": "5e8cc3bc69d95c6e3f8c801cad82a051546c1207fb3dc4fa17d4870f745d6b82"
+}

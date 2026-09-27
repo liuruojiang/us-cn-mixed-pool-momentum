@@ -14,8 +14,13 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 BOT_PATH = ROOT / "poe_subd_six_etf_v1_3_bot.py"
-ARTIFACTS = ROOT / "outputs/subd_six_etf_v1_3_acceptance_20260904"
 ACCEPTED = ROOT / "quant_comparison_runs/20260904_subd_selected_score_max_5p5"
+
+
+@pytest.fixture(scope="module")
+def audit_dir(tmp_path_factory):
+    # Keep the original 2026-09-04 acceptance evidence immutable on reruns.
+    return tmp_path_factory.mktemp("subd_six_etf_v13")
 
 
 @pytest.fixture(scope="module")
@@ -27,7 +32,7 @@ def bot():
 
 
 @pytest.fixture(scope="module")
-def real_run(bot):
+def real_run(bot, audit_dir):
     meta = json.loads((ACCEPTED / "metadata.json").read_text(encoding="utf-8"))
     # Metadata preserves the historical host path; replay uses this checkout's input.
     path = ROOT / "quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/price_snapshot_qfq.csv.gz"
@@ -47,12 +52,11 @@ def real_run(bot):
     daily["common_last_date"] = "2026-09-02"
     for code, date in last_dates.items():
         daily[f"last_date_{code}"] = str(date.date())
-    ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    curve.to_csv(ARTIFACTS / "daily.csv.gz", index_label="date")
+    curve.to_csv(audit_dir / "daily.csv.gz", index_label="date")
     return prices, flags, saved, curve, daily
 
 
-def test_frozen_curve_and_all_five_windows_match_selected(bot, real_run):
+def test_frozen_curve_and_all_five_windows_match_selected(bot, real_run, audit_dir):
     prices, flags, saved, curve, daily = real_run
     assert curve.index.equals(saved.index)
     differences = {}
@@ -67,13 +71,15 @@ def test_frozen_curve_and_all_five_windows_match_selected(bot, real_run):
         metrics = bot.calc_performance(daily, start, end)
         metrics["window"] = "Full" if label == "full_sample" else label
         old = expected[expected.window == metrics["window"]].iloc[0]
-        assert metrics["annual"] == pytest.approx(old.cagr, abs=1e-12)
+        sub = daily[(daily["date"] >= start) & (daily["date"] <= end)]
+        expected_annual = (sub.nav.iloc[-1] / sub.nav.iloc[0]) ** (bot.TRADING_DAYS / (len(sub) - 1)) - 1
+        assert metrics["annual"] == pytest.approx(expected_annual, abs=1e-12)
         assert metrics["maxdd"] == pytest.approx(old.maxdd, abs=1e-12)
-        metrics["ann_delta_pp"] = 100 * (metrics["annual"] - old.cagr)
+        metrics["ann_delta_pp_vs_old_n_denominator"] = 100 * (metrics["annual"] - old.cagr)
         metrics["mdd_improvement_pp"] = 100 * (metrics["maxdd"] - old.maxdd)
         rows.append(metrics)
-    pd.DataFrame(rows).to_csv(ARTIFACTS / "metrics.csv", index=False)
-    (ARTIFACTS / "parity.json").write_text(json.dumps({"passed": True, "max_abs_diff": differences, "data": str(prices.index[0]), "end": str(prices.index[-1]), "rows": len(prices), "bot_sha256": hashlib.sha256(BOT_PATH.read_bytes()).hexdigest()}, indent=2), encoding="utf-8")
+    pd.DataFrame(rows).to_csv(audit_dir / "metrics.csv", index=False)
+    (audit_dir / "parity.json").write_text(json.dumps({"passed": True, "max_abs_diff": differences, "data": str(prices.index[0]), "end": str(prices.index[-1]), "rows": len(prices), "bot_sha256": hashlib.sha256(BOT_PATH.read_bytes()).hexdigest()}, indent=2), encoding="utf-8")
 
 
 def test_trade_legs_cash_and_disabled_overlays(bot, real_run):
@@ -145,19 +151,18 @@ class CapturePoe:
         self.attachments.append(kwargs)
 
 
-def test_injected_poe_runtime_and_decimal_parameter_display():
+def test_injected_poe_runtime_and_decimal_parameter_display(audit_dir):
     runtime = CapturePoe("参数")
     runpy.run_path(str(BOT_PATH), init_globals={"poe": runtime}, run_name="__main__")
     text = "".join(runtime.writes)
     assert "0.5 < Score < 5.5" in text and "0.25" in text
     assert "**100%**" in text and "MA60过热防守 | **关闭**" in text
     assert "等下跌日补足" not in text and "V1.1" not in text
-    ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    (ARTIFACTS / "poe_params.txt").write_text(text, encoding="utf-8")
+    (audit_dir / "poe_params.txt").write_text(text, encoding="utf-8")
 
 
 @pytest.mark.parametrize("query", ["信号", "实时信号", "实时参数", "表现", "交易记录 过去两个月", "净值曲线 过去两年"])
-def test_query_routes_render_real_frozen_data(bot, real_run, monkeypatch, query):
+def test_query_routes_render_real_frozen_data(bot, real_run, audit_dir, monkeypatch, query):
     *_, daily = real_run
     runtime = CapturePoe(query)
     monkeypatch.setattr(bot, "poe", runtime)
@@ -172,14 +177,18 @@ def test_query_routes_render_real_frozen_data(bot, real_run, monkeypatch, query)
     if bot.classify_query(query) == "performance":
         for window in ["full_sample", "10Y", "5Y", "3Y", "1Y"]:
             assert window in text
-        assert "30.58%" in text and "-22.01%" in text
+        assert "30.59%" in text and "-22.01%" in text
         assert any(a["name"].endswith(".csv") for a in runtime.attachments)
         assert any(a["name"].endswith(".png") for a in runtime.attachments)
+        assert any(a["name"].startswith("subd_v13_nav_") and a["name"].endswith(".csv") for a in runtime.attachments)
+        assert all("2026-09-03" not in a["name"] for a in runtime.attachments)
         for a in runtime.attachments:
-            (ARTIFACTS / a["name"]).write_bytes(a["contents"])
+            (audit_dir / a["name"]).write_bytes(a["contents"])
     else:
         assert "关闭" in text
-    (ARTIFACTS / f"poe_{query.replace(' ', '_')}.txt").write_text(text, encoding="utf-8")
+    if query == "信号":
+        assert "上次模型调仓日" in text and "上次实际成交日" not in text
+    (audit_dir / f"poe_{query.replace(' ', '_')}.txt").write_text(text, encoding="utf-8")
 
 
 def test_failed_live_params_keeps_static_parameters(bot, monkeypatch):
@@ -238,9 +247,9 @@ def test_score_red_light_preserves_decimal_ceiling(bot, real_run):
 
 
 @pytest.mark.skipif(os.environ.get("SUBD_V13_NETWORK_SMOKE") != "1", reason="Opt-in real-provider Poe-compatible smoke")
-def test_real_network_poe_queries(bot, monkeypatch):
+def test_real_network_poe_queries(bot, audit_dir, monkeypatch):
     """Local Poe interface with unmodified official network/data/engine path, not poe.com."""
-    network_dir = ARTIFACTS / "network"
+    network_dir = audit_dir / "network"
     network_dir.mkdir(parents=True, exist_ok=True)
     captures = []
     original_get = bot._get_daily_for_today
