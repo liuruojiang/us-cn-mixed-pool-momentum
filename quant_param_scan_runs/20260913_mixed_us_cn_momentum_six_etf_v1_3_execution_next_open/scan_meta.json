@@ -1,0 +1,81 @@
+{
+  "run_id": "20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open",
+  "created_at": "2026-09-13T22:27:12+08:00",
+  "phase": "complete",
+  "project": "mixed_us_cn_momentum",
+  "strategy": "six_etf_v1_3",
+  "subsystem": "execution",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "poe_subd_six_etf_v1_3_bot.py",
+  "git_branch": "codex/previous-research-sync-20260821",
+  "git_commit": "5f539ff7ef93aa805c563bfa4d6581fc841f0bb6",
+  "git_status_before": "?? quant_param_scan_runs/20260913_mixed_us_cn_momentum_six_etf_v1_3_rebalance_weekly/",
+  "git_status_after": "?? quant_param_scan_runs/20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open/\n?? quant_param_scan_runs/20260913_mixed_us_cn_momentum_six_etf_v1_3_rebalance_weekly/",
+  "scan_type": "matched_close_vs_next_open",
+  "parameter_group": "next_open",
+  "baseline": {
+    "candidate": "same_close",
+    "lookback": 25,
+    "score_min": 0.5,
+    "score_max": 5.5,
+    "r2": 0.25,
+    "buffer": 1,
+    "max_lev": 1,
+    "overlays": false
+  },
+  "candidate_grid": [
+    "same_close",
+    "next_open"
+  ],
+  "data_snapshot": {
+    "close": "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz",
+    "close_sha256": "0cc4af45158d6aaab4594b869b79309a96e8e3cc2f21a0205c38128913bec2aa",
+    "opens": "prices/*.csv.gz Tencent qfq",
+    "independent_check": "Sina raw open/close ratio, at least 1016 overlaps per ETF",
+    "start": "2011-12-09",
+    "end": "2026-09-02",
+    "rows": 3578,
+    "source_change_rule": "No replacement of frozen close, no filled opens, no raw prices used for performance",
+    "adjustment": "qfq",
+    "calendar": "China ETF sessions / Asia/Shanghai",
+    "common_start": "2019-12-05"
+  },
+  "cost_model": {
+    "one_way": 0.001,
+    "cash_yield": 0,
+    "next_open": "T close signal, next listed session open trade; old holding earns overnight, new holding earns intraday; cost on wealth at open",
+    "blocked_trade": "missing/filled execution price blocks whole switch; reevaluate prior-close signal each morning",
+    "untraded_missing_open": "use preserved close-close valuation without inventing open",
+    "excluded": "capacity, QDII premium, detailed price limit/T+1 fills, extra open impact beyond unified cost"
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260913_mixed_us_cn_momentum_six_etf_v1_3_execution_next_open\\command_log.txt"
+  },
+  "decision": "research_only_no_production_change",
+  "stability_label": "execution_timing_material",
+  "parity_check": {
+    "passed": true,
+    "baseline_max_nav_diff": 7.105427357601002e-15,
+    "independent_close_ledger_max_nav_diff": 0.0,
+    "prefix_passed": true,
+    "independent_share_account_passed": true,
+    "no_cost_dominance_passed": true,
+    "signal_lag_sessions": 1
+  },
+  "cache_write_risk": "none; fetched OHLC saved only in this run",
+  "warnings": [
+    "Full/10Y are expanding-availability research history",
+    "Frozen cutoff 2026-09-02",
+    "No independent OOS",
+    "Final close signal unexecuted; requires next-session open"
+  ],
+  "elapsed_sec": 10.79455120000057,
+  "source_hashes": {
+    "entrypoint": "21a5867f51367d215a6f9913dafae1a462bf2316f7c59e7a860d43448c63ee72"
+  },
+  "finalized_at": "2026-09-13T22:30:42+08:00"
+}

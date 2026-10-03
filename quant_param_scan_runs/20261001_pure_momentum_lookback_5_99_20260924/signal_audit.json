@@ -1,0 +1,8 @@
+{
+  "candidate_count": 48,
+  "candidate_days_checked": 172512,
+  "best_candidate_mismatches": 0,
+  "pure25_selected_days_below_formal_r2_0p25": 464,
+  "pure25_selected_days_at_or_above_formal_score_cap_5p5": 345,
+  "method": "independent weighted-slope closed form on L1 aligned closes; Top1 among finite Score>0"
+}

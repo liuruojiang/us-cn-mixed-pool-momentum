@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "baseline_max_nav_diff": 7.105427357601002e-15,
+  "independent_close_ledger_max_nav_diff": 0.0,
+  "prefix_passed": true,
+  "independent_share_account_passed": true,
+  "no_cost_dominance_passed": true,
+  "signal_lag_sessions": 1
+}

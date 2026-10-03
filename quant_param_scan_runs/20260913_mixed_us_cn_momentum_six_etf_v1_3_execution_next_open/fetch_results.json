@@ -1,0 +1,32 @@
+[
+  {
+    "code": "513520.SH",
+    "rows": 1747,
+    "source": "Tencent qfq full OHLC"
+  },
+  {
+    "code": "159985.SZ",
+    "rows": 1636,
+    "source": "Tencent qfq full OHLC"
+  },
+  {
+    "code": "513030.SH",
+    "rows": 2913,
+    "source": "Tencent qfq full OHLC"
+  },
+  {
+    "code": "518880.SH",
+    "rows": 3186,
+    "source": "Tencent qfq full OHLC"
+  },
+  {
+    "code": "159941.SZ",
+    "rows": 2709,
+    "source": "Tencent qfq full OHLC"
+  },
+  {
+    "code": "159915.SZ",
+    "rows": 3577,
+    "source": "Tencent qfq full OHLC"
+  }
+]

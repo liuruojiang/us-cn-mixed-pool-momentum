@@ -1,0 +1,19 @@
+{
+  "candidate_count": 11,
+  "candidate_days_checked": 39534,
+  "target_mismatches": 0,
+  "score_passing_asset_days_rejected_by_r2": {
+    "0.0": 189,
+    "0.5": 243,
+    "1.0": 301,
+    "1.5": 323,
+    "2.0": 361,
+    "2.5": 393,
+    "3.0": 413,
+    "3.5": 452,
+    "4.0": 513,
+    "4.5": 542,
+    "5.0": 578
+  },
+  "method": "separate weighted-moment slope and R2 computation on L1 closes; strict Score and R2 gate before Top1"
+}

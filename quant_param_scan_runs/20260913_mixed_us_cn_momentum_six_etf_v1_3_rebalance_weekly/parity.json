@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "max_abs_diff": {
+    "nav": 7.105427357601002e-15,
+    "return": 9.952975943416931e-17,
+    "turnover": 0.0,
+    "cost": 0.0,
+    "fraction_before": 0.0,
+    "holding_fraction": 0.0
+  }
+}

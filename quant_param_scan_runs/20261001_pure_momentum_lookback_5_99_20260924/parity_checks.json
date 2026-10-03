@@ -1,0 +1,20 @@
+{
+  "unchanged_formal_25_vs_L2": {
+    "tag": "unchanged_formal_25_vs_L2",
+    "rows": 3594,
+    "position_mismatch": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "nav_max_abs": 7.105427357601002e-15
+  },
+  "pure25_vs_formal25": {
+    "position_diff_days": 1068,
+    "first_position_diff": "2012-02-09",
+    "end_nav_formal": 44.18887388573992,
+    "end_nav_pure": 15.773995626706258
+  },
+  "formal_code_sha256": "b49c86944f0ef843f0eb23eebe396122fee0db5a90c6250789f21b3d110df988",
+  "price_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "flags_sha256": "39c1d4afc5dc73d59ee3742dc4e275a87ab6f400ecfc7b709796e83c46486ee1",
+  "candidate_count": 48
+}

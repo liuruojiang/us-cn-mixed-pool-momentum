@@ -1,0 +1,90 @@
+[
+  {
+    "code": "159915.SZ",
+    "primary_rows": 3577,
+    "matched_frozen_rows": 3577,
+    "max_close_relative_diff": 0.0,
+    "close_mismatches": 0,
+    "missing_frozen_dates": [
+      "2021-02-08"
+    ],
+    "independent_source": "Sina raw OHLC; comparison uses same-day open/close ratio, adjustment cancels",
+    "independent_rows": 1023,
+    "independent_overlap": 1016,
+    "max_open_close_ratio_relative_diff": 0.0,
+    "ratio_p99": 0.0,
+    "ratio_mismatches_gt_0p1pct": 0
+  },
+  {
+    "code": "159941.SZ",
+    "primary_rows": 2709,
+    "matched_frozen_rows": 2709,
+    "max_close_relative_diff": 0.0,
+    "close_mismatches": 0,
+    "missing_frozen_dates": [],
+    "independent_source": "Sina raw OHLC; comparison uses same-day open/close ratio, adjustment cancels",
+    "independent_rows": 1023,
+    "independent_overlap": 1016,
+    "max_open_close_ratio_relative_diff": 0.000843170320404707,
+    "ratio_p99": 0.0,
+    "ratio_mismatches_gt_0p1pct": 0
+  },
+  {
+    "code": "513030.SH",
+    "primary_rows": 2913,
+    "matched_frozen_rows": 2913,
+    "max_close_relative_diff": 0.0,
+    "close_mismatches": 0,
+    "missing_frozen_dates": [
+      "2025-01-23"
+    ],
+    "independent_source": "Sina raw OHLC; comparison uses same-day open/close ratio, adjustment cancels",
+    "independent_rows": 1023,
+    "independent_overlap": 1016,
+    "max_open_close_ratio_relative_diff": 0.0,
+    "ratio_p99": 0.0,
+    "ratio_mismatches_gt_0p1pct": 0
+  },
+  {
+    "code": "513520.SH",
+    "primary_rows": 1747,
+    "matched_frozen_rows": 1747,
+    "max_close_relative_diff": 0.0,
+    "close_mismatches": 0,
+    "missing_frozen_dates": [],
+    "independent_source": "Sina raw OHLC; comparison uses same-day open/close ratio, adjustment cancels",
+    "independent_rows": 1023,
+    "independent_overlap": 1016,
+    "max_open_close_ratio_relative_diff": 0.0,
+    "ratio_p99": 0.0,
+    "ratio_mismatches_gt_0p1pct": 0
+  },
+  {
+    "code": "159985.SZ",
+    "primary_rows": 1636,
+    "matched_frozen_rows": 1636,
+    "max_close_relative_diff": 0.0,
+    "close_mismatches": 0,
+    "missing_frozen_dates": [],
+    "independent_source": "Sina raw OHLC; comparison uses same-day open/close ratio, adjustment cancels",
+    "independent_rows": 1023,
+    "independent_overlap": 1016,
+    "max_open_close_ratio_relative_diff": 0.0,
+    "ratio_p99": 0.0,
+    "ratio_mismatches_gt_0p1pct": 0
+  },
+  {
+    "code": "518880.SH",
+    "primary_rows": 3186,
+    "matched_frozen_rows": 3186,
+    "max_close_relative_diff": 0.0,
+    "close_mismatches": 0,
+    "missing_frozen_dates": [],
+    "independent_source": "Sina raw OHLC; comparison uses same-day open/close ratio, adjustment cancels",
+    "independent_rows": 1023,
+    "independent_overlap": 1016,
+    "max_open_close_ratio_relative_diff": 0.0,
+    "ratio_p99": 0.0,
+    "ratio_mismatches_gt_0p1pct": 0
+  }
+]
