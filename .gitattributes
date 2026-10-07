@@ -4,3 +4,7 @@ outputs/recert_l8_20260927/agent_a_matrix.csv -text
 outputs/recert_l8_20260927/agent_a_freeze_protocol.md -text
 quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/parameter_matrix.csv -text
 quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/freeze_protocol.md -text
+# Frozen audit data and diagnostics retain literal line endings/traceback spacing.
+outputs/script_audit_20261007/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+outputs/doublecheck_script_audit_20261007/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+outputs/audit_sync_20261007/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol

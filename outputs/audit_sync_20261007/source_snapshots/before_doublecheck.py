@@ -435,7 +435,6 @@ def _validate_adjusted_close_continuity(code: str, close: pd.Series, source: str
 
 def _validate_historical_close(
     code: str, close: pd.Series, end_date: pd.Timestamp, source: str,
-    expected_sessions: pd.DatetimeIndex | None = None,
 ) -> None:
     if not isinstance(close, pd.Series) or close.empty:
         raise RuntimeError(f"{source} returned empty history for {code}")
@@ -445,10 +444,6 @@ def _validate_historical_close(
         or not dates.is_monotonic_increasing or not dates.equals(dates.normalize())
     ):
         raise RuntimeError(f"{source} history dates must be valid, unique, sorted daily dates for {code}")
-    if (dates.dayofweek >= 5).any():
-        raise RuntimeError(f"{source} history contains unexpected non-trading dates for {code}")
-    if expected_sessions is not None and len(dates.difference(expected_sessions)):
-        raise RuntimeError(f"{source} history contains unexpected non-trading dates for {code}")
     values = pd.to_numeric(close, errors="coerce")
     bad = close.notna() & (values.isna() | ~np.isfinite(values) | (values <= 0))
     if bad.any():
@@ -545,8 +540,7 @@ def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
             if not rows:
                 raise RuntimeError(f"Tencent fqkline qfq returned no data for {code}; last_error={last_error}")
             anchor = VERIFIED_HISTORY_FIRST.get(code)
-            first_observed = pd.DatetimeIndex(pd.to_datetime([item[0] for item in rows])).min()
-            if anchor is not None and first_observed.normalize() > anchor:
+            if anchor is not None and pd.Timestamp(rows[0][0]).normalize() > anchor:
                 raise RuntimeError(f"Tencent fqkline premature empty page; refusing partial history for {code}")
             break
         page_dates = pd.DatetimeIndex(pd.to_datetime([item[0] for item in page_rows]))
@@ -1308,9 +1302,6 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
     series: list[pd.Series] = []
     sources: list[dict] = []
     errors: list[str] = []
-    expected_sessions: pd.DatetimeIndex | None = None
-    calendar_start: pd.Timestamp | None = None
-    calendar_unavailable = False
     for code in codes:
         providers = [
             (
@@ -1337,14 +1328,6 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
             try:
                 close = loader(code, end_date)
                 _validate_historical_close(code, close, end_date, source_name)
-                first_observed = pd.Timestamp(close.first_valid_index()).normalize()
-                if not calendar_unavailable and (calendar_start is None or first_observed < calendar_start):
-                    # Reuse alignment's calendar at actual observed coverage,
-                    # without requiring dates before any ETF has data.
-                    calendar_start = first_observed
-                    expected_sessions = _expected_cn_trading_days(calendar_start, pd.Timestamp(end_date).normalize())
-                    calendar_unavailable = expected_sessions is None
-                _validate_historical_close(code, close, end_date, source_name, expected_sessions)
                 source_detail = str(close.attrs.get("source_detail") or source_detail)
                 record = _source_record(code, source_name, adjustment, close, source_detail)
                 series.append(close)
@@ -2514,13 +2497,9 @@ def align_prices_to_common_valid_date(
     if not valid_all.any():
         raise ValueError("No date has valid close prices for all assets")
     common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
-    # Full history starts before all six ETFs have data. Validate every date
-    # represented by any asset, preserving per-asset suspension/missing fills.
-    market_price_dates = pd.DatetimeIndex(
-        aligned_prices.index[rows_with_any_asset_price & (aligned_prices.index <= common_last)]
-    ).normalize().unique().sort_values()
-    first_observed = pd.Timestamp(market_price_dates.min())
-    expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+    common_valid_dates = pd.DatetimeIndex(aligned_prices.index[valid_all]).normalize().unique().sort_values()
+    first_common = pd.Timestamp(common_valid_dates.min())
+    expected_sessions = _expected_cn_trading_days(first_common, common_last)
     if expected_sessions is None:
         reason = _calendar_failure_reason()
         if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
@@ -2534,12 +2513,12 @@ def align_prices_to_common_valid_date(
         )
     else:
         expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
-        missing_common = pd.DatetimeIndex(expected_sessions).difference(market_price_dates)
+        missing_common = pd.DatetimeIndex(expected_sessions).difference(common_valid_dates)
         if len(missing_common):
             sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
             more = "..." if len(missing_common) > 5 else ""
             raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
-        unexpected_common = market_price_dates.difference(expected_sessions)
+        unexpected_common = common_valid_dates.difference(expected_sessions)
         if len(unexpected_common):
             sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in unexpected_common[:5])
             more = "..." if len(unexpected_common) > 5 else ""

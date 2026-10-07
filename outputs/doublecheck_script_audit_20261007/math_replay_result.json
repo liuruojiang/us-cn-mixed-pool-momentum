@@ -1,0 +1,121 @@
+{
+  "status": "PASS",
+  "basis": "preserved 2026-09-30 real qfq input; offline, no fresh download",
+  "rows": 3597,
+  "start": "2011-12-09",
+  "end": "2026-09-30",
+  "code_sha256": {
+    "before_first_audit": "b49c86944f0ef843f0eb23eebe396122fee0db5a90c6250789f21b3d110df988",
+    "before_doublecheck": "7a4cf15ff1603764dbf3469aab9b85f33756c98129116b4ce7dedb46eb48e1e3",
+    "final": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881"
+  },
+  "input_sha256": {
+    "raw": "3c233f1f7e3baddb8cfd27ea5d1b6695e49d7d4e1804fe490a74ba084e0dd656",
+    "daily": "06fcc794fa86288a4cf528b522ad751882fbf5affa652d7e383e6f5348aaeb8c",
+    "calendar": "a357c2cd14fd9f95f53c394d4ff9527e998d658fe5c8e31563804a2a22e398f6"
+  },
+  "formal_parameters_unchanged": true,
+  "same_input_max_abs_differences": {
+    "before_first_audit": {
+      "nav": 0.0,
+      "return": 0.0,
+      "gross_return": 0.0,
+      "turnover": 0.0,
+      "cost": 0.0,
+      "buy_delta": 0.0,
+      "sell_delta": 0.0,
+      "holding_fraction": 0.0,
+      "fraction_before": 0.0
+    },
+    "before_doublecheck": {
+      "nav": 0.0,
+      "return": 0.0,
+      "gross_return": 0.0,
+      "turnover": 0.0,
+      "cost": 0.0,
+      "buy_delta": 0.0,
+      "sell_delta": 0.0,
+      "holding_fraction": 0.0,
+      "fraction_before": 0.0
+    },
+    "final": {
+      "nav": 0.0,
+      "return": 0.0,
+      "gross_return": 0.0,
+      "turnover": 0.0,
+      "cost": 0.0,
+      "buy_delta": 0.0,
+      "sell_delta": 0.0,
+      "holding_fraction": 0.0,
+      "fraction_before": 0.0
+    },
+    "preserved_current_download": {
+      "nav": 7.105427357601002e-15,
+      "return": 9.952975943416931e-17,
+      "gross_return": 9.952975943416931e-17,
+      "turnover": 0.0,
+      "cost": 0.0,
+      "buy_delta": 0.0,
+      "sell_delta": 0.0,
+      "holding_fraction": 0.0,
+      "fraction_before": 0.0
+    }
+  },
+  "independent_score_max_abs_difference": 1.3642420526593924e-12,
+  "independent_r2_max_abs_difference": 8.881784197001252e-16,
+  "independent_ledger_max_abs_differences": {
+    "turnover": 0.0,
+    "cost": 0.0,
+    "gross_return": 2.220446049250313e-16,
+    "return": 3.3306690738754696e-16,
+    "nav": 8.526512829121202e-14
+  },
+  "prefix_and_full_mask_cutoff_checks": [
+    {
+      "rows": 1,
+      "end": "2011-12-09",
+      "passed": true
+    },
+    {
+      "rows": 24,
+      "end": "2012-01-13",
+      "passed": true
+    },
+    {
+      "rows": 25,
+      "end": "2012-01-16",
+      "passed": true
+    },
+    {
+      "rows": 29,
+      "end": "2012-01-20",
+      "passed": true
+    },
+    {
+      "rows": 501,
+      "end": "2014-01-07",
+      "passed": true
+    },
+    {
+      "rows": 1350,
+      "end": "2017-07-03",
+      "passed": true
+    },
+    {
+      "rows": 1960,
+      "end": "2019-12-30",
+      "passed": true
+    },
+    {
+      "rows": 2500,
+      "end": "2022-03-24",
+      "passed": true
+    },
+    {
+      "rows": 3596,
+      "end": "2026-09-29",
+      "passed": true
+    }
+  ],
+  "limitations": "Paper same-close model only; no broker fills or point-in-time corporate-action certification"
+}

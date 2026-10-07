@@ -1,0 +1,1 @@
+﻿date,strategy,operation,base_position_before,base_position_next,actual_position_before,actual_position_next,position_before_name,position_name,fraction_before,holding_fraction,exposure_effective,drifted_exposure_before_trade,final_exposure_after_overheat,rebalance_delta,buy_delta,sell_delta,turnover,cost,note

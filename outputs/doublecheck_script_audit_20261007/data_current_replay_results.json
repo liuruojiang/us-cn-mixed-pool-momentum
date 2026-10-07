@@ -1,0 +1,140 @@
+{
+  "status": "PASS",
+  "basis": "same preserved genuine qfq snapshot; external price responses frozen; not a fresh network run",
+  "code_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "capture_code_sha256": "7a4cf15ff1603764dbf3469aab9b85f33756c98129116b4ce7dedb46eb48e1e3",
+  "real_input": {
+    "path": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\script_audit_20261007\\current_network\\raw_prices_qfq.csv.gz",
+    "sha256": "3c233f1f7e3baddb8cfd27ea5d1b6695e49d7d4e1804fe490a74ba084e0dd656"
+  },
+  "saved_daily": {
+    "path": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\script_audit_20261007\\current_network\\confirmed_daily.csv.gz",
+    "sha256": "06fcc794fa86288a4cf528b522ad751882fbf5affa652d7e383e6f5348aaeb8c"
+  },
+  "calendar": {
+    "path": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l1_20260926\\calendar_cache_for_audit.csv",
+    "sha256": "8f28e0c7c315b2750f6da49b81ce90ce4e3d59d0bd113f3721bd4656cd16586f"
+  },
+  "official_chain": "_build_v13_daily -> load_close -> formal fallback -> actual AkShare parser(frozen response) -> central validator -> align -> flags -> build_curves -> metadata -> normalize -> official metrics",
+  "rows": 3597,
+  "start": "2011-12-09",
+  "end": "2026-09-30",
+  "ffill_flags": 2,
+  "source_description_in_replay": "akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]",
+  "primary_calls": [
+    "159915.SZ",
+    "159941.SZ",
+    "513030.SH",
+    "513520.SH",
+    "159985.SZ",
+    "518880.SH"
+  ],
+  "calendar_call_ranges": [
+    {
+      "start": "2011-12-09",
+      "end": "2026-09-30"
+    },
+    {
+      "start": "2011-12-09",
+      "end": "2026-09-30"
+    }
+  ],
+  "max_abs_ledger_differences_vs_preserved_daily": {
+    "nav": 7.105427357601002e-15,
+    "return": 9.952975943416931e-17,
+    "cost": 0.0,
+    "turnover": 0.0,
+    "buy_delta": 0.0,
+    "sell_delta": 0.0,
+    "fraction_before": 0.0,
+    "holding_fraction": 0.0
+  },
+  "five_windows": [
+    {
+      "window": "full_sample",
+      "start": "2011-12-09",
+      "end": "2026-09-30",
+      "rows": 3597,
+      "total": 43.913706029149836,
+      "annual": 0.30555503427153385,
+      "maxdd": -0.22006724591954296,
+      "vol": 0.2167040918733779,
+      "sharpe": 1.33836580338364,
+      "trades": 379,
+      "avg_scale": 1.0,
+      "avg_final_exposure": 0.6800111203780929,
+      "cash_days": 1150,
+      "zero_exposure_days": 1151,
+      "overheat_days": 0
+    },
+    {
+      "window": "10Y",
+      "start": "2016-05-19",
+      "end": "2026-09-30",
+      "rows": 2520,
+      "total": 20.99179850530643,
+      "annual": 0.36232071444787417,
+      "maxdd": -0.16309804295217534,
+      "vol": 0.2248062471289265,
+      "sharpe": 1.4872372867805583,
+      "trades": 306,
+      "avg_scale": 1.0,
+      "avg_final_exposure": 0.780952380952381,
+      "cash_days": 552,
+      "zero_exposure_days": 552,
+      "overheat_days": 0
+    },
+    {
+      "window": "5Y",
+      "start": "2021-07-22",
+      "end": "2026-09-30",
+      "rows": 1260,
+      "total": 8.098705562603087,
+      "annual": 0.555780279236779,
+      "maxdd": -0.1596223835085654,
+      "vol": 0.2552047037802102,
+      "sharpe": 1.8583351111477322,
+      "trades": 154,
+      "avg_scale": 1.0,
+      "avg_final_exposure": 0.8261904761904761,
+      "cash_days": 219,
+      "zero_exposure_days": 219,
+      "overheat_days": 0
+    },
+    {
+      "window": "3Y",
+      "start": "2023-08-18",
+      "end": "2026-09-30",
+      "rows": 756,
+      "total": 3.512761189227084,
+      "annual": 0.6536225559889004,
+      "maxdd": -0.1433795586170047,
+      "vol": 0.28529037441977734,
+      "sharpe": 1.9041364635821096,
+      "trades": 107,
+      "avg_scale": 1.0,
+      "avg_final_exposure": 0.8571428571428571,
+      "cash_days": 108,
+      "zero_exposure_days": 108,
+      "overheat_days": 0
+    },
+    {
+      "window": "1Y",
+      "start": "2025-09-16",
+      "end": "2026-09-30",
+      "rows": 252,
+      "total": 0.6336405607333444,
+      "annual": 0.6368381432082915,
+      "maxdd": -0.13869632980491142,
+      "vol": 0.3061809608105509,
+      "sharpe": 1.7634531530725326,
+      "trades": 46,
+      "avg_scale": 1.0,
+      "avg_final_exposure": 0.8095238095238095,
+      "cash_days": 48,
+      "zero_exposure_days": 48,
+      "overheat_days": 0
+    }
+  ],
+  "assumptions": "China-listed ETF qfq; same-close paper execution; prior holding owns close-close return; one-way cost 0.001; cash 0; no order/fill/hosted-Poe acceptance"
+}

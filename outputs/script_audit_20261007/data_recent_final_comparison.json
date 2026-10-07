@@ -1,0 +1,80 @@
+{
+  "classification": "current direct public-source price/date cross-check; recent window only, not full-history qfq certification",
+  "official_calendar_url": "https://www.sse.com.cn/disclosure/announcement/general/c/c_20251222_10802507.shtml",
+  "expected_sessions": [
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30"
+  ],
+  "first_round": "data_recent_independent_results.json",
+  "recovery_round": "data_recent_retry_results.json",
+  "comparisons": [
+    {
+      "code": "159915.SZ",
+      "rows": 10,
+      "last_tencent": "2026-09-30",
+      "last_sina": "2026-09-30",
+      "max_abs_close_diff": 0.0,
+      "tencent_0930": 3.154,
+      "sina_0930": 3.154,
+      "payload_key": "qfqday"
+    },
+    {
+      "code": "159941.SZ",
+      "rows": 10,
+      "last_tencent": "2026-09-30",
+      "last_sina": "2026-09-30",
+      "max_abs_close_diff": 0.0,
+      "tencent_0930": 1.735,
+      "sina_0930": 1.735,
+      "payload_key": "qfqday"
+    },
+    {
+      "code": "159985.SZ",
+      "rows": 10,
+      "last_tencent": "2026-09-30",
+      "last_sina": "2026-09-30",
+      "max_abs_close_diff": 0.0,
+      "tencent_0930": 2.267,
+      "sina_0930": 2.267,
+      "payload_key": "day"
+    },
+    {
+      "code": "513030.SH",
+      "rows": 10,
+      "last_tencent": "2026-09-30",
+      "last_sina": "2026-09-30",
+      "max_abs_close_diff": 0.0,
+      "tencent_0930": 1.803,
+      "sina_0930": 1.803,
+      "payload_key": "day"
+    },
+    {
+      "code": "513520.SH",
+      "rows": 10,
+      "last_tencent": "2026-09-30",
+      "last_sina": "2026-09-30",
+      "max_abs_close_diff": 0.0,
+      "tencent_0930": 2.352,
+      "sina_0930": 2.352,
+      "payload_key": "day"
+    },
+    {
+      "code": "518880.SH",
+      "rows": 10,
+      "last_tencent": "2026-09-30",
+      "last_sina": "2026-09-30",
+      "max_abs_close_diff": 0.0,
+      "tencent_0930": 8.633,
+      "sina_0930": 8.633,
+      "payload_key": "qfqday"
+    }
+  ]
+}

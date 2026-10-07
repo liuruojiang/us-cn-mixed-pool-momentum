@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="9" skipped="0" tests="22" time="5.920" timestamp="2026-10-07T20:10:21.469404+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_provider_nontrading_dates_use_available_good_backup[2012-06-09]" time="1.140"><failure message="AssertionError: A price on a non-session must reject that provider and use a valid backup.&#10;assert '159915.SZ' in []">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020382C7B490&gt;
+bad_date = '2012-06-09'
+
+    @pytest.mark.parametrize("bad_date", ["2012-06-09", "2012-10-01", "2026-09-19", "2026-01-01"])
+    def test_provider_nontrading_dates_use_available_good_backup(
+        bot, real_prices, monkeypatch, bad_date
+    ):
+        target = "159915.SZ"
+        inserted = pd.Timestamp(bad_date)
+        calls = []
+    
+        def primary(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            close = real_prices[code].dropna().copy()
+            if code == target:
+                close.loc[inserted] = close.loc[:inserted].iloc[-1]
+                close = close.sort_index()
+            return pd.DataFrame({"日期": close.index, "收盘": close.values})
+    
+        def backup(code, end):
+            calls.append(code)
+            close = real_prices[code].dropna().rename(code)
+            close.attrs["source_detail"] = bot.SOURCE_DETAIL_TENCENT_QFQ
+            return close
+    
+        _calendar(bot, real_prices, monkeypatch)
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=primary), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, sources = bot.load_close(bot._build_config(real_prices.index.max()))
+&gt;       assert target in calls, "A price on a non-session must reject that provider and use a valid backup."
+E       AssertionError: A price on a non-session must reject that provider and use a valid backup.
+E       assert '159915.SZ' in []
+
+tests\test_v13_doublecheck_data_20261007.py:74: AssertionError</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_provider_nontrading_dates_use_available_good_backup[2012-10-01]" time="0.210"><failure message="AssertionError: A price on a non-session must reject that provider and use a valid backup.&#10;assert '159915.SZ' in []">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020385ED3E10&gt;
+bad_date = '2012-10-01'
+
+    @pytest.mark.parametrize("bad_date", ["2012-06-09", "2012-10-01", "2026-09-19", "2026-01-01"])
+    def test_provider_nontrading_dates_use_available_good_backup(
+        bot, real_prices, monkeypatch, bad_date
+    ):
+        target = "159915.SZ"
+        inserted = pd.Timestamp(bad_date)
+        calls = []
+    
+        def primary(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            close = real_prices[code].dropna().copy()
+            if code == target:
+                close.loc[inserted] = close.loc[:inserted].iloc[-1]
+                close = close.sort_index()
+            return pd.DataFrame({"日期": close.index, "收盘": close.values})
+    
+        def backup(code, end):
+            calls.append(code)
+            close = real_prices[code].dropna().rename(code)
+            close.attrs["source_detail"] = bot.SOURCE_DETAIL_TENCENT_QFQ
+            return close
+    
+        _calendar(bot, real_prices, monkeypatch)
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=primary), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, sources = bot.load_close(bot._build_config(real_prices.index.max()))
+&gt;       assert target in calls, "A price on a non-session must reject that provider and use a valid backup."
+E       AssertionError: A price on a non-session must reject that provider and use a valid backup.
+E       assert '159915.SZ' in []
+
+tests\test_v13_doublecheck_data_20261007.py:74: AssertionError</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_provider_nontrading_dates_use_available_good_backup[2026-09-19]" time="0.203"><failure message="AssertionError: A price on a non-session must reject that provider and use a valid backup.&#10;assert '159915.SZ' in []">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020385E85B50&gt;
+bad_date = '2026-09-19'
+
+    @pytest.mark.parametrize("bad_date", ["2012-06-09", "2012-10-01", "2026-09-19", "2026-01-01"])
+    def test_provider_nontrading_dates_use_available_good_backup(
+        bot, real_prices, monkeypatch, bad_date
+    ):
+        target = "159915.SZ"
+        inserted = pd.Timestamp(bad_date)
+        calls = []
+    
+        def primary(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            close = real_prices[code].dropna().copy()
+            if code == target:
+                close.loc[inserted] = close.loc[:inserted].iloc[-1]
+                close = close.sort_index()
+            return pd.DataFrame({"日期": close.index, "收盘": close.values})
+    
+        def backup(code, end):
+            calls.append(code)
+            close = real_prices[code].dropna().rename(code)
+            close.attrs["source_detail"] = bot.SOURCE_DETAIL_TENCENT_QFQ
+            return close
+    
+        _calendar(bot, real_prices, monkeypatch)
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=primary), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, sources = bot.load_close(bot._build_config(real_prices.index.max()))
+&gt;       assert target in calls, "A price on a non-session must reject that provider and use a valid backup."
+E       AssertionError: A price on a non-session must reject that provider and use a valid backup.
+E       assert '159915.SZ' in []
+
+tests\test_v13_doublecheck_data_20261007.py:74: AssertionError</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_provider_nontrading_dates_use_available_good_backup[2026-01-01]" time="0.207"><failure message="AssertionError: A price on a non-session must reject that provider and use a valid backup.&#10;assert '159915.SZ' in []">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000203872CA030&gt;
+bad_date = '2026-01-01'
+
+    @pytest.mark.parametrize("bad_date", ["2012-06-09", "2012-10-01", "2026-09-19", "2026-01-01"])
+    def test_provider_nontrading_dates_use_available_good_backup(
+        bot, real_prices, monkeypatch, bad_date
+    ):
+        target = "159915.SZ"
+        inserted = pd.Timestamp(bad_date)
+        calls = []
+    
+        def primary(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            close = real_prices[code].dropna().copy()
+            if code == target:
+                close.loc[inserted] = close.loc[:inserted].iloc[-1]
+                close = close.sort_index()
+            return pd.DataFrame({"日期": close.index, "收盘": close.values})
+    
+        def backup(code, end):
+            calls.append(code)
+            close = real_prices[code].dropna().rename(code)
+            close.attrs["source_detail"] = bot.SOURCE_DETAIL_TENCENT_QFQ
+            return close
+    
+        _calendar(bot, real_prices, monkeypatch)
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=primary), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, sources = bot.load_close(bot._build_config(real_prices.index.max()))
+&gt;       assert target in calls, "A price on a non-session must reject that provider and use a valid backup."
+E       AssertionError: A price on a non-session must reject that provider and use a valid backup.
+E       assert '159915.SZ' in []
+
+tests\test_v13_doublecheck_data_20261007.py:74: AssertionError</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_alignment_rejects_nontrading_row_before_all_six_have_history[2012-06-09]" time="0.198"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000203873AB350&gt;
+bad_date = '2012-06-09'
+
+    @pytest.mark.parametrize("bad_date", ["2012-06-09", "2012-10-01"])
+    def test_alignment_rejects_nontrading_row_before_all_six_have_history(
+        bot, real_prices, monkeypatch, bad_date
+    ):
+        injected = real_prices.copy()
+        weekend = pd.Timestamp(bad_date)
+        assert weekend not in real_prices.index
+        injected.loc[weekend] = injected.loc[:weekend].iloc[-1]
+        injected = injected.sort_index()
+        _calendar(bot, real_prices, monkeypatch)
+&gt;       with pytest.raises(ValueError, match="non-trading"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+tests\test_v13_doublecheck_data_20261007.py:89: Failed</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_alignment_rejects_nontrading_row_before_all_six_have_history[2012-10-01]" time="0.179"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000203871BE550&gt;
+bad_date = '2012-10-01'
+
+    @pytest.mark.parametrize("bad_date", ["2012-06-09", "2012-10-01"])
+    def test_alignment_rejects_nontrading_row_before_all_six_have_history(
+        bot, real_prices, monkeypatch, bad_date
+    ):
+        injected = real_prices.copy()
+        weekend = pd.Timestamp(bad_date)
+        assert weekend not in real_prices.index
+        injected.loc[weekend] = injected.loc[:weekend].iloc[-1]
+        injected = injected.sort_index()
+        _calendar(bot, real_prices, monkeypatch)
+&gt;       with pytest.raises(ValueError, match="non-trading"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+tests\test_v13_doublecheck_data_20261007.py:89: Failed</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_alignment_rejects_missing_market_row_before_all_six_have_history[single_date]" time="0.173"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000203871F4250&gt;
+extent = 'single_date'
+
+    @pytest.mark.parametrize("extent", ["single_date", "whole_month"])
+    def test_alignment_rejects_missing_market_row_before_all_six_have_history(
+        bot, real_prices, monkeypatch, extent
+    ):
+        # Only CYB ETF is available on this genuine session. Removing its row removes
+        # the entire market date from the panel, without changing any first/last date.
+        omitted = pd.Timestamp("2012-06-11")
+        assert real_prices.loc[omitted].notna().sum() == 1
+        missing = (pd.DatetimeIndex([omitted]) if extent == "single_date" else
+                   real_prices.loc["2012-06-01":"2012-06-30"].index)
+        assert real_prices.loc[missing].notna().sum(axis=1).eq(1).all()
+        injected = real_prices.drop(index=missing)
+        _calendar(bot, real_prices, monkeypatch)
+&gt;       with pytest.raises(ValueError, match="missing common trading dates"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+tests\test_v13_doublecheck_data_20261007.py:106: Failed</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_alignment_rejects_missing_market_row_before_all_six_have_history[whole_month]" time="0.172"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020386FDCD70&gt;
+extent = 'whole_month'
+
+    @pytest.mark.parametrize("extent", ["single_date", "whole_month"])
+    def test_alignment_rejects_missing_market_row_before_all_six_have_history(
+        bot, real_prices, monkeypatch, extent
+    ):
+        # Only CYB ETF is available on this genuine session. Removing its row removes
+        # the entire market date from the panel, without changing any first/last date.
+        omitted = pd.Timestamp("2012-06-11")
+        assert real_prices.loc[omitted].notna().sum() == 1
+        missing = (pd.DatetimeIndex([omitted]) if extent == "single_date" else
+                   real_prices.loc["2012-06-01":"2012-06-30"].index)
+        assert real_prices.loc[missing].notna().sum(axis=1).eq(1).all()
+        injected = real_prices.drop(index=missing)
+        _calendar(bot, real_prices, monkeypatch)
+&gt;       with pytest.raises(ValueError, match="missing common trading dates"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+tests\test_v13_doublecheck_data_20261007.py:106: Failed</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_real_prelisting_nans_and_two_existing_single_asset_gaps_are_preserved" time="0.182" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_complete_tencent_exact_full_page_history_reaches_anchor_before_empty_page[False]" time="0.190" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_complete_tencent_exact_full_page_history_reaches_anchor_before_empty_page[True]" time="0.177"><failure message="RuntimeError: Tencent fqkline premature empty page; refusing partial history for 159915.SZ">bot = &lt;module 'v13_doublecheck_data_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000020386FFCD70&gt;
+reverse = True
+
+    @pytest.mark.parametrize("reverse", [False, True])
+    def test_complete_tencent_exact_full_page_history_reaches_anchor_before_empty_page(
+        bot, real_prices, monkeypatch, reverse
+    ):
+        # 2,560 genuine historical observations = four pages at the actual 640 size.
+        # A final empty page is valid after reaching the verified first observation.
+        close = real_prices["159915.SZ"].dropna().iloc[:2560]
+        calls = []
+    
+        def provider(url, **kwargs):
+            end = pd.Timestamp(kwargs["params"]["param"].split(",")[3])
+            page = close.loc[:end].iloc[-bot.TENCENT_FQKLINE_PAGE_SIZE:]
+            calls.append(end)
+            if reverse:
+                page = page.iloc[::-1]
+            return _Response(_rows(page))
+    
+        monkeypatch.setattr(bot, "_http_get", provider)
+        monkeypatch.setattr(bot.time, "sleep", lambda _: None)
+&gt;       actual = bot._load_tencent_qfq_one_close("159915.SZ", close.index.max())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_doublecheck_data_20261007.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+code = '159915.SZ', end_date = Timestamp('2022-06-27 00:00:00')
+
+    def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -&gt; pd.Series:
+        """Fetch Tencent qfq close, with independently verified day-key exceptions."""
+        url = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
+        symbol = _tencent_fq_symbol(code)
+        rows: list[list[str]] = []
+        current_end = pd.Timestamp(end_date).normalize()
+        last_error = None
+        page_size = int(TENCENT_FQKLINE_PAGE_SIZE)
+        payload_key: str | None = None
+        for _page in range(16):
+            page_rows: list[list[str]] | None = None
+            page_error: Exception | None = None
+            missing_qfqday_error: RuntimeError | None = None
+            params = {
+                "param": f"{symbol},day,{START_DATE.date().isoformat()},{current_end.date().isoformat()},{page_size},qfq",
+            }
+            for attempt in range(1, 4):
+                try:
+                    resp = _http_get(url, params=params, timeout=20, headers=HTTP_HEADERS)
+                    resp.raise_for_status()
+                    payload = resp.json()
+                    data = payload.get("data") or {}
+                    if not isinstance(data, dict):
+                        raise RuntimeError(f"Tencent returned non-object data for {code}: {payload.get('msg', '')}")
+                    node = data.get(symbol) or {}
+                    if "qfqday" in node:
+                        page_payload_key = "qfqday"
+                    elif code in TENCENT_VERIFIED_DAY_QFQ_CODES and "day" in node:
+                        page_payload_key = "day"
+                    else:
+                        missing_qfqday_error = DeterministicProviderSchemaError(
+                            f"Tencent fqkline adjusted response missing qfqday for {code}"
+                        )
+                        raise missing_qfqday_error
+                    if payload_key is not None and page_payload_key != payload_key:
+                        missing_qfqday_error = DeterministicProviderSchemaError(
+                            f"Tencent fqkline qfqday/day payload changed; refusing partial history for {code}"
+                        )
+                        raise missing_qfqday_error
+                    payload_key = page_payload_key
+                    page_error = None
+                    missing_qfqday_error = None
+                    page_rows = node.get(payload_key) or []
+                    if page_rows:
+                        break
+                except DeterministicProviderSchemaError as exc:
+                    if rows:
+                        raise RuntimeError(
+                            f"Tencent fqkline qfqday missing; refusing partial history for {code}"
+                        ) from exc
+                    raise
+                except Exception as exc:
+                    page_error = exc
+                    last_error = exc
+                time.sleep(0.5 * attempt)
+            if missing_qfqday_error is not None:
+                if rows:
+                    raise RuntimeError(
+                        f"Tencent fqkline qfqday missing; refusing partial history for {code}"
+                    ) from missing_qfqday_error
+                raise missing_qfqday_error
+            if page_rows is None:
+                if rows:
+                    raise RuntimeError(
+                        f"Tencent fqkline refusing partial history for {code} after provider failure: "
+                        f"{page_error}"
+                    ) from page_error
+                raise RuntimeError(
+                    f"Tencent fqkline qfq provider failure for {code}: {page_error}"
+                ) from page_error
+            if not page_rows:
+                if not rows:
+                    raise RuntimeError(f"Tencent fqkline qfq returned no data for {code}; last_error={last_error}")
+                anchor = VERIFIED_HISTORY_FIRST.get(code)
+                if anchor is not None and pd.Timestamp(rows[0][0]).normalize() &gt; anchor:
+&gt;                   raise RuntimeError(f"Tencent fqkline premature empty page; refusing partial history for {code}")
+E                   RuntimeError: Tencent fqkline premature empty page; refusing partial history for 159915.SZ
+
+.codex_backups\20261007_200248\poe_subd_six_etf_v1_3_bot.py:544: RuntimeError</failure></testcase><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_bad_text_and_prices_reject_even_before_six_have_history[inf]" time="0.162" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_bad_text_and_prices_reject_even_before_six_have_history[0.0]" time="0.157" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_bad_text_and_prices_reject_even_before_six_have_history[-1.0]" time="0.173" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_bad_text_and_prices_reject_even_before_six_have_history[not-a-price]" time="0.168" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_empty_calendar_rejects_false_bar_even_in_warning_mode[required]" time="0.156" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_empty_calendar_rejects_false_bar_even_in_warning_mode[warning]" time="0.161" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_official_calendar_fallback_outside_2026_keeps_execution_closed" time="0.153" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_cache_time_interval_is_closed_and_excludes_future_entries[-1-True]" time="0.150" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_cache_time_interval_is_closed_and_excludes_future_entries[0-False]" time="0.165" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_cache_time_interval_is_closed_and_excludes_future_entries[300-False]" time="0.161" /><testcase classname="tests.test_v13_doublecheck_data_20261007" name="test_cache_time_interval_is_closed_and_excludes_future_entries[301-True]" time="0.149" /></testsuite></testsuites>

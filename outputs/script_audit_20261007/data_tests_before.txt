@@ -1,0 +1,118 @@
+FFFFFFFF.....FFF..FF                                                     [100%]
+================================== FAILURES ===================================
+________ test_primary_truncated_history_uses_existing_full_backup[20] _________
+tests\test_v13_audit_data_20261007.py:54: in test_primary_truncated_history_uses_existing_full_backup
+    assert target in fallback_calls, "A primary history prefix loss must trigger the existing full backup."
+E   AssertionError: A primary history prefix loss must trigger the existing full backup.
+E   assert '159915.SZ' in []
+________ test_primary_truncated_history_uses_existing_full_backup[640] ________
+tests\test_v13_audit_data_20261007.py:54: in test_primary_truncated_history_uses_existing_full_backup
+    assert target in fallback_calls, "A primary history prefix loss must trigger the existing full backup."
+E   AssertionError: A primary history prefix loss must trigger the existing full backup.
+E   assert '159915.SZ' in []
+_ test_primary_invalid_history_structure_uses_existing_backup[duplicate_date] _
+tests\test_v13_audit_data_20261007.py:86: in test_primary_invalid_history_structure_uses_existing_backup
+    loaded, _ = bot.load_close(bot._build_config(real_raw.index.max()))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+poe_subd_six_etf_v1_3_bot.py:1307: in load_close
+    prices, sources = _load_public_close_with_per_code_fallback(codes, config.end_date)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+poe_subd_six_etf_v1_3_bot.py:1285: in _load_public_close_with_per_code_fallback
+    return pd.concat(series, axis=1).sort_index(), source_frame
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\reshape\concat.py:395: in concat
+    return op.get_result()
+           ^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\reshape\concat.py:660: in get_result
+    df = cons(data, index=index, copy=self.copy)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\frame.py:782: in __init__
+    mgr = dict_to_mgr(data, index, columns, dtype=dtype, copy=copy, typ=manager)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\internals\construction.py:503: in dict_to_mgr
+    return arrays_to_mgr(arrays, columns, index, dtype=dtype, typ=typ, consolidate=copy)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\internals\construction.py:119: in arrays_to_mgr
+    arrays, refs = _homogenize(arrays, index, dtype)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\internals\construction.py:611: in _homogenize
+    val = val.reindex(index, copy=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python314\Lib\site-packages\pandas\core\series.py:5172: in reindex
+    return super().reindex(
+C:\Python314\Lib\site-packages\pandas\core\generic.py:5632: in reindex
+    return self._reindex_axes(
+C:\Python314\Lib\site-packages\pandas\core\generic.py:5655: in _reindex_axes
+    new_index, indexer = ax.reindex(
+C:\Python314\Lib\site-packages\pandas\core\indexes\base.py:4436: in reindex
+    raise ValueError("cannot reindex on an axis with duplicate labels")
+E   ValueError: cannot reindex on an axis with duplicate labels
+______ test_primary_invalid_history_structure_uses_existing_backup[NaT] _______
+tests\test_v13_audit_data_20261007.py:87: in test_primary_invalid_history_structure_uses_existing_backup
+    assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+E   AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E   assert '159915.SZ' in []
+_ test_primary_invalid_history_structure_uses_existing_backup[constant_zero] __
+tests\test_v13_audit_data_20261007.py:87: in test_primary_invalid_history_structure_uses_existing_backup
+    assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+E   AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E   assert '159915.SZ' in []
+_ test_primary_invalid_history_structure_uses_existing_backup[constant_infinite] _
+tests\test_v13_audit_data_20261007.py:87: in test_primary_invalid_history_structure_uses_existing_backup
+    assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+E   AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E   assert '159915.SZ' in []
+____________ test_tencent_incomplete_pagination_is_rejected[empty] ____________
+tests\test_v13_audit_data_20261007.py:118: in test_tencent_incomplete_pagination_is_rejected
+    with pytest.raises(RuntimeError, match="partial|coverage|history|page"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'RuntimeError'>
+__________ test_tencent_incomplete_pagination_is_rejected[repeated] ___________
+tests\test_v13_audit_data_20261007.py:118: in test_tencent_incomplete_pagination_is_rejected
+    with pytest.raises(RuntimeError, match="partial|coverage|history|page"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'RuntimeError'>
+_________ test_alignment_rejects_nonempty_invalid_prices[not-a-price] _________
+tests\test_v13_audit_data_20261007.py:147: in test_alignment_rejects_nonempty_invalid_prices
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'ValueError'>
+_ test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-03] _
+tests\test_v13_audit_data_20261007.py:155: in test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty
+    with pytest.raises(ValueError, match="non-trading|trading date"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'ValueError'>
+_ test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-07] _
+tests\test_v13_audit_data_20261007.py:155: in test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty
+    with pytest.raises(ValueError, match="non-trading|trading date"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'ValueError'>
+__ test_official_2026_calendar_preserves_holiday_when_remote_calendar_fails ___
+tests\test_v13_audit_data_20261007.py:185: in test_official_2026_calendar_preserves_holiday_when_remote_calendar_fails
+    assert status["calendar_available"]
+E   assert False
+_________________ test_normal_live_cache_rejects_negative_age _________________
+tests\test_v13_audit_data_20261007.py:203: in test_normal_live_cache_rejects_negative_age
+    assert calls
+E   assert []
+============================== warnings summary ===============================
+tests/test_v13_audit_data_20261007.py::test_primary_truncated_history_uses_existing_full_backup[20]
+  C:\Python314\Lib\site-packages\fastapi_poe\types.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RequestContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_v13_audit_data_20261007.py::test_primary_truncated_history_uses_existing_full_backup[20]
+FAILED tests/test_v13_audit_data_20261007.py::test_primary_truncated_history_uses_existing_full_backup[640]
+FAILED tests/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[duplicate_date]
+FAILED tests/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[NaT]
+FAILED tests/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[constant_zero]
+FAILED tests/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[constant_infinite]
+FAILED tests/test_v13_audit_data_20261007.py::test_tencent_incomplete_pagination_is_rejected[empty]
+FAILED tests/test_v13_audit_data_20261007.py::test_tencent_incomplete_pagination_is_rejected[repeated]
+FAILED tests/test_v13_audit_data_20261007.py::test_alignment_rejects_nonempty_invalid_prices[not-a-price]
+FAILED tests/test_v13_audit_data_20261007.py::test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-03]
+FAILED tests/test_v13_audit_data_20261007.py::test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-07]
+FAILED tests/test_v13_audit_data_20261007.py::test_official_2026_calendar_preserves_holiday_when_remote_calendar_fails
+FAILED tests/test_v13_audit_data_20261007.py::test_normal_live_cache_rejects_negative_age
+13 failed, 7 passed, 1 warning in 5.95s

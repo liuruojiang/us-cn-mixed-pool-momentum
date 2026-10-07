@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="13" skipped="0" tests="14" time="3.147" timestamp="2026-10-07T16:41:50.750247+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_audit_math_20261007" name="test_build_curves_cutoff_truncates_matching_full_snapshot_flags" time="1.109"><failure message="ValueError: price ffill mask must exactly cover the prices index">bot = &lt;module 'v13_math_cutoff_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_build_curves_cutoff_truncates_matching_full_snapshot_flags(bot):
+        """A full snapshot and its exact mask remain valid with an earlier end date."""
+        prices, flags = _contract_prices(bot)
+        end_date = prices.index[29]
+        full = bot.build_curves(prices, bot._build_config(prices.index[-1]), flags)[0]
+&gt;       actual = bot.build_curves(prices, bot._build_config(end_date), flags)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_audit_math_20261007.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+poe_subd_six_etf_v1_3_bot.py:3341: in build_curves
+    curve = run_staged_entry(
+poe_subd_six_etf_v1_3_bot.py:1692: in run_staged_entry
+    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+2026-01-05  10.000000       10.0       10...     10.0       10.0       10.0       10.0
+2026-02-13  10.908967       10.0       10.0       10.0       10.0       10.0
+price_ffill_flags =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+2026-01-05      False      False      Fal...    False      False      False      False
+2026-02-20      False      False      False      False      False      False
+
+    def _validate_price_ffill_flags(
+        prices: pd.DataFrame,
+        price_ffill_flags: pd.DataFrame | None,
+    ) -&gt; pd.DataFrame:
+        price_index = pd.DatetimeIndex(prices.index).normalize()
+        if not price_index.is_unique:
+            raise ValueError("price ffill mask requires a normalized unique prices index")
+        if price_ffill_flags is None:
+            return pd.DataFrame(False, index=price_index, columns=list(ASSETS), dtype=bool)
+        if not isinstance(price_ffill_flags, pd.DataFrame):
+            raise ValueError("price ffill mask must be a DataFrame")
+        flags = price_ffill_flags.copy()
+        try:
+            raw_flag_index = pd.DatetimeIndex(flags.index)
+        except Exception as exc:
+            raise ValueError("price ffill mask index must contain valid dates") from exc
+        if not raw_flag_index.equals(raw_flag_index.normalize()):
+            raise ValueError("price ffill mask index must contain normalized midnight dates")
+        flags.index = raw_flag_index
+        if not flags.index.is_unique:
+            raise ValueError("price ffill mask index must be normalized and unique")
+        if flags.columns.has_duplicates:
+            raise ValueError("price ffill mask asset columns must be unique")
+        missing_assets = [code for code in ASSETS if code not in flags.columns]
+        if missing_assets:
+            raise ValueError(f"price ffill mask is missing asset columns: {missing_assets}")
+        if set(flags.index) != set(price_index) or len(flags.index) != len(price_index):
+&gt;           raise ValueError("price ffill mask must exactly cover the prices index")
+E           ValueError: price ffill mask must exactly cover the prices index
+
+poe_subd_six_etf_v1_3_bot.py:1418: ValueError</failure></testcase><testcase classname="tests.test_v13_audit_math_20261007" name="test_build_curves_cutoff_before_first_price_raises_explicit_validation" time="0.004"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: re.compile('(?i)(empty|no price|no rows|nonempty)', re.IGNORECASE)&#10;  Actual message: 'price ffill mask must exactly cover the prices index'">bot = &lt;module 'v13_math_cutoff_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_build_curves_cutoff_before_first_price_raises_explicit_validation(bot):
+        """No data inside the requested cutoff must not leak an internal KeyError."""
+        prices, flags = _contract_prices(bot)
+        before_first = prices.index[0] - pd.Timedelta(days=1)
+        with pytest.raises(ValueError, match="(?i)(empty|no price|no rows|nonempty)"):
+&gt;           bot.build_curves(prices, bot._build_config(before_first))
+
+tests\test_v13_audit_math_20261007.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+poe_subd_six_etf_v1_3_bot.py:3341: in build_curves
+    curve = run_staged_entry(
+poe_subd_six_etf_v1_3_bot.py:1692: in run_staged_entry
+    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices = Empty DataFrame
+Columns: [159915.SZ, 159941.SZ, 513030.SH, 513520.SH, 159985.SZ, 518880.SH]
+Index: []
+price_ffill_flags =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+2026-01-05      False      False      Fal...    False      False      False      False
+2026-02-20      False      False      False      False      False      False
+
+    def _validate_price_ffill_flags(
+        prices: pd.DataFrame,
+        price_ffill_flags: pd.DataFrame | None,
+    ) -&gt; pd.DataFrame:
+        price_index = pd.DatetimeIndex(prices.index).normalize()
+        if not price_index.is_unique:
+            raise ValueError("price ffill mask requires a normalized unique prices index")
+        if price_ffill_flags is None:
+            return pd.DataFrame(False, index=price_index, columns=list(ASSETS), dtype=bool)
+        if not isinstance(price_ffill_flags, pd.DataFrame):
+            raise ValueError("price ffill mask must be a DataFrame")
+        flags = price_ffill_flags.copy()
+        try:
+            raw_flag_index = pd.DatetimeIndex(flags.index)
+        except Exception as exc:
+            raise ValueError("price ffill mask index must contain valid dates") from exc
+        if not raw_flag_index.equals(raw_flag_index.normalize()):
+            raise ValueError("price ffill mask index must contain normalized midnight dates")
+        flags.index = raw_flag_index
+        if not flags.index.is_unique:
+            raise ValueError("price ffill mask index must be normalized and unique")
+        if flags.columns.has_duplicates:
+            raise ValueError("price ffill mask asset columns must be unique")
+        missing_assets = [code for code in ASSETS if code not in flags.columns]
+        if missing_assets:
+            raise ValueError(f"price ffill mask is missing asset columns: {missing_assets}")
+        if set(flags.index) != set(price_index) or len(flags.index) != len(price_index):
+&gt;           raise ValueError("price ffill mask must exactly cover the prices index")
+E           ValueError: price ffill mask must exactly cover the prices index
+
+poe_subd_six_etf_v1_3_bot.py:1418: ValueError
+
+During handling of the above exception, another exception occurred:
+
+bot = &lt;module 'v13_math_cutoff_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_build_curves_cutoff_before_first_price_raises_explicit_validation(bot):
+        """No data inside the requested cutoff must not leak an internal KeyError."""
+        prices, flags = _contract_prices(bot)
+        before_first = prices.index[0] - pd.Timedelta(days=1)
+&gt;       with pytest.raises(ValueError, match="(?i)(empty|no price|no rows|nonempty)"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: re.compile('(?i)(empty|no price|no rows|nonempty)', re.IGNORECASE)
+E         Actual message: 'price ffill mask must exactly cover the prices index'
+
+tests\test_v13_audit_math_20261007.py:45: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_single_day_trade_query_keeps_requested_day_when_metrics_are_na" time="0.046"><failure message="AssertionError: assert ['2026-06-17'... '2026-06-15'] == ['2026-06-16']&#10;  &#10;  At index 0 diff: '2026-06-17' != '2026-06-16'&#10;  Left contains 2 more items, first extra item: '2026-06-16'&#10;  Use -v to get more diff">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C8087629E0&gt;
+
+    def test_single_day_trade_query_keeps_requested_day_when_metrics_are_na(bot, monkeypatch):
+        daily = diagnostic_daily(bot)
+        capture = run_record_query(bot, monkeypatch, "交易记录 2026-06-16", daily)
+        exports = record_exports(capture)
+        assert len(exports) == 1
+        records = pd.read_csv(io.BytesIO(exports[0]["contents"]))
+&gt;       assert records["date"].tolist() == ["2026-06-16"]
+E       AssertionError: assert ['2026-06-17'... '2026-06-15'] == ['2026-06-16']
+E         
+E         At index 0 diff: '2026-06-17' != '2026-06-16'
+E         Left contains 2 more items, first extra item: '2026-06-16'
+E         Use -v to get more diff
+
+tests\test_v13_audit_execution_report_20261007.py:105: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_no_session_trade_query_does_not_export_full_history" time="0.068"><failure message="assert False&#10; +  where False =          date   strategy  ... price_ffill_518880.SH signal_price_518880.SH\n0  2026-06-17  SubD V1.3  ...              ...                  1.0\n2  2026-06-15  SubD V1.3  ...                 False                    1.0\n\n[3 rows x 49 columns].empty">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C808763820&gt;
+
+    def test_no_session_trade_query_does_not_export_full_history(bot, monkeypatch):
+        daily = diagnostic_daily(bot)
+        capture = run_record_query(bot, monkeypatch, "交易记录 2026-06-14", daily)
+        for item in record_exports(capture):
+            records = pd.read_csv(io.BytesIO(item["contents"]))
+&gt;           assert records.empty
+E           assert False
+E            +  where False =          date   strategy  ... price_ffill_518880.SH signal_price_518880.SH\n0  2026-06-17  SubD V1.3  ...              ...                  1.0\n2  2026-06-15  SubD V1.3  ...                 False                    1.0\n\n[3 rows x 49 columns].empty
+
+tests\test_v13_audit_execution_report_20261007.py:114: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_date_range_trade_query_uses_requested_bounds" time="0.045" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_requested_no_trade_day_remains_empty_in_table_and_csv" time="0.052"><failure message="AssertionError: assert '该时段无调仓记录' in '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n#x1F4CE 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n'&#10; +  where '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n#x1F4CE 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n' = &lt;built-in method join of str object at 0x00007FFB4052D790&gt;(['\n', '## SubD六ETF V1.3 表现\n\n', '数据: diagnostic rows\n', '口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不...新日度数据: **2026-06-17**\n\n', '| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n', ...])&#10; +    where &lt;built-in method join of str object at 0x00007FFB4052D790&gt; = ''.join&#10; +    and   ['\n', '## SubD六ETF V1.3 表现\n\n', '数据: diagnostic rows\n', '口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不...新日度数据: **2026-06-17**\n\n', '| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n', ...] = &lt;test_v13_audit_execution_report_20261007.CapturePoe object at 0x000002C8087D3BB0&gt;.writes">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C8082F3BD0&gt;
+
+    def test_requested_no_trade_day_remains_empty_in_table_and_csv(bot, monkeypatch):
+        daily = diagnostic_daily(bot)
+        daily.loc[1, ["turnover", "cost", "buy_delta", "sell_delta"]] = 0.0
+        capture = run_record_query(bot, monkeypatch, "交易记录 2026-06-16", daily)
+&gt;       assert "该时段无调仓记录" in "".join(capture.writes)
+E       AssertionError: assert '该时段无调仓记录' in '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n#x1F4CE 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n'
+E        +  where '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n#x1F4CE 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n' = &lt;built-in method join of str object at 0x00007FFB4052D790&gt;(['\n', '## SubD六ETF V1.3 表现\n\n', '数据: diagnostic rows\n', '口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不...新日度数据: **2026-06-17**\n\n', '| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n', ...])
+E        +    where &lt;built-in method join of str object at 0x00007FFB4052D790&gt; = ''.join
+E        +    and   ['\n', '## SubD六ETF V1.3 表现\n\n', '数据: diagnostic rows\n', '口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不...新日度数据: **2026-06-17**\n\n', '| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n', ...] = &lt;test_v13_audit_execution_report_20261007.CapturePoe object at 0x000002C8087D3BB0&gt;.writes
+
+tests\test_v13_audit_execution_report_20261007.py:130: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_duplicate_daily_sessions[yearly]" time="0.011"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+api = 'yearly'
+
+    @pytest.mark.parametrize("api", ["yearly", "nav", "trade"])
+    def test_reporting_apis_reject_duplicate_daily_sessions(bot, api):
+        daily = diagnostic_daily(bot)
+        duplicate = pd.concat([daily, daily.iloc[[1]]], ignore_index=True)
+&gt;       with pytest.raises(bot.poe.BotError, match="duplicate normalized date"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:139: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_duplicate_daily_sessions[nav]" time="0.011"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+api = 'nav'
+
+    @pytest.mark.parametrize("api", ["yearly", "nav", "trade"])
+    def test_reporting_apis_reject_duplicate_daily_sessions(bot, api):
+        daily = diagnostic_daily(bot)
+        duplicate = pd.concat([daily, daily.iloc[[1]]], ignore_index=True)
+&gt;       with pytest.raises(bot.poe.BotError, match="duplicate normalized date"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:139: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_duplicate_daily_sessions[trade]" time="0.016"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+api = 'trade'
+
+    @pytest.mark.parametrize("api", ["yearly", "nav", "trade"])
+    def test_reporting_apis_reject_duplicate_daily_sessions(bot, api):
+        daily = diagnostic_daily(bot)
+        duplicate = pd.concat([daily, daily.iloc[[1]]], ignore_index=True)
+&gt;       with pytest.raises(bot.poe.BotError, match="duplicate normalized date"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:139: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_invalid_nav_even_with_finite_returns[yearly]" time="0.014"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+api = 'yearly'
+
+    @pytest.mark.parametrize("api", ["yearly", "nav", "trade"])
+    def test_reporting_apis_reject_invalid_nav_even_with_finite_returns(bot, api):
+        daily = diagnostic_daily(bot)
+        daily.loc[1, "nav"] = float("inf")
+&gt;       with pytest.raises(bot.poe.BotError, match="nav must be finite"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:152: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_invalid_nav_even_with_finite_returns[nav]" time="0.015"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+api = 'nav'
+
+    @pytest.mark.parametrize("api", ["yearly", "nav", "trade"])
+    def test_reporting_apis_reject_invalid_nav_even_with_finite_returns(bot, api):
+        daily = diagnostic_daily(bot)
+        daily.loc[1, "nav"] = float("inf")
+&gt;       with pytest.raises(bot.poe.BotError, match="nav must be finite"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:152: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_invalid_nav_even_with_finite_returns[trade]" time="0.018"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+api = 'trade'
+
+    @pytest.mark.parametrize("api", ["yearly", "nav", "trade"])
+    def test_reporting_apis_reject_invalid_nav_even_with_finite_returns(bot, api):
+        daily = diagnostic_daily(bot)
+        daily.loc[1, "nav"] = float("inf")
+&gt;       with pytest.raises(bot.poe.BotError, match="nav must be finite"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:152: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_performance_preparation_rejects_single_unconfirmed_row" time="0.013"><failure message="Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_performance_preparation_rejects_single_unconfirmed_row(bot):
+        daily = diagnostic_daily(bot, dates=("2026-06-18",))
+&gt;       with pytest.raises(bot.poe.BotError, match="没有可用的已确认日线"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'fastapi_poe.client.BotError'&gt;
+
+tests\test_v13_audit_execution_report_20261007.py:163: Failed</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_performance_preparation_does_not_retain_future_bar" time="0.038"><failure message="AssertionError: assert [Timestamp('2...18 00:00:00')] == [Timestamp('2...17 00:00:00')]&#10;  &#10;  Left contains one more item: Timestamp('2026-06-18 00:00:00')&#10;  Use -v to get more diff">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_performance_preparation_does_not_retain_future_bar(bot):
+        daily = diagnostic_daily(bot, dates=("2026-06-17", "2026-06-18", "2026-06-19"))
+        result = bot.prepare_daily_for_performance(daily, now=datetime(2026, 6, 18, 14, 0))
+&gt;       assert result.date.tolist() == [pd.Timestamp("2026-06-17")]
+E       AssertionError: assert [Timestamp('2...18 00:00:00')] == [Timestamp('2...17 00:00:00')]
+E         
+E         Left contains one more item: Timestamp('2026-06-18 00:00:00')
+E         Use -v to get more diff
+
+tests\test_v13_audit_execution_report_20261007.py:170: AssertionError</failure></testcase></testsuite></testsuites>

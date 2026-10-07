@@ -40,3 +40,7 @@ python .\analyze_abcde_combo_20260509.py
 数据源规则见 `AGENTS.md`。Poe 脚本的正式 A 股历史路径只接受 AkShare/Eastmoney qfq、已验证的 Tencent fqkline `qfqday/day` 和 Eastmoney HTTP qfq；所有候选序列都经过连续性与覆盖范围校验。新浪与新华财经原始日线的精确日期交集仅保留为 `159985.SZ` 的诊断 helper，不得进入正式信号或绩效路径。QVeris 相关材料只作为历史归档证据保留。
 
 V1.1/V1.3 的 2026-08-12 对抗修复、正式同输入回测和回滚信息见 `docs/subd_v11_v13_adversarial_repair_20260812.md` 与 `outputs/subd_v11_v13_repair_formal_comparison_20260812/report.md`。
+
+六 ETF 朴素版 V1.3 的最新脚本审计见 [2026-10-07 多智能体 Double-check 与补修](docs/subd_six_etf_v1_3_script_doublecheck_20261007.md)：独立核实第一轮 14 类问题的证据，并补修完整历史日历、异常源回退和倒序分页的三处遗漏；累计 690 个唯一测试通过（全仓 685 项及后追加的 5 项）。正式参数及正常同输入持仓／费用／净值保留，最终真实正式数据构建截止 2026-09-30；本地修复不代表 Poe 托管端发布。第一轮记录继续保留。
+
+两轮修订的 GitHub 同步目标、独立检出验证与源码快照恢复步骤见 [远端同步记录](docs/remote_sync_audit_20261007.md)。

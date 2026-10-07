@@ -195,16 +195,6 @@ CROSS_VALIDATED_RAW_MIN_SHORTER_OVERLAP = 0.99
 CROSS_VALIDATED_RAW_MAX_ABS_CLOSE_DIFF = 0.001
 CNFIN_KLINE_PAGE_SIZE = 2001
 MAX_ADJUSTED_DAILY_ABS_RETURN = 0.35
-# Minimum history independently verified in the 2026-09-24 qfq snapshot.
-# These are coverage anchors, not ETF listing dates.
-VERIFIED_HISTORY_FIRST = {
-    "159915.SZ": pd.Timestamp("2011-12-09"),
-    "159941.SZ": pd.Timestamp("2015-07-13"),
-    "513030.SH": pd.Timestamp("2014-09-05"),
-    "513520.SH": pd.Timestamp("2019-06-25"),
-    "159985.SZ": pd.Timestamp("2019-12-05"),
-    "518880.SH": pd.Timestamp("2013-07-29"),
-}
 
 
 class DeterministicProviderSchemaError(RuntimeError):
@@ -369,9 +359,9 @@ def _load_akshare_eastmoney_qfq_one_close(code: str, end_date: pd.Timestamp) -> 
     close = df[["日期", "收盘"]].copy()
     close["日期"] = pd.to_datetime(close["日期"])
     close = close.set_index("日期")["收盘"].astype(float).sort_index()
-    _validate_historical_close(code, close, end_date, "akshare.fund_etf_hist_em daily close")
     close = close.loc[:end_date]
     close.name = code
+    _validate_adjusted_close_continuity(code, close, "akshare.fund_etf_hist_em daily close")
     return close
 
 
@@ -413,9 +403,9 @@ def _load_eastmoney_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close = df[["date", "close"]].copy()
     close["date"] = pd.to_datetime(close["date"])
     close = close.set_index("date")["close"].astype(float).sort_index()
-    _validate_historical_close(code, close, end_date, "Eastmoney push2his kline")
     close = close.loc[:end_date]
     close.name = code
+    _validate_adjusted_close_continuity(code, close, "Eastmoney push2his kline")
     return close
 
 
@@ -431,44 +421,6 @@ def _validate_adjusted_close_continuity(code: str, close: pd.Series, source: str
         f"{source} adjusted close continuity check failed for {code}: "
         f"{first_date} abs_return={float(bad.iloc[0]):.2%}"
     )
-
-
-def _validate_historical_close(
-    code: str, close: pd.Series, end_date: pd.Timestamp, source: str,
-    expected_sessions: pd.DatetimeIndex | None = None,
-) -> None:
-    if not isinstance(close, pd.Series) or close.empty:
-        raise RuntimeError(f"{source} returned empty history for {code}")
-    dates = pd.DatetimeIndex(close.index)
-    if (
-        dates.hasnans or dates.tz is not None or not dates.is_unique
-        or not dates.is_monotonic_increasing or not dates.equals(dates.normalize())
-    ):
-        raise RuntimeError(f"{source} history dates must be valid, unique, sorted daily dates for {code}")
-    if (dates.dayofweek >= 5).any():
-        raise RuntimeError(f"{source} history contains unexpected non-trading dates for {code}")
-    if expected_sessions is not None and len(dates.difference(expected_sessions)):
-        raise RuntimeError(f"{source} history contains unexpected non-trading dates for {code}")
-    values = pd.to_numeric(close, errors="coerce")
-    bad = close.notna() & (values.isna() | ~np.isfinite(values) | (values <= 0))
-    if bad.any():
-        raise RuntimeError(f"{source} history contains invalid prices for {code}")
-    observed = values.dropna()
-    if observed.empty:
-        raise RuntimeError(f"{source} returned empty history for {code}")
-    end = pd.Timestamp(end_date).normalize()
-    if observed.index.max() > end:
-        raise RuntimeError(f"{source} history extends beyond requested end_date for {code}")
-    anchor = VERIFIED_HISTORY_FIRST.get(code)
-    if anchor is not None and end >= anchor:
-        if observed.index.min() > anchor:
-            raise RuntimeError(
-                f"{source} partial history coverage for {code}: "
-                f"first={observed.index.min().date()}, verified first={anchor.date()}"
-            )
-        if end >= anchor + pd.Timedelta(days=2 * LOOKBACK) and len(observed) < LOOKBACK:
-            raise RuntimeError(f"{source} history has insufficient scoring rows for {code}")
-    _validate_adjusted_close_continuity(code, observed, source)
 
 
 def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
@@ -544,26 +496,13 @@ def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
         if not page_rows:
             if not rows:
                 raise RuntimeError(f"Tencent fqkline qfq returned no data for {code}; last_error={last_error}")
-            anchor = VERIFIED_HISTORY_FIRST.get(code)
-            first_observed = pd.DatetimeIndex(pd.to_datetime([item[0] for item in rows])).min()
-            if anchor is not None and first_observed.normalize() > anchor:
-                raise RuntimeError(f"Tencent fqkline premature empty page; refusing partial history for {code}")
             break
-        page_dates = pd.DatetimeIndex(pd.to_datetime([item[0] for item in page_rows]))
-        if (
-            page_dates.hasnans or not page_dates.is_unique
-            or not page_dates.equals(page_dates.normalize())
-            or page_dates.max() > current_end or page_dates.min() < START_DATE
-        ):
-            raise RuntimeError(f"Tencent fqkline page outside requested history or invalid dates for {code}")
         rows = page_rows + rows
-        first_date = pd.Timestamp(page_dates.min()).normalize()
+        first_date = pd.Timestamp(page_rows[0][0]).normalize()
         if len(page_rows) < page_size or first_date <= START_DATE:
             break
         next_end = first_date - pd.Timedelta(days=1)
-        if next_end >= current_end:
-            raise RuntimeError(f"Tencent fqkline page made no history progress for {code}")
-        if next_end < START_DATE:
+        if next_end >= current_end or next_end < START_DATE:
             break
         current_end = next_end
         time.sleep(0.2)
@@ -585,7 +524,7 @@ def _load_tencent_qfq_one_close(code: str, end_date: pd.Timestamp) -> pd.Series:
     close = close.loc[START_DATE:end_date]
     if close.dropna().empty:
         raise RuntimeError(f"Tencent fqkline qfq returned empty close series for {code}")
-    _validate_historical_close(code, close, end_date, "Tencent fqkline")
+    _validate_adjusted_close_continuity(code, close, "Tencent fqkline")
     close.name = code
     close.attrs["source_detail"] = (
         SOURCE_DETAIL_TENCENT_VERIFIED_DAY_QFQ
@@ -1308,9 +1247,6 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
     series: list[pd.Series] = []
     sources: list[dict] = []
     errors: list[str] = []
-    expected_sessions: pd.DatetimeIndex | None = None
-    calendar_start: pd.Timestamp | None = None
-    calendar_unavailable = False
     for code in codes:
         providers = [
             (
@@ -1336,19 +1272,9 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
         for source_name, adjustment, source_detail, loader in providers:
             try:
                 close = loader(code, end_date)
-                _validate_historical_close(code, close, end_date, source_name)
-                first_observed = pd.Timestamp(close.first_valid_index()).normalize()
-                if not calendar_unavailable and (calendar_start is None or first_observed < calendar_start):
-                    # Reuse alignment's calendar at actual observed coverage,
-                    # without requiring dates before any ETF has data.
-                    calendar_start = first_observed
-                    expected_sessions = _expected_cn_trading_days(calendar_start, pd.Timestamp(end_date).normalize())
-                    calendar_unavailable = expected_sessions is None
-                _validate_historical_close(code, close, end_date, source_name, expected_sessions)
                 source_detail = str(close.attrs.get("source_detail") or source_detail)
-                record = _source_record(code, source_name, adjustment, close, source_detail)
                 series.append(close)
-                sources.append(record)
+                sources.append(_source_record(code, source_name, adjustment, close, source_detail))
                 break
             except Exception as exc:
                 errors.append(f"{code} {source_name}: {str(exc)[:160]}")
@@ -1762,11 +1688,8 @@ def run_staged_entry(
     switch_buffer: float,
     price_ffill_flags: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
     prices = prices.loc[:config.end_date].copy()
-    if prices.empty:
-        raise ValueError("No prices on or before the requested end_date")
-    price_ffill_flags = price_ffill_flags.reindex(prices.index)
+    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
     holding = "CASH"
     holding_fraction = 0.0
     pending_entry_target = None  # type: Optional[str]
@@ -2501,7 +2424,7 @@ def align_prices_to_common_valid_date(
     for col in asset_cols:
         series = pd.to_numeric(aligned_prices[col], errors="coerce")
         finite = np.isfinite(series.to_numpy(dtype=float))
-        invalid = prices[col].notna() & (series.isna() | ~finite | (series <= 0))
+        invalid = series.notna() & (~finite | (series <= 0))
         if invalid.any():
             first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
             raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
@@ -2514,13 +2437,9 @@ def align_prices_to_common_valid_date(
     if not valid_all.any():
         raise ValueError("No date has valid close prices for all assets")
     common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
-    # Full history starts before all six ETFs have data. Validate every date
-    # represented by any asset, preserving per-asset suspension/missing fills.
-    market_price_dates = pd.DatetimeIndex(
-        aligned_prices.index[rows_with_any_asset_price & (aligned_prices.index <= common_last)]
-    ).normalize().unique().sort_values()
-    first_observed = pd.Timestamp(market_price_dates.min())
-    expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+    common_valid_dates = pd.DatetimeIndex(aligned_prices.index[valid_all]).normalize().unique().sort_values()
+    first_common = pd.Timestamp(common_valid_dates.min())
+    expected_sessions = _expected_cn_trading_days(first_common, common_last)
     if expected_sessions is None:
         reason = _calendar_failure_reason()
         if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
@@ -2532,14 +2451,14 @@ def align_prices_to_common_valid_date(
             RuntimeWarning,
             stacklevel=2,
         )
-    else:
+    elif len(expected_sessions):
         expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
-        missing_common = pd.DatetimeIndex(expected_sessions).difference(market_price_dates)
+        missing_common = pd.DatetimeIndex(expected_sessions).difference(common_valid_dates)
         if len(missing_common):
             sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
             more = "..." if len(missing_common) > 5 else ""
             raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
-        unexpected_common = market_price_dates.difference(expected_sessions)
+        unexpected_common = common_valid_dates.difference(expected_sessions)
         if len(unexpected_common):
             sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in unexpected_common[:5])
             more = "..." if len(unexpected_common) > 5 else ""
@@ -3593,7 +3512,7 @@ def _cached_daily(date_key: str, data_state: str = "confirmed") -> tuple[pd.Data
         cached = _DAILY_CACHE.get(key)
         if cached is not None:
             cached_at, daily, source_name = cached
-            if timedelta(0) <= now - cached_at <= DAILY_CACHE_TTL and not _crossed_close_boundary(cached_at, now):
+            if now - cached_at <= DAILY_CACHE_TTL and not _crossed_close_boundary(cached_at, now):
                 return daily, source_name
         daily, source_name = _call_build_v13_daily(pd.Timestamp(date_key), data_state, now)
         daily = _with_cache_metadata(daily, now)
@@ -4171,7 +4090,7 @@ def _status_calendar_sessions(ts: datetime, latest_market_date: pd.Timestamp | N
         if latest_market is not None:
             required_end = max(required_end, latest_market)
     calendar = _expected_cn_trading_days(required_start, required_end)
-    if calendar is None or not len(calendar) or pd.Timestamp(calendar.max()).normalize() < required_end:
+    if calendar is not None and len(calendar) and pd.Timestamp(calendar.max()).normalize() < required_end:
         official_calendar = _load_official_cn_trading_calendar_2026(required_start, required_end)
         if official_calendar is not None:
             _set_calendar_failure("")
@@ -4261,13 +4180,8 @@ def prepare_daily_for_signal(
     now: datetime | None = None,
 ) -> pd.DataFrame:
     ordered = _validated_daily_frame(daily)
-    original_rows = len(ordered)
-    if not live:
-        while not ordered.empty and _row_uses_unconfirmed_bar(ordered.iloc[-1], now):
-            ordered = ordered.iloc[:-1].copy()
-    if ordered.empty:
-        raise poe.BotError("没有可用的已确认日线信号。")
-    if len(ordered) != original_rows:
+    if not live and len(ordered) >= 2 and _row_uses_unconfirmed_bar(ordered.iloc[-1], now):
+        ordered = ordered.iloc[:-1].copy()
         latest_confirmed = pd.Timestamp(ordered["date"].iloc[-1]).normalize()
         if "common_last_date" in ordered.columns:
             ordered["common_last_date"] = latest_confirmed.date().isoformat()
@@ -4275,6 +4189,8 @@ def prepare_daily_for_signal(
             col = f"last_date_{code}"
             if col in ordered.columns:
                 ordered[col] = ordered[col].map(lambda value: _cap_row_date_text(value, latest_confirmed))
+    if ordered.empty:
+        raise poe.BotError("没有可用的已确认日线信号。")
     return ordered
 
 
@@ -4634,9 +4550,7 @@ def _get_daily_for_today(force_refresh: bool = False, data_state: str = "confirm
             daily, source_name = _call_build_v13_daily(pd.Timestamp(date_key), data_state, now)
             daily = _with_cache_metadata(daily, now)
             with _DAILY_CACHE_LOCK:
-                cached = _DAILY_CACHE.get(key)
-                if cached is None or cached[0] <= now:
-                    _DAILY_CACHE[key] = (now, daily, source_name)
+                _DAILY_CACHE[key] = (now, daily, source_name)
         except Exception as exc:
             with _DAILY_CACHE_LOCK:
                 cached = _DAILY_CACHE.get(key)
@@ -4883,7 +4797,9 @@ def calc_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
 def calc_yearly_performance(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> list[dict[str, object]]:
     start = pd.Timestamp(start).normalize()
     end = pd.Timestamp(end).normalize()
-    df = _validated_daily_frame(daily)
+    df = daily.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date")
     # Calendar-year returns include the first session's move from the prior close.
     df["_report_return"] = _daily_returns_for_window(df, rebase_first=False).to_numpy(dtype=float)
     sub = df[(df["date"] >= start) & (df["date"] <= end)].copy()
@@ -5053,7 +4969,7 @@ def parse_date_range(text, now=None):
         )
         return day, day
     # MM-DD至今
-    match = re.search(r"(?<![\d年/.-])(\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix + r"\s*至今", text)
+    match = re.search(r"(\d{1,2})[-月/.](\d{1,2})\s*" + day_suffix + r"\s*至今", text)
     if match:
         start = _checked_timestamp(now.year, int(match.group(1)), int(match.group(2)), match.group(0))
         if start > now:
@@ -5098,12 +5014,12 @@ def parse_date_range(text, now=None):
         return _explicit_range(start, end)
 
     # 最近/过去/近 N 年/月
-    match = re.search(r"(?:最近|过去|近)\s*(\d+(?:\.\d+)?|[一二两三四五六七八九十半]+)\s*个?\s*年", text)
+    match = re.search(r"(?:最近|过去|近)\s*([一二两三四五六七八九十\d半]+)\s*个?\s*年", text)
     if match:
         number = _parse_cn_num(match.group(1))
         if number is not None:
             return now - pd.DateOffset(months=int(number * 12)), now
-    match = re.search(r"(?:最近|过去|近)\s*(\d+(?:\.\d+)?|[一二两三四五六七八九十半]+)\s*个?\s*月", text)
+    match = re.search(r"(?:最近|过去|近)\s*([一二两三四五六七八九十\d半]+)\s*个?\s*月", text)
     if match:
         number = _parse_cn_num(match.group(1))
         if number is not None:
@@ -5595,7 +5511,8 @@ def trade_records_frame(
     start: pd.Timestamp | None = None,
     end: pd.Timestamp | None = None,
 ) -> pd.DataFrame:
-    data = _validated_daily_frame(daily)
+    data = daily.copy()
+    data["date"] = pd.to_datetime(data["date"])
     if start is not None:
         data = data[data["date"] >= pd.Timestamp(start).normalize()]
     if end is not None:
@@ -6157,7 +6074,8 @@ def format_live_params_snapshot(
 def _nav_window(daily: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     start = pd.Timestamp(start).normalize()
     end = pd.Timestamp(end).normalize()
-    daily = _validated_daily_frame(daily)
+    daily = daily.copy()
+    daily["date"] = pd.to_datetime(daily["date"])
     sub = daily[(daily["date"] >= start) & (daily["date"] <= end)].copy()
     if sub.empty:
         raise poe.BotError(f"在 {start.date()} 到 {end.date()} 期间没有净值数据。")
@@ -6417,21 +6335,15 @@ class SubDSixEtfV13Bot:
                 except Exception as exc:
                     msg.write("\n### 年度收益\n\n")
                     msg.write(f"N/A: {_exception_na_reason(exc)}\n\n")
-            if chart_range is not None:
-                # Records retain the requested bounds even when that window's
-                # metrics are N/A (a single session or a period without bars).
-                label, start, end = chart_range
                 try:
+                    label, start, end = first_chart_range
                     trade_table = format_trade_records_table(daily, limit=20, start=start, end=end)
                     msg.write(trade_table)
                 except Exception as exc:
                     msg.write("\n### 调仓记录\n\n")
                     msg.write(f"N/A: {_exception_na_reason(exc)}\n\n")
                 else:
-                    record_window = daily[(daily["date"] >= start) & (daily["date"] <= end)]
-                    file_start = start if record_window.empty else record_window["date"].iloc[0]
-                    file_end = end if record_window.empty else record_window["date"].iloc[-1]
-                    csv_name = f"subd_v13_trade_records_{pd.Timestamp(file_start).date()}_{pd.Timestamp(file_end).date()}.csv"
+                    csv_name = f"subd_v13_trade_records_{pd.Timestamp(start).date()}_{pd.Timestamp(end).date()}.csv"
                     try:
                         msg.attach_file(
                             name=csv_name,
