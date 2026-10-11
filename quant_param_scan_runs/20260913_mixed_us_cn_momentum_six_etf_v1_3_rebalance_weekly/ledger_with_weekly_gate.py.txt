@@ -1,0 +1,252 @@
+def run_staged_entry(
+    prices: pd.DataFrame,
+    config: RunConfig,
+    case: EntryCase,
+    r2_threshold: float,
+    switch_buffer: float,
+    price_ffill_flags: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    prices = prices.loc[:config.end_date].copy()
+    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
+    holding = "CASH"
+    holding_fraction = 0.0
+    pending_entry_target = None  # type: Optional[str]
+    pending_entry_since = None   # type: Optional[pd.Timestamp]
+    pending_entry_days = 0
+    nav = 1.0
+    trade_count = 0
+    staged_initial_count = 0
+    staged_fill_count = 0
+    buffer_blocked_count = 0
+    rows: list[dict] = []
+
+    for idx, date in enumerate(prices.index):
+        old_holding = holding
+        old_fraction = holding_fraction
+        old_pending_entry_target = pending_entry_target
+        old_pending_entry_since = pending_entry_since
+        old_pending_entry_days = pending_entry_days
+        old_staged_initial_count = staged_initial_count
+        old_staged_fill_count = staged_fill_count
+
+        scores: dict[str, float] = {}
+        r2_values: dict[str, float] = {}
+        raw_scores: dict[str, float] = {}
+        if idx >= LOOKBACK - 1:
+            scores, r2_values, raw_scores = calc_scores(prices, idx, r2_threshold=r2_threshold)
+        ideal, best_candidate, best_score, current_score, buffer_blocked = _target_from_scores(
+            scores, old_holding, switch_buffer
+        )
+        if buffer_blocked:
+            buffer_blocked_count += 1
+
+        if not rebalance_allowed.loc[date]:
+            ideal = old_holding
+        signal_target = ideal if ideal != old_holding else None
+        trade_target = None  # type: Optional[str]
+        trade_fraction = old_fraction
+        fill_on_down_day = False
+        staged_initial = False
+
+        if case.mode == "full_entry":
+            if signal_target is not None:
+                trade_target = signal_target
+                trade_fraction = 0.0 if signal_target == "CASH" else 1.0
+                pending_entry_target = None
+                pending_entry_since = None
+                pending_entry_days = 0
+        elif old_holding == "CASH":
+            if ideal != "CASH":
+                initial = float(np.clip(case.initial_fraction, 0.0, 1.0))
+                trade_target = ideal
+                trade_fraction = initial
+                staged_initial = initial < 1.0 - 1e-12
+                if staged_initial:
+                    pending_entry_target = ideal
+                    pending_entry_since = date
+                    pending_entry_days = 0
+                    staged_initial_count += 1
+                else:
+                    pending_entry_target = None
+                    pending_entry_since = None
+                    pending_entry_days = 0
+        else:
+            is_partial_pending = (
+                pending_entry_target is not None
+                and old_holding == pending_entry_target
+                and old_fraction < 1.0 - 1e-12
+            )
+            if is_partial_pending:
+                if signal_target is not None:
+                    if signal_target != "CASH":
+                        initial = float(np.clip(case.initial_fraction, 0.0, 1.0))
+                        trade_target = signal_target
+                        trade_fraction = initial
+                        pending_entry_target = signal_target if initial < 1.0 - 1e-12 else None
+                        pending_entry_since = date if pending_entry_target is not None else None
+                        pending_entry_days = 0
+                        staged_initial = pending_entry_target is not None
+                        if staged_initial:
+                            staged_initial_count += 1
+                    else:
+                        trade_target = signal_target
+                        trade_fraction = 0.0
+                        pending_entry_target = None
+                        pending_entry_since = None
+                        pending_entry_days = 0
+                else:
+                    prev_close = prices.iloc[idx - 1][pending_entry_target] if idx > 0 else np.nan
+                    curr_close = prices.iloc[idx][pending_entry_target]
+                    is_down_day = (
+                        pd.notna(prev_close)
+                        and pd.notna(curr_close)
+                        and float(curr_close) < float(prev_close)
+                    )
+                    if is_down_day:
+                        trade_target = pending_entry_target
+                        trade_fraction = 1.0
+                        pending_entry_target = None
+                        pending_entry_since = None
+                        pending_entry_days = 0
+                        fill_on_down_day = True
+                        staged_fill_count += 1
+                    else:
+                        pending_entry_days += 1
+            elif signal_target is not None:
+                if signal_target != "CASH":
+                    initial = float(np.clip(case.initial_fraction, 0.0, 1.0))
+                    trade_target = signal_target
+                    trade_fraction = initial
+                    staged_initial = initial < 1.0 - 1e-12
+                    if staged_initial:
+                        pending_entry_target = signal_target
+                        pending_entry_since = date
+                        pending_entry_days = 0
+                        staged_initial_count += 1
+                    else:
+                        pending_entry_target = None
+                        pending_entry_since = None
+                        pending_entry_days = 0
+                else:
+                    trade_target = signal_target
+                    trade_fraction = 0.0
+                    pending_entry_target = None
+                    pending_entry_since = None
+                    pending_entry_days = 0
+
+        stale_trade_assets: list[str] = []
+        trade_blocked_by_stale_price = False
+        blocked_trade_target = None  # type: Optional[str]
+        if trade_target is not None:
+            stale_trade_assets = _backtest_stale_price_trade_assets(
+                price_ffill_flags,
+                date,
+                old_holding,
+                old_fraction,
+                trade_target,
+                trade_fraction,
+            )
+            if stale_trade_assets:
+                trade_blocked_by_stale_price = True
+                blocked_trade_target = trade_target
+                trade_target = None
+                trade_fraction = old_fraction
+                pending_entry_target = old_pending_entry_target
+                pending_entry_since = old_pending_entry_since
+                pending_entry_days = old_pending_entry_days
+                staged_initial_count = old_staged_initial_count
+                staged_fill_count = old_staged_fill_count
+                staged_initial = False
+                fill_on_down_day = False
+
+        # --- daily return ---
+        if old_holding == "CASH" or old_fraction <= 1e-12 or idx == 0:
+            asset_return = 0.0
+            gross_return = 0.0
+            asset_component = 0.0
+        else:
+            prev_px = prices.iloc[idx - 1].get(old_holding, np.nan)
+            cur_px = prices.iloc[idx].get(old_holding, np.nan)
+            prev_px = _require_valid_close(prev_px, old_holding, prices.index[idx - 1], "previous")
+            cur_px = _require_valid_close(cur_px, old_holding, date, "current")
+            asset_return = float(cur_px / prev_px - 1.0)
+            asset_component = old_fraction * asset_return
+            gross_return = asset_component
+
+        # --- trading cost ---
+        turnover = 0.0
+        cost = 0.0
+        if trade_target is not None:
+            if old_holding == trade_target:
+                turnover = abs(float(trade_fraction) - old_fraction)
+            else:
+                turnover = (old_fraction if old_holding != "CASH" else 0.0) + (
+                    float(trade_fraction) if trade_target != "CASH" else 0.0
+                )
+            cost = turnover * config.one_way_cost
+            holding = trade_target if float(trade_fraction) > 1e-12 else "CASH"
+            holding_fraction = float(trade_fraction) if holding != "CASH" else 0.0
+            if turnover > 1e-12:
+                trade_count += 1
+        else:
+            holding_fraction = old_fraction
+
+        nav *= (1.0 + gross_return) * (1.0 - cost)
+        net_return = nav / rows[-1]["nav"] - 1.0 if rows else nav - 1.0
+        score_row = {f"score_{code}": scores.get(code, math.nan) for code in ASSETS}
+        raw_score_row = {f"raw_score_{code}": raw_scores.get(code, math.nan) for code in ASSETS}
+        r2_row = {f"r2_{code}": r2_values.get(code, math.nan) for code in ASSETS}
+        asset_return_row: dict[str, float] = {}
+        for code in ASSETS:
+            if idx == 0:
+                code_return = 0.0
+            else:
+                previous = pd.to_numeric(prices.iloc[idx - 1].get(code, np.nan), errors="coerce")
+                current = pd.to_numeric(prices.iloc[idx].get(code, np.nan), errors="coerce")
+                code_return = (
+                    float(current / previous - 1.0)
+                    if pd.notna(previous) and pd.notna(current) and float(previous) > 0 and float(current) > 0
+                    else math.nan
+                )
+            asset_return_row[f"asset_return_{code}"] = code_return
+        rows.append({
+            "date": date,
+            "entry_case": case.label,
+            "position_before": old_holding,
+            "fraction_before": old_fraction,
+            "position": holding,
+            "holding_fraction": holding_fraction,
+            "pending_entry_target": pending_entry_target,
+            "pending_entry_since": pending_entry_since,
+            "pending_entry_days": pending_entry_days,
+            "trade_target": trade_target,
+            "trade_fraction": trade_fraction if trade_target is not None else math.nan,
+            "staged_initial": staged_initial,
+            "fill_on_down_day": fill_on_down_day,
+            "trade_blocked_by_stale_price": trade_blocked_by_stale_price,
+            "blocked_trade_target": blocked_trade_target,
+            "stale_price_trade_assets": ",".join(stale_trade_assets),
+            "best_candidate": best_candidate,
+            "best_candidate_score": best_score,
+            "current_score": current_score,
+            "buffer_blocked": buffer_blocked,
+            "asset_return": asset_return,
+            **asset_return_row,
+            "gross_return": gross_return,
+            "asset_component": asset_component,
+            "turnover": turnover,
+            "cost": cost,
+            "return": net_return,
+            "nav": nav,
+            "trade_count": trade_count,
+            "stop_count": 0,
+            "stop_triggered": False,
+            "staged_initial_count": staged_initial_count,
+            "staged_fill_count": staged_fill_count,
+            **score_row,
+            **raw_score_row,
+            **r2_row,
+            "buffer_blocked_count": buffer_blocked_count,
+        })
+
+    return pd.DataFrame(rows).set_index("date")

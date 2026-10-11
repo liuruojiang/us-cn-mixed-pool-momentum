@@ -1,0 +1,245 @@
+{
+  "run_id": "20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width",
+  "created_at": "2026-07-01T18:53:52+08:00",
+  "phase": "complete",
+  "project": "subd_dynamic_cyb_proxy",
+  "strategy": "subd_v1_dynamic_cyb_2007_2016",
+  "subsystem": "raw_weighted_slope",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_proxy_dynamic_cyb_layer1_scan.py",
+  "git_branch": "codex/cleanup-test-files-sync",
+  "git_commit": "41fd8cbcf819868d8bcd47a9b4ca395980a41228",
+  "git_status_before": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_zz500_layer0.py",
+  "git_status_after": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_zz500_layer0.py",
+  "scan_type": "layer1_grid_scan",
+  "parameter_group": "layer1_lookback_width",
+  "baseline": {
+    "candidate": "lb_25",
+    "lookback": 25
+  },
+  "candidate_grid": [
+    {
+      "lookback": 10,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 15,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 20,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 22,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 24,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 25,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 26,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 28,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 30,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 32,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 34,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 35,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 36,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 38,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 40,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 42,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 45,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 50,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 55,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 60,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 65,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 70,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 75,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 80,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 85,
+      "score_min": 0.0,
+      "score_max": 5.0
+    },
+    {
+      "lookback": 90,
+      "score_min": 0.0,
+      "score_max": 5.0
+    }
+  ],
+  "data_snapshot": {
+    "start": "2007-01-04",
+    "end": "2016-12-30",
+    "rows": 2432,
+    "calendar": "A-share trading-day cache",
+    "pool_rule": "QQQ/EWG/EWJ/GLD from 2007 start; CN_CYB_399006 joins from own data with no backfill",
+    "ffill_counts_on_cn_calendar": {
+      "QQQ": 80,
+      "EWG": 80,
+      "EWJ": 80,
+      "GLD": 80,
+      "CN_CYB_399006": 0
+    }
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width\\command_log.txt",
+    "comparison_list": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width\\comparison_list.csv"
+  },
+  "decision": "carry_forward_width_supported_lb28",
+  "stability_label": "width_supported_10y_na_by_sample",
+  "execution_assumptions": {
+    "signal": "close-to-close raw weighted-slope ranking",
+    "overlays": "none in Layer 1",
+    "mixed_market_calendar": "diagnostic A-share calendar with US proxy forward-filled; trades on stale trade legs blocked"
+  },
+  "layer1_selection": {
+    "peak": {
+      "lookback": 32,
+      "candidate": "lb_32",
+      "width_metric": "ann_return_full",
+      "ann_return_full": 0.11224355201393954,
+      "left_neighbor": 30.0,
+      "left_ann_return_full": 0.08807548526354214,
+      "left_retention_ratio": 0.7846819143125837,
+      "right_neighbor": 34.0,
+      "right_ann_return_full": 0.07659540643910945,
+      "right_retention_ratio": 0.6824036219879879,
+      "width_supported_80pct": false,
+      "edge_of_grid": false
+    },
+    "recommended": {
+      "lookback": 28,
+      "candidate": "lb_28",
+      "width_metric": "ann_return_full",
+      "ann_return_full": 0.0985740414214038,
+      "left_neighbor": 26.0,
+      "left_ann_return_full": 0.08378490752091938,
+      "left_retention_ratio": 0.8499692851461684,
+      "right_neighbor": 30.0,
+      "right_ann_return_full": 0.08807548526354214,
+      "right_retention_ratio": 0.8934957316705687,
+      "width_supported_80pct": true,
+      "edge_of_grid": false
+    },
+    "best_broad_watch": {
+      "lookback": 28,
+      "candidate": "lb_28",
+      "width_metric": "ann_return_full",
+      "ann_return_full": 0.0985740414214038,
+      "left_neighbor": 26.0,
+      "left_ann_return_full": 0.08378490752091938,
+      "left_retention_ratio": 0.8499692851461684,
+      "right_neighbor": 30.0,
+      "right_ann_return_full": 0.08807548526354214,
+      "right_retention_ratio": 0.8934957316705687,
+      "width_supported_80pct": true,
+      "edge_of_grid": false
+    },
+    "decision": "carry_forward_width_supported",
+    "stability_label": "width_supported",
+    "minimum_recommended_ann_return": 0.08979484161115164
+  },
+  "git_status_after_scan": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_zz500_layer0.py",
+  "elapsed_sec": 295.538,
+  "command": "python run_subd_proxy_dynamic_cyb_layer1_scan.py --start-date 2007-01-01 --end-date 2016-12-30 --run-folder quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width",
+  "warnings": [
+    "10Y mandatory window is N/A because sample has fewer than 2520 trading days.",
+    "This is proxy research; US adjusted closes are aligned to an A-share calendar for this diagnostic."
+  ],
+  "finalized_at": "2026-07-01T19:07:28+08:00",
+  "comparison_reference": {
+    "original_layer1_candidate": "orig_layer1_raw_lb25",
+    "original_full_strategy_candidate": "orig_full_v1_1_reference",
+    "note": "Original first-layer raw line is the Layer1 comparator; full strategy reference is shown only for context."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "code_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "restore_point": "D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py",
+  "tests": {
+    "tests": 691,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 690
+  },
+  "full_run": {
+    "passed": 685,
+    "skipped": 1,
+    "errors": 0,
+    "failures": 0
+  },
+  "additional_tests_after_full_collection": 5,
+  "additional_test_names": [
+    "test_provider_calendar_reuses_legal_actual_start_cache_once[False]",
+    "test_provider_calendar_reuses_legal_actual_start_cache_once[True]",
+    "test_provider_calendar_extends_only_when_later_candidate_has_earlier_history",
+    "test_optional_provider_calendar_preserves_required_alignment_guard[unavailable]",
+    "test_optional_provider_calendar_preserves_required_alignment_guard[known_empty]"
+  ],
+  "final_network": {
+    "manifest_sha256": "cf26c76a6e5ff461fc3e68506ab9fc8fa5478ca3a7e98a084d0c7baa4ad317c3",
+    "rows": 3597,
+    "end": "2026-09-30",
+    "raw_prices_vs_first_audit": "all columns exact equal",
+    "daily_vs_first_audit": "all columns exact equal",
+    "window_metrics_vs_first_audit": "all columns exact equal"
+  },
+  "math_and_replay": "PASS",
+  "checked_document_links": 28
+}

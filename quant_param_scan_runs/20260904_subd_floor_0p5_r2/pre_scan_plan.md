@@ -1,0 +1,12 @@
+# R2 conditional on Score > 0.5
+- User-requested comparison branch only; does not replace agreed no-floor research baseline or production.
+- Strict 0.5 < Score < 5. LOOKBACK25, linear weights, Top1, full entry, Buffer1, overheat/target-vol OFF; cash yield0; one-way cost0.001.
+- R2 grid: off,0,.01,.025,.05,.075,.10,.125,.15,.175,.20,.225,.25,.275,.30,.325,.35,.375,.40,.45,.50,.60,.70,.80,.90.
+- Compare each point to Score>0.5/R2-off on the identical frozen Tencent qfq panel 2011-12-09 through 2026-09-02,3578 rows. Source/missing values/stale flags unchanged; no cache or live-data refresh.
+- Historical available-asset pool, not fixed-six common-history formal evidence; all six first observed2019-12-05. Chinese ETF calendar, Asia/Shanghai,252-session annualization and trailing windows.
+- Use official score outputs cached with floor0.5, then R2 filter and official run_staged_entry. Validate previous saved score_min_0p5 curve, off=0, uncached0.20 and independent Poe0.20; fail at >1e-12 absolute daily difference.
+- Predeclared filter criterion: Full/10Y/5Y annual return losses <=1pp;3Y/1Y<=3pp; Full DD improved and at least3 windows DD improved. Adjacent support required; no post-result tolerance widening.
+- Check all selected nonmissing best scores strictly >0.5 and <5. Independently reconcile metrics with official summarize().
+- Execution: old holding earns current close-close, close signal/fill and costs, new holding earns next-row return; no leverage, hedge, financing. No detailed liquidity, price-limit/T+1, separate opening-impact or QDII-premium execution modeling.
+- R2 window remains25; do not optimize other parameters. Repeated overlapping historical windows are not untouched OOS.
+- Stop after this branch's table; no production change or parameter promotion.

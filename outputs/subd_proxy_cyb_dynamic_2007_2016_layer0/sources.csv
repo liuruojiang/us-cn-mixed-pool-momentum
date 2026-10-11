@@ -1,0 +1,7 @@
+﻿code,name,source,adjustment,publication_or_inception,raw_first,first_used,last,rows,note
+CN_CALENDAR,SSE_COMPOSITE_CALENDAR_ONLY,Eastmoney push2his kline secid=1.000001,index close / calendar only,,2007-01-04,2007-01-04,2016-12-30,2432,Used only to define China trading sessions before ChiNext exists.
+QQQ,NASDAQ_QQQ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-12-01,2006-12-01,2006-12-01,2016-12-30,2538,Reindexed to China trading sessions for this proxy diagnostic.
+EWG,GERMANY_EWG_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-12-01,2006-12-01,2006-12-01,2016-12-30,2538,Reindexed to China trading sessions for this proxy diagnostic.
+EWJ,JAPAN_EWJ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-12-01,2006-12-01,2006-12-01,2016-12-30,2538,Reindexed to China trading sessions for this proxy diagnostic.
+GLD,GOLD_GLD_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-12-01,2006-12-01,2006-12-01,2016-12-30,2538,Reindexed to China trading sessions for this proxy diagnostic.
+CN_CYB_399006,CHINEXT_INDEX_PROXY_DYNAMIC_FROM_2010_06_01,Eastmoney push2his kline secid=0.399006,index close / price index,2010-06-01,2010-06-01,2010-06-01,2016-12-30,1601,Not eligible before official publication; naturally joins after enough lookback data exists.

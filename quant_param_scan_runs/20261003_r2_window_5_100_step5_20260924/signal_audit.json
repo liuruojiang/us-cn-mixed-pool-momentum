@@ -1,0 +1,29 @@
+{
+  "candidate_count": 20,
+  "candidate_days_checked": 71880,
+  "target_mismatches": 0,
+  "max_r2_absolute_error": 3.1069591344135006e-13,
+  "days_with_eligible_candidate": {
+    "5": 2050,
+    "10": 2011,
+    "15": 2138,
+    "20": 2368,
+    "25": 2444,
+    "30": 2392,
+    "35": 2322,
+    "40": 2264,
+    "45": 2218,
+    "50": 2175,
+    "55": 2139,
+    "60": 2116,
+    "65": 2090,
+    "70": 2065,
+    "75": 2039,
+    "80": 2019,
+    "85": 2019,
+    "90": 2012,
+    "95": 2003,
+    "100": 1983
+  },
+  "method": "independent weighted-moment Score25 and R2-N on L1 closes; strict Score gate and R2 >= 0.25 before Top1"
+}

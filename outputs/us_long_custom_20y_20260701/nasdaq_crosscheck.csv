@@ -1,0 +1,5 @@
+symbol,source,nasdaq_rows_2026_06,yfinance_rows_2026_06,nasdaq_latest_date,nasdaq_latest_close,yfinance_latest_date,yfinance_latest_close,latest_close_abs_diff
+SPY,Nasdaq historical API,21,21,06/30/2026,746.77,2026-06-30,746.77001953125,1.9531250018189894e-05
+QQQ,Nasdaq historical API,21,21,06/30/2026,736.4,2026-06-30,736.4000244140625,2.4414062522737368e-05
+GLD,Nasdaq historical API,21,21,06/30/2026,368.38,2026-06-30,368.3800048828125,4.8828125045474735e-06
+AGG,Nasdaq historical API,21,21,06/30/2026,98.98,2026-06-30,98.9800033569336,3.3569335897709607e-06

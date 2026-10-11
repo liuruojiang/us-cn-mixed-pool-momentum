@@ -1,0 +1,547 @@
+{
+  "arms_checked": 24,
+  "path_days": 86256,
+  "max_nav_abs": 3.623767952376511e-13,
+  "details": {
+    "formal_111": {
+      "reference": "outputs\\recert_l2_20260926\\formal_daily_20260924.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 5.000340419503146e-16,
+        "nav": 1.3500311979441904e-13
+      }
+    },
+    "gate_011": {
+      "reference": "outputs\\recert_l5_20260926\\daily_score_floor_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 5.134781488891349e-16,
+        "nav": 3.623767952376511e-13
+      }
+    },
+    "gate_101": {
+      "reference": "outputs\\recert_l5_20260926\\daily_score_ceiling_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 5.000340419503146e-16,
+        "nav": 6.039613253960852e-14
+      }
+    },
+    "gate_110": {
+      "reference": "outputs\\recert_l5_20260926\\daily_r2_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 4.996003610813204e-16,
+        "nav": 1.2079226507921703e-13
+      }
+    },
+    "gate_001": {
+      "reference": "outputs\\recert_l5_20260926\\daily_floor_ceiling_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 5.004677228193088e-16,
+        "nav": 1.9184653865522705e-13
+      }
+    },
+    "gate_010": {
+      "reference": "outputs\\recert_l5_20260926\\daily_floor_r2_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 5.030698080332741e-16,
+        "nav": 1.2079226507921703e-13
+      }
+    },
+    "gate_100": {
+      "reference": "outputs\\recert_l5_20260926\\daily_ceiling_r2_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 3.9985376121265404e-16,
+        "nav": 1.6342482922482304e-13
+      }
+    },
+    "gate_000": {
+      "reference": "outputs\\recert_l5_20260926\\daily_all_three_off.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 3.999621814299026e-16,
+        "nav": 1.1013412404281553e-13
+      }
+    },
+    "weight_p0": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_weight_power_0_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 3.552713678800501e-15
+      }
+    },
+    "lookback_29": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_lookback_29_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 3.552713678800501e-15
+      }
+    },
+    "lookback_24": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_lookback_24_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "lookback_26": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_lookback_26_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "weight_p075": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_weight_power_0p75_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "weight_p125": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_weight_power_1p25_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "floor_04": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_score_floor_0p4_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "floor_06": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_score_floor_0p6_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "ceiling_525": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_score_ceiling_5p25_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "ceiling_575": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_score_ceiling_5p75_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "r2_0225": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_r2_0p225_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "r2_0275": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_r2_0p275_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "buffer_102": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_switch_buffer_1p02_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "buffer_103": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_switch_buffer_1p03_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "buffer_105": {
+      "reference": "outputs\\recert_l6_20260926\\agent_b_switch_buffer_1p05_daily.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 1.0061396160665481e-16,
+        "return": 1.0061396160665481e-16,
+        "nav": 7.105427357601002e-15
+      }
+    },
+    "legacy_clean_base": {
+      "reference": "outputs\\recert_l3_20260926\\baseline_daily_20260924.csv.gz",
+      "rows": 3594,
+      "mismatch": {
+        "position_before": {
+          "days": 0,
+          "first": null
+        },
+        "position": {
+          "days": 0,
+          "first": null
+        },
+        "trade_target": {
+          "days": 0,
+          "first": null
+        }
+      },
+      "maxabs": {
+        "turnover": 0.0,
+        "cost": 0.0,
+        "gross_return": 3.0531133177191805e-16,
+        "return": 4.996003610813204e-16,
+        "nav": 9.237055564881302e-14
+      }
+    }
+  }
+}

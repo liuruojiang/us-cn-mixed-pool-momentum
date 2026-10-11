@@ -1,0 +1,69 @@
+{
+  "159915.SZ": {
+    "raw_first": "2011-12-09",
+    "raw_last": "2026-09-24",
+    "raw_rows": 3593,
+    "common_rows": 3593,
+    "changed_rows": 5,
+    "first_changed": "2011-12-13",
+    "max_abs_diff": 0.009999999999999787,
+    "raw_only_dates": [],
+    "qfq_only_dates": []
+  },
+  "159941.SZ": {
+    "raw_first": "2015-07-13",
+    "raw_last": "2026-09-24",
+    "raw_rows": 2725,
+    "common_rows": 2725,
+    "changed_rows": 1697,
+    "first_changed": "2015-07-13",
+    "max_abs_diff": 2.472,
+    "raw_only_dates": [],
+    "qfq_only_dates": []
+  },
+  "513030.SH": {
+    "raw_first": "2014-09-05",
+    "raw_last": "2026-09-24",
+    "raw_rows": 2929,
+    "common_rows": 2929,
+    "changed_rows": 0,
+    "first_changed": null,
+    "max_abs_diff": 0.0,
+    "raw_only_dates": [],
+    "qfq_only_dates": []
+  },
+  "513520.SH": {
+    "raw_first": "2019-06-25",
+    "raw_last": "2026-09-24",
+    "raw_rows": 1763,
+    "common_rows": 1763,
+    "changed_rows": 0,
+    "first_changed": null,
+    "max_abs_diff": 0.0,
+    "raw_only_dates": [],
+    "qfq_only_dates": []
+  },
+  "159985.SZ": {
+    "raw_first": "2019-12-05",
+    "raw_last": "2026-09-24",
+    "raw_rows": 1652,
+    "common_rows": 1652,
+    "changed_rows": 0,
+    "first_changed": null,
+    "max_abs_diff": 0.0,
+    "raw_only_dates": [],
+    "qfq_only_dates": []
+  },
+  "518880.SH": {
+    "raw_first": "2013-07-29",
+    "raw_last": "2026-09-24",
+    "raw_rows": 3202,
+    "common_rows": 3202,
+    "changed_rows": 2,
+    "first_changed": "2014-04-23",
+    "max_abs_diff": 0.0009999999999998899,
+    "raw_only_dates": [],
+    "qfq_only_dates": []
+  },
+  "sha256": "d3bc37563a5f751a6b2a77bf7328fd46ce77739d77474a409958285fc0359464"
+}

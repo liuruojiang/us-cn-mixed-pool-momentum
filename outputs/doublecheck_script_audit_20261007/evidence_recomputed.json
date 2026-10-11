@@ -1,0 +1,733 @@
+{
+  "scope": "Independent offline recheck of preserved evidence; paper model only",
+  "source_path": ".codex_backups\\20261007_200248\\poe_subd_six_etf_v1_3_bot.py",
+  "source_sha256": "7a4cf15ff1603764dbf3469aab9b85f33756c98129116b4ce7dedb46eb48e1e3",
+  "backup_sha256": "b49c86944f0ef843f0eb23eebe396122fee0db5a90c6250789f21b3d110df988",
+  "formal_parameters_unchanged": {
+    "LOOKBACK": 25,
+    "SCORE_MIN": 0.5,
+    "SCORE_MAX": 5.5,
+    "DEFAULT_MAX_LEV": 1.0,
+    "R2_THRESHOLD": 0.25,
+    "TARGET_VOL": null,
+    "TARGET_VOL_ENABLED": false,
+    "OVERHEAT_ENABLED": false,
+    "STAGED_ENTRY_ENABLED": false,
+    "SWITCH_BUFFER": 1.0,
+    "INITIAL_ENTRY_FRACTION": 1.0,
+    "ONE_WAY_COST": 0.001
+  },
+  "current_manifest_verified_file_count": 15,
+  "current_manifest_actual_file_hashes": {
+    "confirmed_daily.csv.gz": "06fcc794fa86288a4cf528b522ad751882fbf5affa652d7e383e6f5348aaeb8c",
+    "raw_prices_qfq.csv.gz": "3c233f1f7e3baddb8cfd27ea5d1b6695e49d7d4e1804fe490a74ba084e0dd656",
+    "sources.csv": "803586c2f332622addc1fc564c3b23cb56a8cabfb6ce598442bfea7d9c2ed6da",
+    "subd_v13_nav_2011-12-09_2026-09-30.csv": "b7642d5375afeae6857ebfa0d76bc0253f06a0c078da75cd99f563c9a62ab7e1",
+    "subd_v13_nav_2011-12-09_2026-09-30.png": "836f32ce82cfeff826e12ae6872f1265157256e46878554d8bb1ecce92360a50",
+    "subd_v13_trade_records_2011-12-09_2026-09-30.csv": "60503c4b4b97ea7e0fe9b2370f09dc2aee1381e4cd392fbf1f77fb0ac7e23529",
+    "subd_v13_trade_records_2026-09-30_2026-09-30.csv": "6cfbbfbca630fe4bc40de148fdb0eb13e6fdc5e7fe17cd2dfe3ae44abeb998ca",
+    "subd_v13_trade_records_2026-10-07_2026-10-07.csv": "6cfbbfbca630fe4bc40de148fdb0eb13e6fdc5e7fe17cd2dfe3ae44abeb998ca",
+    "window_metrics.csv": "9254f485d69438ef687b7e4157e5d85a2e1f1d55781c28bdd63273e7858d57e6",
+    "交易记录_2026-09-30.txt": "6eae4950458c7673ebd26019f1350da3f071eca258b4acc596870511ca63deec",
+    "交易记录_2026-10-07.txt": "5cc9617b32c794ac8f901c7398fcbd070db38e4a37b088683c6fb79b22b231d8",
+    "信号.txt": "d65dece0efb65bd0418b07c1e5f1956c92aef4c3d38e1e969f329b6bcefe8c64",
+    "参数.txt": "addfdcef2a70bed1cd446a5e980c6f4edf7ed4b4a8946c34eb42e4ab75093e9e",
+    "表现.txt": "42122bf32a33ad8ad7a3131ea4b74f5004bbc80190dbacee5f4d646f405fe790",
+    "表现_2001-06至今.txt": "4fed661c4b1e0ca0415fbed8150fa15282499284ae6fe79c14104e1eebf3bb59"
+  },
+  "xml": {
+    "confirmed_failures_before": {
+      "path": "outputs\\script_audit_20261007\\confirmed_failures_before.xml",
+      "sha256": "50b994341d1c1badeb3486a7d6eddf32650bfbd7cb895ce2ea2b231d7edc4fc7",
+      "declared": {
+        "tests": 14,
+        "errors": 0,
+        "failures": 13,
+        "skipped": 0
+      },
+      "actual_case_count": 14,
+      "actual_outcomes": {
+        "failure": 13,
+        "passed": 1
+      },
+      "by_module": {
+        "test_v13_audit_math_20261007": {
+          "failure": 2
+        },
+        "test_v13_audit_execution_report_20261007": {
+          "failure": 11,
+          "passed": 1
+        }
+      }
+    },
+    "execution_report_after": {
+      "path": "outputs\\script_audit_20261007\\execution_report_after.xml",
+      "sha256": "29666b9870a62121a82b6bc5015ffa9fbc38e481916ed3367c9b81025b4e5bb5",
+      "declared": {
+        "tests": 37,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "actual_case_count": 37,
+      "actual_outcomes": {
+        "passed": 37
+      },
+      "by_module": {
+        "test_v13_audit_execution_report_20261007": {
+          "passed": 37
+        }
+      }
+    },
+    "full_suite_after": {
+      "path": "outputs\\script_audit_20261007\\full_suite_after.xml",
+      "sha256": "4011eb83d3b0b44cc4fcba6633c98d05744df551e81844c79e08ca1be379e1df",
+      "declared": {
+        "tests": 626,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 1
+      },
+      "actual_case_count": 626,
+      "actual_outcomes": {
+        "passed": 625,
+        "skipped": 1
+      },
+      "by_module": {
+        "test_poe_subd_159985_cross_validated_fallback": {
+          "passed": 27
+        },
+        "test_poe_subd_external_review_regressions": {
+          "passed": 275
+        },
+        "test_poe_subd_live_signal_freshness": {
+          "passed": 6
+        },
+        "test_poe_subd_mixed_pool_v1_3_regressions": {
+          "passed": 91
+        },
+        "test_poe_subd_review_20260808": {
+          "passed": 48
+        },
+        "test_poe_subd_six_etf_v1_3": {
+          "passed": 25,
+          "skipped": 1
+        },
+        "test_poe_subd_six_etf_v1_3_safety": {
+          "passed": 33
+        },
+        "test_poe_subd_trade_records": {
+          "passed": 6
+        },
+        "test_subd_runner_regressions": {
+          "passed": 55
+        },
+        "test_v13_audit_data_20261007": {
+          "passed": 20
+        },
+        "test_v13_audit_execution_report_20261007": {
+          "passed": 37
+        },
+        "test_v13_audit_math_20261007": {
+          "passed": 2
+        }
+      }
+    },
+    "full_suite_setup_error": {
+      "path": "outputs\\script_audit_20261007\\full_suite_setup_error.xml",
+      "sha256": "af0bb756418ec0b94aca2fb61950959970be1ecb02941a9a482e07c3ce084a7b",
+      "declared": {
+        "tests": 626,
+        "errors": 35,
+        "failures": 0,
+        "skipped": 1
+      },
+      "actual_case_count": 626,
+      "actual_outcomes": {
+        "passed": 590,
+        "error": 35,
+        "skipped": 1
+      },
+      "by_module": {
+        "test_poe_subd_159985_cross_validated_fallback": {
+          "passed": 27
+        },
+        "test_poe_subd_external_review_regressions": {
+          "passed": 260,
+          "error": 15
+        },
+        "test_poe_subd_live_signal_freshness": {
+          "passed": 6
+        },
+        "test_poe_subd_mixed_pool_v1_3_regressions": {
+          "passed": 85,
+          "error": 6
+        },
+        "test_poe_subd_review_20260808": {
+          "passed": 48
+        },
+        "test_poe_subd_six_etf_v1_3": {
+          "error": 13,
+          "passed": 12,
+          "skipped": 1
+        },
+        "test_poe_subd_six_etf_v1_3_safety": {
+          "passed": 33
+        },
+        "test_poe_subd_trade_records": {
+          "passed": 6
+        },
+        "test_subd_runner_regressions": {
+          "passed": 54,
+          "error": 1
+        },
+        "test_v13_audit_data_20261007": {
+          "passed": 20
+        },
+        "test_v13_audit_execution_report_20261007": {
+          "passed": 37
+        },
+        "test_v13_audit_math_20261007": {
+          "passed": 2
+        }
+      }
+    },
+    "math_cutoff_after": {
+      "path": "outputs\\script_audit_20261007\\math_cutoff_after.xml",
+      "sha256": "2a5033e4701cf6e061d9e1ce5347dd04cb976efe58e0f09093eed822113ce7ba",
+      "declared": {
+        "tests": 2,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      "actual_case_count": 2,
+      "actual_outcomes": {
+        "passed": 2
+      },
+      "by_module": {
+        "test_v13_audit_math_20261007": {
+          "passed": 2
+        }
+      }
+    },
+    "math_cutoff_before": {
+      "path": "outputs\\script_audit_20261007\\math_cutoff_before.xml",
+      "sha256": "ec86042b5455d1c6d0d0917d1dbfc855e7d8eff5c81b1c485f4fb7376b340c1f",
+      "declared": {
+        "tests": 2,
+        "errors": 0,
+        "failures": 2,
+        "skipped": 0
+      },
+      "actual_case_count": 2,
+      "actual_outcomes": {
+        "failure": 2
+      },
+      "by_module": {
+        "test_v13_audit_math_20261007": {
+          "failure": 2
+        }
+      }
+    },
+    "new_regressions_before": {
+      "path": "outputs\\script_audit_20261007\\new_regressions_before.xml",
+      "sha256": "ce101e986aa8b70e1a97c24628565bedbd9add45bfa7fc5baf8de0455bc28ce2",
+      "declared": {
+        "tests": 59,
+        "errors": 0,
+        "failures": 37,
+        "skipped": 0
+      },
+      "actual_case_count": 59,
+      "actual_outcomes": {
+        "failure": 37,
+        "passed": 22
+      },
+      "by_module": {
+        "test_v13_audit_math_20261007": {
+          "failure": 2
+        },
+        "test_v13_audit_data_20261007": {
+          "failure": 13,
+          "passed": 7
+        },
+        "test_v13_audit_execution_report_20261007": {
+          "failure": 22,
+          "passed": 15
+        }
+      }
+    },
+    "targeted_after_data_cache": {
+      "path": "outputs\\script_audit_20261007\\targeted_after_data_cache.xml",
+      "sha256": "c5c60f4ea43b5992572131163fe2e331eb8937bbb11dfafcca5acb37956b6174",
+      "declared": {
+        "tests": 118,
+        "errors": 0,
+        "failures": 5,
+        "skipped": 1
+      },
+      "actual_case_count": 118,
+      "actual_outcomes": {
+        "passed": 112,
+        "failure": 5,
+        "skipped": 1
+      },
+      "by_module": {
+        "test_v13_audit_math_20261007": {
+          "passed": 2
+        },
+        "test_v13_audit_data_20261007": {
+          "passed": 16,
+          "failure": 4
+        },
+        "test_v13_audit_execution_report_20261007": {
+          "passed": 36,
+          "failure": 1
+        },
+        "test_poe_subd_six_etf_v1_3": {
+          "passed": 25,
+          "skipped": 1
+        },
+        "test_poe_subd_six_etf_v1_3_safety": {
+          "passed": 33
+        }
+      }
+    },
+    "targeted_after_initial": {
+      "path": "outputs\\script_audit_20261007\\targeted_after_initial.xml",
+      "sha256": "02719867cef3cb9d436d883c5d61cda9ae792d75b8991d67d0a1b75d984a6071",
+      "declared": {
+        "tests": 73,
+        "errors": 0,
+        "failures": 2,
+        "skipped": 1
+      },
+      "actual_case_count": 73,
+      "actual_outcomes": {
+        "passed": 70,
+        "failure": 2,
+        "skipped": 1
+      },
+      "by_module": {
+        "test_v13_audit_math_20261007": {
+          "passed": 2
+        },
+        "test_v13_audit_execution_report_20261007": {
+          "passed": 12
+        },
+        "test_poe_subd_six_etf_v1_3": {
+          "passed": 23,
+          "failure": 2,
+          "skipped": 1
+        },
+        "test_poe_subd_six_etf_v1_3_safety": {
+          "passed": 33
+        }
+      }
+    }
+  },
+  "test_issue_mapping": {
+    "D01": {
+      "cases": 2,
+      "before_failed": 2,
+      "before_passed": 0,
+      "after_passed": 2
+    },
+    "D02": {
+      "cases": 2,
+      "before_failed": 2,
+      "before_passed": 0,
+      "after_passed": 2
+    },
+    "D02_unchanged_guard": {
+      "cases": 1,
+      "before_failed": 0,
+      "before_passed": 1,
+      "after_passed": 1
+    },
+    "D03": {
+      "cases": 4,
+      "before_failed": 4,
+      "before_passed": 0,
+      "after_passed": 4
+    },
+    "D04": {
+      "cases": 5,
+      "before_failed": 1,
+      "before_passed": 4,
+      "after_passed": 5
+    },
+    "D05": {
+      "cases": 2,
+      "before_failed": 2,
+      "before_passed": 0,
+      "after_passed": 2
+    },
+    "D06": {
+      "cases": 1,
+      "before_failed": 1,
+      "before_passed": 0,
+      "after_passed": 1
+    },
+    "D07": {
+      "cases": 1,
+      "before_failed": 1,
+      "before_passed": 0,
+      "after_passed": 1
+    },
+    "E01": {
+      "cases": 4,
+      "before_failed": 3,
+      "before_passed": 1,
+      "after_passed": 4
+    },
+    "E02": {
+      "cases": 6,
+      "before_failed": 6,
+      "before_passed": 0,
+      "after_passed": 6
+    },
+    "E03": {
+      "cases": 2,
+      "before_failed": 2,
+      "before_passed": 0,
+      "after_passed": 2
+    },
+    "E04": {
+      "cases": 9,
+      "before_failed": 9,
+      "before_passed": 0,
+      "after_passed": 9
+    },
+    "E05": {
+      "cases": 1,
+      "before_failed": 1,
+      "before_passed": 0,
+      "after_passed": 1
+    },
+    "E06": {
+      "cases": 1,
+      "before_failed": 1,
+      "before_passed": 0,
+      "after_passed": 1
+    },
+    "M01": {
+      "cases": 2,
+      "before_failed": 2,
+      "before_passed": 0,
+      "after_passed": 2
+    },
+    "unchanged_alignment_guards": {
+      "cases": 2,
+      "before_failed": 0,
+      "before_passed": 2,
+      "after_passed": 2
+    },
+    "unchanged_execution_guards": {
+      "cases": 14,
+      "before_failed": 0,
+      "before_passed": 14,
+      "after_passed": 14
+    }
+  },
+  "source_table_vs_raw_panel": [
+    {
+      "code": "159915.SZ",
+      "source": "Tencent fqkline",
+      "adjustment": "qfq/front-adjusted",
+      "rows": 3596,
+      "start": "2011-12-09",
+      "end": "2026-09-30"
+    },
+    {
+      "code": "159941.SZ",
+      "source": "Tencent fqkline",
+      "adjustment": "qfq/front-adjusted",
+      "rows": 2728,
+      "start": "2015-07-13",
+      "end": "2026-09-30"
+    },
+    {
+      "code": "513030.SH",
+      "source": "Tencent fqkline",
+      "adjustment": "qfq/front-adjusted",
+      "rows": 2932,
+      "start": "2014-09-05",
+      "end": "2026-09-30"
+    },
+    {
+      "code": "513520.SH",
+      "source": "Tencent fqkline",
+      "adjustment": "qfq/front-adjusted",
+      "rows": 1766,
+      "start": "2019-06-25",
+      "end": "2026-09-30"
+    },
+    {
+      "code": "159985.SZ",
+      "source": "Tencent fqkline",
+      "adjustment": "qfq/front-adjusted",
+      "rows": 1655,
+      "start": "2019-12-05",
+      "end": "2026-09-30"
+    },
+    {
+      "code": "518880.SH",
+      "source": "Tencent fqkline",
+      "adjustment": "qfq/front-adjusted",
+      "rows": 3205,
+      "start": "2013-07-29",
+      "end": "2026-09-30"
+    }
+  ],
+  "independent_current_ledger_vs_saved_daily": {
+    "position_before_different_rows": 0,
+    "position_different_rows": 0,
+    "best_candidate_different_rows": 0,
+    "trade_blocked_by_stale_price_different_rows": 0,
+    "nav_max_abs_difference": 8.526512829121202e-14,
+    "return_max_abs_difference": 3.213575239247035e-16,
+    "gross_return_max_abs_difference": 3.213575239247035e-16,
+    "turnover_max_abs_difference": 0.0,
+    "cost_max_abs_difference": 0.0,
+    "score_max_abs_difference": 1.3073986337985843e-12,
+    "r2_max_abs_difference": 1.1657341758564144e-14
+  },
+  "same_input_before_after": {
+    "rows": 3594,
+    "all_columns": 104,
+    "exact_equal": true
+  },
+  "latest_vs_frozen_overlap": {
+    "rows": 3594,
+    "numeric_nav_max_abs": 0.0,
+    "positions_different_rows": 0
+  },
+  "independent_frozen_ledger_vs_saved_daily": {
+    "position_before_different_rows": 0,
+    "position_different_rows": 0,
+    "best_candidate_different_rows": 0,
+    "trade_blocked_by_stale_price_different_rows": 0,
+    "nav_max_abs_difference": 8.526512829121202e-14,
+    "return_max_abs_difference": 3.213575239247035e-16,
+    "gross_return_max_abs_difference": 3.213575239247035e-16,
+    "turnover_max_abs_difference": 0.0,
+    "cost_max_abs_difference": 0.0,
+    "score_max_abs_difference": 1.3073986337985843e-12,
+    "r2_max_abs_difference": 1.1657341758564144e-14
+  },
+  "five_window_recomputations": [
+    {
+      "dataset": "current_0930",
+      "window": "full_sample",
+      "rows": 3597,
+      "start": "2011-12-09",
+      "end": "2026-09-30",
+      "total": 43.91370602914984,
+      "annual": 0.3055550342715338,
+      "maxdd": -0.22006724591954296,
+      "total_delta": 0.0,
+      "annual_delta": 0.0,
+      "maxdd_delta": -5.551115123125783e-17,
+      "nav_ratio_vs_return_product_max_abs": 2.6574298317427747e-12
+    },
+    {
+      "dataset": "current_0930",
+      "window": "10Y",
+      "rows": 2520,
+      "start": "2016-05-19",
+      "end": "2026-09-30",
+      "total": 20.99179850530643,
+      "annual": 0.36232071444787417,
+      "maxdd": -0.16309804295217567,
+      "total_delta": 0.0,
+      "annual_delta": 5.551115123125783e-17,
+      "maxdd_delta": -3.608224830031759e-16,
+      "nav_ratio_vs_return_product_max_abs": 1.0516032489249483e-12
+    },
+    {
+      "dataset": "current_0930",
+      "window": "5Y",
+      "rows": 1260,
+      "start": "2021-07-22",
+      "end": "2026-09-30",
+      "total": 8.098705562603072,
+      "annual": 0.5557802792367785,
+      "maxdd": -0.15962238350856572,
+      "total_delta": -1.4210854715202004e-14,
+      "annual_delta": -4.440892098500626e-16,
+      "maxdd_delta": -3.3306690738754696e-16,
+      "nav_ratio_vs_return_product_max_abs": 2.2737367544323206e-13
+    },
+    {
+      "dataset": "current_0930",
+      "window": "3Y",
+      "rows": 756,
+      "start": "2023-08-18",
+      "end": "2026-09-30",
+      "total": 3.512761189227086,
+      "annual": 0.6536225559889004,
+      "maxdd": -0.1433795586170047,
+      "total_delta": 1.7763568394002505e-15,
+      "annual_delta": 0.0,
+      "maxdd_delta": 0.0,
+      "nav_ratio_vs_return_product_max_abs": 7.638334409421077e-14
+    },
+    {
+      "dataset": "current_0930",
+      "window": "1Y",
+      "rows": 252,
+      "start": "2025-09-16",
+      "end": "2026-09-30",
+      "total": 0.6336405607333446,
+      "annual": 0.6368381432082917,
+      "maxdd": -0.1386963298049113,
+      "total_delta": 2.220446049250313e-16,
+      "annual_delta": 2.220446049250313e-16,
+      "maxdd_delta": 8.326672684688674e-17,
+      "nav_ratio_vs_return_product_max_abs": 9.325873406851315e-15
+    },
+    {
+      "dataset": "frozen_0924",
+      "window": "full_sample",
+      "rows": 3594,
+      "start": "2011-12-09",
+      "end": "2026-09-24",
+      "total": 43.18887388573992,
+      "annual": 0.3043564408483703,
+      "maxdd": -0.22006724591954296,
+      "total_delta": 0.0,
+      "annual_delta": 0.0,
+      "maxdd_delta": -5.551115123125783e-17,
+      "nav_ratio_vs_return_product_max_abs": 2.6574298317427747e-12
+    },
+    {
+      "dataset": "frozen_0924",
+      "window": "10Y",
+      "rows": 2520,
+      "start": "2016-05-16",
+      "end": "2026-09-24",
+      "total": 20.17412318212617,
+      "annual": 0.35716663958151246,
+      "maxdd": -0.16309804295217578,
+      "total_delta": 1.0658141036401503e-13,
+      "annual_delta": 6.661338147750939e-16,
+      "maxdd_delta": 3.0531133177191805e-16,
+      "nav_ratio_vs_return_product_max_abs": 9.805489753489383e-13
+    },
+    {
+      "dataset": "frozen_0924",
+      "window": "5Y",
+      "rows": 1260,
+      "start": "2021-07-19",
+      "end": "2026-09-24",
+      "total": 7.719011412153751,
+      "annual": 0.5425627803742445,
+      "maxdd": -0.15962238350856572,
+      "total_delta": -1.2434497875801753e-14,
+      "annual_delta": -4.440892098500626e-16,
+      "maxdd_delta": -2.220446049250313e-16,
+      "nav_ratio_vs_return_product_max_abs": 1.9895196601282805e-13
+    },
+    {
+      "dataset": "frozen_0924",
+      "window": "3Y",
+      "rows": 756,
+      "start": "2023-08-15",
+      "end": "2026-09-24",
+      "total": 3.5570342566205557,
+      "annual": 0.6590198158316622,
+      "maxdd": -0.1433795586170047,
+      "total_delta": -7.105427357601002e-15,
+      "annual_delta": -8.881784197001252e-16,
+      "maxdd_delta": 2.220446049250313e-16,
+      "nav_ratio_vs_return_product_max_abs": 7.815970093361102e-14
+    },
+    {
+      "dataset": "frozen_0924",
+      "window": "1Y",
+      "rows": 252,
+      "start": "2025-09-11",
+      "end": "2026-09-24",
+      "total": 0.6293883003857408,
+      "annual": 0.6325606075238854,
+      "maxdd": -0.13541584013921892,
+      "total_delta": 0.0,
+      "annual_delta": 0.0,
+      "maxdd_delta": 1.6653345369377348e-16,
+      "nav_ratio_vs_return_product_max_abs": 8.881784197001252e-15
+    }
+  ],
+  "recent_raw_payload_recomputation": [
+    {
+      "code": "159915.SZ",
+      "rows": 10,
+      "last": "2026-09-30",
+      "payload_key": "qfqday",
+      "tencent_sina_max_abs_difference": 0.0,
+      "formal_panel_vs_recent_payload_max_abs_difference": 0.0,
+      "tencent_saved_json_sha256": "1f6bf5c25a1c2d7051815152f582001aa1d0580ba90008afdb8d59812b87f919",
+      "sina_saved_json_sha256": "36d0f80147355b51ffcd953e482c205098a720cf7232cec8f8a87f6182be4be4"
+    },
+    {
+      "code": "159941.SZ",
+      "rows": 10,
+      "last": "2026-09-30",
+      "payload_key": "qfqday",
+      "tencent_sina_max_abs_difference": 0.0,
+      "formal_panel_vs_recent_payload_max_abs_difference": 0.0,
+      "tencent_saved_json_sha256": "cf9e60ee86cce3d149870cc48b065287c79c2dc42986a927ce6eca0e5fd301e9",
+      "sina_saved_json_sha256": "cfbd9df6c578272c41c7a05297dd9fcf19563ce7fc69aa9d64dda7bc028ecf28"
+    },
+    {
+      "code": "513030.SH",
+      "rows": 10,
+      "last": "2026-09-30",
+      "payload_key": "day",
+      "tencent_sina_max_abs_difference": 0.0,
+      "formal_panel_vs_recent_payload_max_abs_difference": 0.0,
+      "tencent_saved_json_sha256": "15f9e1fbe3cd8eb0182c591c2053c799dde50274f77bef00828b4e950c2ba073",
+      "sina_saved_json_sha256": "717144562937a0a863dda22222abe257b7efdf63939493a62f5eb4769d7c237c"
+    },
+    {
+      "code": "513520.SH",
+      "rows": 10,
+      "last": "2026-09-30",
+      "payload_key": "day",
+      "tencent_sina_max_abs_difference": 0.0,
+      "formal_panel_vs_recent_payload_max_abs_difference": 0.0,
+      "tencent_saved_json_sha256": "6e00ff7ede074df3117cf42dd5cd3c971ef734ef53fe23da08203baa4d5e8acf",
+      "sina_saved_json_sha256": "faaf2b716507daa3f6a7028483b53288823cd33af0b3c3de1e652bdf45fd1c74"
+    },
+    {
+      "code": "159985.SZ",
+      "rows": 10,
+      "last": "2026-09-30",
+      "payload_key": "day",
+      "tencent_sina_max_abs_difference": 0.0,
+      "formal_panel_vs_recent_payload_max_abs_difference": 0.0,
+      "tencent_saved_json_sha256": "e2ca9686d23a441600759324bf38df040a43342d1cec9cf3c1026705706961fd",
+      "sina_saved_json_sha256": "37eb0d7e05def340649f3e9f2dc7afec61ac89408a461f1882cda528453ab3dd"
+    },
+    {
+      "code": "518880.SH",
+      "rows": 10,
+      "last": "2026-09-30",
+      "payload_key": "qfqday",
+      "tencent_sina_max_abs_difference": 0.0,
+      "formal_panel_vs_recent_payload_max_abs_difference": 0.0,
+      "tencent_saved_json_sha256": "0c61fbac19101288819e313c3bbc437777a874911c271d36176afb00a27d93af",
+      "sina_saved_json_sha256": "0b5fd4cdf4665bb119715c70e5151bedabc3ad62fe0e9eaedd33de1990aa5776"
+    }
+  ],
+  "nav_export_max_abs_difference": 0.0,
+  "drawdown_export_max_abs_difference": 4.753142324176451e-16,
+  "status": "PASS",
+  "limitations": [
+    "Rechecks saved received data, not a fresh network pull or independent source for full history",
+    "Weighted least-squares and cash/share book validate the retained same-close fee convention only",
+    "No point-in-time corporate-action, real fill, broker position, hosted Poe, capacity, T+1 or market-limit certification",
+    "XML proves preserved test outcomes; regression bugs and preexisting defense rechecks are counted separately"
+  ]
+}

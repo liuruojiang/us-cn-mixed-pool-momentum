@@ -1,0 +1,90 @@
+{
+  "run_id": "20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00",
+  "created_at": "2026-09-03T21:36:59+08:00",
+  "phase": "complete",
+  "project": "mixed-us-cn-momentum",
+  "strategy": "SubD V1.1 clean momentum base",
+  "subsystem": "six-etf mixed pool",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_six_etf_v1_1.py",
+  "git_branch": "codex/previous-research-sync-20260821",
+  "git_commit": "6bf19204abca54f5ff7d15ec1708cf03a0412669",
+  "git_status_before": "?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "git_status_after": "?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00/\n?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "scan_type": "single_parameter",
+  "parameter_group": "R2_THRESHOLD extended at buffer 1.00",
+  "baseline": {
+    "candidate": "r2_off",
+    "r2_threshold": null,
+    "switch_buffer": 1.0
+  },
+  "candidate_grid": [
+    null,
+    0.0,
+    0.01,
+    0.025,
+    0.05,
+    0.075,
+    0.1,
+    0.125,
+    0.15,
+    0.175,
+    0.2,
+    0.225,
+    0.25,
+    0.275,
+    0.3,
+    0.325,
+    0.35,
+    0.375,
+    0.4,
+    0.45,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+  ],
+  "data_snapshot": {
+    "source_run": "20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer",
+    "price_snapshot": "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz",
+    "start": "2011-12-09",
+    "end": "2026-09-02",
+    "rows": 3578,
+    "adjustment": "qfq/front-adjusted",
+    "reuse_reason": "same-session frozen matched panel for exact comparability"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "switch_buffer": 1.0,
+    "other_overlays": "disabled"
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_extended_at_buffer_1_00\\command_log.txt"
+  },
+  "decision": "keep_default",
+  "stability_label": "wide_stable",
+  "parity_check": {
+    "overlap_thresholds": [
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5
+    ],
+    "daily_thresholds": [
+      "off",
+      0.2
+    ],
+    "max_abs_diff": 7.105427357601002e-15,
+    "passed": true
+  },
+  "elapsed_sec": 103.99,
+  "finalized_at": "2026-09-03T21:42:59+08:00"
+}

@@ -1,0 +1,78 @@
+{
+  "runtime": "local Poe-compatible; official real-data call chain; not hosted Poe",
+  "queries": [
+    {
+      "query": "参数",
+      "passed": true,
+      "attachments": 0
+    },
+    {
+      "query": "信号",
+      "passed": true,
+      "attachments": 0
+    },
+    {
+      "query": "表现",
+      "passed": true,
+      "attachments": 2
+    },
+    {
+      "query": "交易记录 过去两个月",
+      "passed": true,
+      "attachments": 2
+    },
+    {
+      "query": "净值曲线 过去两年",
+      "passed": true,
+      "attachments": 2
+    },
+    {
+      "query": "实时信号",
+      "passed": true,
+      "attachments": 0
+    },
+    {
+      "query": "实时参数",
+      "passed": true,
+      "attachments": 0
+    }
+  ],
+  "data_captures": [
+    {
+      "state": "confirmed",
+      "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)], akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]",
+      "rows": 3580,
+      "last_date": "2026-09-04 00:00:00"
+    },
+    {
+      "state": "confirmed",
+      "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)], akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]",
+      "rows": 3580,
+      "last_date": "2026-09-04 00:00:00"
+    },
+    {
+      "state": "confirmed",
+      "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)], akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]",
+      "rows": 3580,
+      "last_date": "2026-09-04 00:00:00"
+    },
+    {
+      "state": "confirmed",
+      "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)], akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]",
+      "rows": 3580,
+      "last_date": "2026-09-04 00:00:00"
+    },
+    {
+      "state": "live",
+      "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)], akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]; live quotes: Eastmoney push2",
+      "rows": 3580,
+      "last_date": "2026-09-04 00:00:00"
+    },
+    {
+      "state": "live",
+      "source": "akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)], Tencent fqkline [qfq/front-adjusted; qfqday]; live quotes: Eastmoney push2",
+      "rows": 3580,
+      "last_date": "2026-09-04 00:00:00"
+    }
+  ]
+}

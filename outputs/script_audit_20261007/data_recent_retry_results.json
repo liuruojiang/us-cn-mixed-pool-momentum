@@ -1,0 +1,250 @@
+[
+  {
+    "code": "159915.SZ",
+    "provider": "Sina",
+    "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+    "params": {
+      "symbol": "sz159915",
+      "scale": "240",
+      "ma": "no",
+      "datalen": "10"
+    },
+    "received_at_bj": "2026-10-07T16:48:49.658343+08:00",
+    "http_status": 200,
+    "response_sha256": "4a37ec373704adaa0a4a1ed3d0baba15f2db171d1d3700e437b85eb9866da11a",
+    "raw_receipt_path": "data_recent_sina_159915.SZ_retry25s.json",
+    "price_basis": "raw/unadjusted",
+    "rows": [
+      {
+        "date": "2026-09-16",
+        "close": 3.33
+      },
+      {
+        "date": "2026-09-17",
+        "close": 3.319
+      },
+      {
+        "date": "2026-09-18",
+        "close": 3.391
+      },
+      {
+        "date": "2026-09-21",
+        "close": 3.418
+      },
+      {
+        "date": "2026-09-22",
+        "close": 3.42
+      },
+      {
+        "date": "2026-09-23",
+        "close": 3.399
+      },
+      {
+        "date": "2026-09-24",
+        "close": 3.312
+      },
+      {
+        "date": "2026-09-28",
+        "close": 3.159
+      },
+      {
+        "date": "2026-09-29",
+        "close": 3.162
+      },
+      {
+        "date": "2026-09-30",
+        "close": 3.154
+      }
+    ],
+    "row_count": 10,
+    "last": "2026-09-30",
+    "exact_expected_sessions": true,
+    "ok": true
+  },
+  {
+    "code": "159941.SZ",
+    "provider": "Sina",
+    "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+    "params": {
+      "symbol": "sz159941",
+      "scale": "240",
+      "ma": "no",
+      "datalen": "10"
+    },
+    "received_at_bj": "2026-10-07T16:48:49.680087+08:00",
+    "http_status": 200,
+    "response_sha256": "f2573e10b02011c297acd68454aebc7fee4feffd1d74bf026163b3936dbaf141",
+    "raw_receipt_path": "data_recent_sina_159941.SZ_retry25s.json",
+    "price_basis": "raw/unadjusted",
+    "rows": [
+      {
+        "date": "2026-09-16",
+        "close": 1.631
+      },
+      {
+        "date": "2026-09-17",
+        "close": 1.64
+      },
+      {
+        "date": "2026-09-18",
+        "close": 1.678
+      },
+      {
+        "date": "2026-09-21",
+        "close": 1.687
+      },
+      {
+        "date": "2026-09-22",
+        "close": 1.714
+      },
+      {
+        "date": "2026-09-23",
+        "close": 1.728
+      },
+      {
+        "date": "2026-09-24",
+        "close": 1.707
+      },
+      {
+        "date": "2026-09-28",
+        "close": 1.698
+      },
+      {
+        "date": "2026-09-29",
+        "close": 1.708
+      },
+      {
+        "date": "2026-09-30",
+        "close": 1.735
+      }
+    ],
+    "row_count": 10,
+    "last": "2026-09-30",
+    "exact_expected_sessions": true,
+    "ok": true
+  },
+  {
+    "code": "159985.SZ",
+    "provider": "Sina",
+    "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+    "params": {
+      "symbol": "sz159985",
+      "scale": "240",
+      "ma": "no",
+      "datalen": "10"
+    },
+    "received_at_bj": "2026-10-07T16:48:51.072735+08:00",
+    "http_status": 200,
+    "response_sha256": "e95e098323575163deedca872cc971ce39cac549471944e4b39526d4bdf84862",
+    "raw_receipt_path": "data_recent_sina_159985.SZ_retry25s.json",
+    "price_basis": "raw/unadjusted",
+    "rows": [
+      {
+        "date": "2026-09-16",
+        "close": 2.383
+      },
+      {
+        "date": "2026-09-17",
+        "close": 2.373
+      },
+      {
+        "date": "2026-09-18",
+        "close": 2.299
+      },
+      {
+        "date": "2026-09-21",
+        "close": 2.294
+      },
+      {
+        "date": "2026-09-22",
+        "close": 2.323
+      },
+      {
+        "date": "2026-09-23",
+        "close": 2.304
+      },
+      {
+        "date": "2026-09-24",
+        "close": 2.319
+      },
+      {
+        "date": "2026-09-28",
+        "close": 2.264
+      },
+      {
+        "date": "2026-09-29",
+        "close": 2.262
+      },
+      {
+        "date": "2026-09-30",
+        "close": 2.267
+      }
+    ],
+    "row_count": 10,
+    "last": "2026-09-30",
+    "exact_expected_sessions": true,
+    "ok": true
+  },
+  {
+    "code": "513030.SH",
+    "provider": "Sina",
+    "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+    "params": {
+      "symbol": "sh513030",
+      "scale": "240",
+      "ma": "no",
+      "datalen": "10"
+    },
+    "received_at_bj": "2026-10-07T16:48:51.054131+08:00",
+    "http_status": 200,
+    "response_sha256": "9d4c93d0acd810e5eb7541f66b9f0972df16030fbe75483133e2203589209892",
+    "raw_receipt_path": "data_recent_sina_513030.SH_retry25s.json",
+    "price_basis": "raw/unadjusted",
+    "rows": [
+      {
+        "date": "2026-09-16",
+        "close": 1.82
+      },
+      {
+        "date": "2026-09-17",
+        "close": 1.828
+      },
+      {
+        "date": "2026-09-18",
+        "close": 1.838
+      },
+      {
+        "date": "2026-09-21",
+        "close": 1.833
+      },
+      {
+        "date": "2026-09-22",
+        "close": 1.834
+      },
+      {
+        "date": "2026-09-23",
+        "close": 1.836
+      },
+      {
+        "date": "2026-09-24",
+        "close": 1.796
+      },
+      {
+        "date": "2026-09-28",
+        "close": 1.792
+      },
+      {
+        "date": "2026-09-29",
+        "close": 1.789
+      },
+      {
+        "date": "2026-09-30",
+        "close": 1.803
+      }
+    ],
+    "row_count": 10,
+    "last": "2026-09-30",
+    "exact_expected_sessions": true,
+    "ok": true
+  }
+]

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="2.729" timestamp="2026-10-07T16:40:44.915848+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_audit_math_20261007" name="test_build_curves_cutoff_truncates_matching_full_snapshot_flags" time="1.231"><failure message="ValueError: price ffill mask must exactly cover the prices index">bot = &lt;module 'v13_math_cutoff_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_build_curves_cutoff_truncates_matching_full_snapshot_flags(bot):
+        """A full snapshot and its exact mask remain valid with an earlier end date."""
+        prices, flags = _contract_prices(bot)
+        end_date = prices.index[29]
+        full = bot.build_curves(prices, bot._build_config(prices.index[-1]), flags)[0]
+&gt;       actual = bot.build_curves(prices, bot._build_config(end_date), flags)[0]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_audit_math_20261007.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+poe_subd_six_etf_v1_3_bot.py:3341: in build_curves
+    curve = run_staged_entry(
+poe_subd_six_etf_v1_3_bot.py:1692: in run_staged_entry
+    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+2026-01-05  10.000000       10.0       10...     10.0       10.0       10.0       10.0
+2026-02-13  10.908967       10.0       10.0       10.0       10.0       10.0
+price_ffill_flags =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+2026-01-05      False      False      Fal...    False      False      False      False
+2026-02-20      False      False      False      False      False      False
+
+    def _validate_price_ffill_flags(
+        prices: pd.DataFrame,
+        price_ffill_flags: pd.DataFrame | None,
+    ) -&gt; pd.DataFrame:
+        price_index = pd.DatetimeIndex(prices.index).normalize()
+        if not price_index.is_unique:
+            raise ValueError("price ffill mask requires a normalized unique prices index")
+        if price_ffill_flags is None:
+            return pd.DataFrame(False, index=price_index, columns=list(ASSETS), dtype=bool)
+        if not isinstance(price_ffill_flags, pd.DataFrame):
+            raise ValueError("price ffill mask must be a DataFrame")
+        flags = price_ffill_flags.copy()
+        try:
+            raw_flag_index = pd.DatetimeIndex(flags.index)
+        except Exception as exc:
+            raise ValueError("price ffill mask index must contain valid dates") from exc
+        if not raw_flag_index.equals(raw_flag_index.normalize()):
+            raise ValueError("price ffill mask index must contain normalized midnight dates")
+        flags.index = raw_flag_index
+        if not flags.index.is_unique:
+            raise ValueError("price ffill mask index must be normalized and unique")
+        if flags.columns.has_duplicates:
+            raise ValueError("price ffill mask asset columns must be unique")
+        missing_assets = [code for code in ASSETS if code not in flags.columns]
+        if missing_assets:
+            raise ValueError(f"price ffill mask is missing asset columns: {missing_assets}")
+        if set(flags.index) != set(price_index) or len(flags.index) != len(price_index):
+&gt;           raise ValueError("price ffill mask must exactly cover the prices index")
+E           ValueError: price ffill mask must exactly cover the prices index
+
+poe_subd_six_etf_v1_3_bot.py:1418: ValueError</failure></testcase><testcase classname="tests.test_v13_audit_math_20261007" name="test_build_curves_cutoff_before_first_price_raises_explicit_validation" time="0.004"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: re.compile('(?i)(empty|no price|no rows|nonempty)', re.IGNORECASE)&#10;  Actual message: 'price ffill mask must exactly cover the prices index'">bot = &lt;module 'v13_math_cutoff_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_build_curves_cutoff_before_first_price_raises_explicit_validation(bot):
+        """No data inside the requested cutoff must not leak an internal KeyError."""
+        prices, flags = _contract_prices(bot)
+        before_first = prices.index[0] - pd.Timedelta(days=1)
+        with pytest.raises(ValueError, match="(?i)(empty|no price|no rows|nonempty)"):
+&gt;           bot.build_curves(prices, bot._build_config(before_first))
+
+tests\test_v13_audit_math_20261007.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+poe_subd_six_etf_v1_3_bot.py:3341: in build_curves
+    curve = run_staged_entry(
+poe_subd_six_etf_v1_3_bot.py:1692: in run_staged_entry
+    price_ffill_flags = _validate_price_ffill_flags(prices, price_ffill_flags)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices = Empty DataFrame
+Columns: [159915.SZ, 159941.SZ, 513030.SH, 513520.SH, 159985.SZ, 518880.SH]
+Index: []
+price_ffill_flags =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+2026-01-05      False      False      Fal...    False      False      False      False
+2026-02-20      False      False      False      False      False      False
+
+    def _validate_price_ffill_flags(
+        prices: pd.DataFrame,
+        price_ffill_flags: pd.DataFrame | None,
+    ) -&gt; pd.DataFrame:
+        price_index = pd.DatetimeIndex(prices.index).normalize()
+        if not price_index.is_unique:
+            raise ValueError("price ffill mask requires a normalized unique prices index")
+        if price_ffill_flags is None:
+            return pd.DataFrame(False, index=price_index, columns=list(ASSETS), dtype=bool)
+        if not isinstance(price_ffill_flags, pd.DataFrame):
+            raise ValueError("price ffill mask must be a DataFrame")
+        flags = price_ffill_flags.copy()
+        try:
+            raw_flag_index = pd.DatetimeIndex(flags.index)
+        except Exception as exc:
+            raise ValueError("price ffill mask index must contain valid dates") from exc
+        if not raw_flag_index.equals(raw_flag_index.normalize()):
+            raise ValueError("price ffill mask index must contain normalized midnight dates")
+        flags.index = raw_flag_index
+        if not flags.index.is_unique:
+            raise ValueError("price ffill mask index must be normalized and unique")
+        if flags.columns.has_duplicates:
+            raise ValueError("price ffill mask asset columns must be unique")
+        missing_assets = [code for code in ASSETS if code not in flags.columns]
+        if missing_assets:
+            raise ValueError(f"price ffill mask is missing asset columns: {missing_assets}")
+        if set(flags.index) != set(price_index) or len(flags.index) != len(price_index):
+&gt;           raise ValueError("price ffill mask must exactly cover the prices index")
+E           ValueError: price ffill mask must exactly cover the prices index
+
+poe_subd_six_etf_v1_3_bot.py:1418: ValueError
+
+During handling of the above exception, another exception occurred:
+
+bot = &lt;module 'v13_math_cutoff_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+
+    def test_build_curves_cutoff_before_first_price_raises_explicit_validation(bot):
+        """No data inside the requested cutoff must not leak an internal KeyError."""
+        prices, flags = _contract_prices(bot)
+        before_first = prices.index[0] - pd.Timedelta(days=1)
+&gt;       with pytest.raises(ValueError, match="(?i)(empty|no price|no rows|nonempty)"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: re.compile('(?i)(empty|no price|no rows|nonempty)', re.IGNORECASE)
+E         Actual message: 'price ffill mask must exactly cover the prices index'
+
+tests\test_v13_audit_math_20261007.py:45: AssertionError</failure></testcase></testsuite></testsuites>

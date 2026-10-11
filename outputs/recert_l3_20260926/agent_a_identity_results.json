@@ -1,0 +1,85 @@
+{
+  "old_rows": 3578,
+  "new_rows": 3594,
+  "old_bridge": {
+    "position_before_mismatch": 0,
+    "position_before_first_mismatch": null,
+    "best_candidate_mismatch": 0,
+    "best_candidate_first_mismatch": null,
+    "position_mismatch": 0,
+    "position_first_mismatch": null,
+    "gross_return_na_mismatch": 0,
+    "gross_return_max_abs_diff": 9.974659986866641e-17,
+    "turnover_na_mismatch": 0,
+    "turnover_max_abs_diff": 0.0,
+    "cost_na_mismatch": 0,
+    "cost_max_abs_diff": 0.0,
+    "return_na_mismatch": 0,
+    "return_max_abs_diff": 3.217912047936977e-16,
+    "nav_na_mismatch": 0,
+    "nav_max_abs_diff": 1.7763568394002505e-14,
+    "best_candidate_score_na_mismatch": 0,
+    "best_candidate_score_max_abs_diff": 9.769962616701378e-15
+  },
+  "new_old_prefix": {
+    "position_before_mismatch": 0,
+    "position_before_first_mismatch": null,
+    "best_candidate_mismatch": 0,
+    "best_candidate_first_mismatch": null,
+    "position_mismatch": 0,
+    "position_first_mismatch": null,
+    "gross_return_na_mismatch": 0,
+    "gross_return_max_abs_diff": 0.0,
+    "turnover_na_mismatch": 0,
+    "turnover_max_abs_diff": 0.0,
+    "cost_na_mismatch": 0,
+    "cost_max_abs_diff": 0.0,
+    "return_na_mismatch": 0,
+    "return_max_abs_diff": 0.0,
+    "nav_na_mismatch": 0,
+    "nav_max_abs_diff": 0.0,
+    "best_candidate_score_na_mismatch": 0,
+    "best_candidate_score_max_abs_diff": 0.0
+  },
+  "future_data_prefix": {
+    "position_before_mismatch": 0,
+    "position_before_first_mismatch": null,
+    "best_candidate_mismatch": 0,
+    "best_candidate_first_mismatch": null,
+    "position_mismatch": 0,
+    "position_first_mismatch": null,
+    "gross_return_na_mismatch": 0,
+    "gross_return_max_abs_diff": 0.0,
+    "turnover_na_mismatch": 0,
+    "turnover_max_abs_diff": 0.0,
+    "cost_na_mismatch": 0,
+    "cost_max_abs_diff": 0.0,
+    "return_na_mismatch": 0,
+    "return_max_abs_diff": 0.0,
+    "nav_na_mismatch": 0,
+    "nav_max_abs_diff": 0.0,
+    "best_candidate_score_na_mismatch": 0,
+    "best_candidate_score_max_abs_diff": 0.0
+  },
+  "old_nav_end": 19.000877074885278,
+  "new_nav_end": 19.654249115777237,
+  "new_trade_days": 388,
+  "new_trade_blocked_days": 0,
+  "wrong_baseline_counterexamples": {
+    "v13_gates": {
+      "different_position_days": 841,
+      "first_position_difference": "2012-02-09",
+      "nav_end": 44.18887388574015
+    },
+    "no_score_floor": {
+      "different_position_days": 316,
+      "first_position_difference": "2012-01-16",
+      "nav_end": 30.11490466633986
+    },
+    "r2_0p20": {
+      "different_position_days": 416,
+      "first_position_difference": "2012-02-09",
+      "nav_end": 39.68317170649758
+    }
+  }
+}

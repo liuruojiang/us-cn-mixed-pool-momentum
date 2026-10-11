@@ -1,0 +1,36 @@
+{
+  "two_leg_fee_2013_08_30": {
+    "turnover": 2,
+    "correct_return": -0.0317663628831815,
+    "wrong_one_leg_return": -0.030796188898094434,
+    "error": 0.0009701739850870653
+  },
+  "new_holding_same_day_return_2012_02_14": {
+    "old": "CASH",
+    "new": "159915.SZ",
+    "correct_return": -0.0010000000000001,
+    "wrong_return": -0.005174094707520949,
+    "error": -0.004174094707520849
+  },
+  "stale_trade_2025_01_23": {
+    "arm": "weight_p0",
+    "blocked": true,
+    "position": "513030.SH",
+    "turnover": 0,
+    "cost": 0.0
+  },
+  "floor_r2_joint_2012_02_06": {
+    "joint_position": "159915.SZ",
+    "floor_only_position": "CASH",
+    "r2_only_position": "CASH",
+    "joint_turnover": 0
+  },
+  "formal_costed_never_exceeds_no_cost": true,
+  "formal_no_cost_end_nav": 78.410207389628,
+  "formal_costed_end_nav": 44.18887388574005,
+  "one_year_first_base_annual": {
+    "correct_n_minus_1": 0.6325606075238848,
+    "wrong_n": 0.6293883003857401,
+    "difference_pp": 0.31723071381446477
+  }
+}

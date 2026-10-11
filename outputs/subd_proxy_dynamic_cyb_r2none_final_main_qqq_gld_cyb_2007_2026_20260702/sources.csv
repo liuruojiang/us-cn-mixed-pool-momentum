@@ -1,0 +1,10 @@
+﻿code,name,source,adjustment,first_available,first_used,last,rows,pool_rule,last_aligned,ffill_days_on_cn_calendar,mode
+QQQ,NASDAQ_QQQ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-11-02,2007-01-03,2016-12-30,2558,core asset available from 2007 start,2016-12-30,80,insample_2007_2016_three_asset_pool
+GLD,GOLD_GLD_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-11-02,2007-01-03,2016-12-30,2558,core asset available from 2007 start,2016-12-30,80,insample_2007_2016_three_asset_pool
+CN_CYB_399006,CHINEXT_INDEX_PROXY_DYNAMIC_ADD,Eastmoney push2his kline secid=0.399006,index close / price index,2010-06-01,2010-06-01,2016-12-30,1601,dynamic asset; no prices before 2010-06-01 and no backfill,2016-12-30,0,insample_2007_2016_three_asset_pool
+QQQ,NASDAQ_QQQ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2016-11-02,2017-01-03,2026-06-30,2426,core asset available from 2007 start,2026-06-30,78,oos_2017_2026_standalone_reset_three_asset_pool
+GLD,GOLD_GLD_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2016-11-02,2017-01-03,2026-06-30,2426,core asset available from 2007 start,2026-06-30,78,oos_2017_2026_standalone_reset_three_asset_pool
+CN_CYB_399006,CHINEXT_INDEX_PROXY_DYNAMIC_ADD,Eastmoney push2his kline secid=0.399006,index close / price index,2010-06-01,2010-06-01,2026-06-30,3903,dynamic asset; no prices before 2010-06-01 and no backfill,2026-06-30,0,oos_2017_2026_standalone_reset_three_asset_pool
+QQQ,NASDAQ_QQQ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-11-02,2007-01-03,2026-06-30,4943,core asset available from 2007 start,2026-06-30,158,oos_2017_2026_continuous_state_from_2007_three_asset_pool
+GLD,GOLD_GLD_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2006-11-02,2007-01-03,2026-06-30,4943,core asset available from 2007 start,2026-06-30,158,oos_2017_2026_continuous_state_from_2007_three_asset_pool
+CN_CYB_399006,CHINEXT_INDEX_PROXY_DYNAMIC_ADD,Eastmoney push2his kline secid=0.399006,index close / price index,2010-06-01,2010-06-01,2026-06-30,3903,dynamic asset; no prices before 2010-06-01 and no backfill,2026-06-30,0,oos_2017_2026_continuous_state_from_2007_three_asset_pool

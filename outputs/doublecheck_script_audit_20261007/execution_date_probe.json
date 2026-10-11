@@ -1,0 +1,26 @@
+{
+  "code_sha256": "f6e7a9b772f21c81a837ce5ec9a908fd9cc9e3a6bec319ecba0a9ad3ddbb6471",
+  "now_bj_day": "2026-10-07",
+  "supported_grammar_cases": 2592,
+  "mismatches": [],
+  "status": "PASS",
+  "observations_not_classified_as_bugs": {
+    "过去1.5个月": [
+      "2026-09-07 00:00:00",
+      "2026-10-07 00:00:00"
+    ],
+    "过去半个月": [
+      "2026-09-07 00:00:00",
+      "2026-10-07 00:00:00"
+    ],
+    "2026-12至今": [
+      "2026-12-01 00:00:00",
+      "2026-10-07 00:00:00"
+    ],
+    "2026-12-01至今": [
+      "2026-12-01 00:00:00",
+      "2026-10-07 00:00:00"
+    ]
+  },
+  "basis": "actual parser calls; no market prices or strategy returns simulated"
+}

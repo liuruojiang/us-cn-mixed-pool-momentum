@@ -1,0 +1,61 @@
+{
+  "old_rows": 3578,
+  "new_rows": 3594,
+  "cutoff": "2026-09-24",
+  "source_note": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)]",
+  "string_mismatch": {
+    "version": 0,
+    "scenario": 0,
+    "position_before": 0,
+    "position": 0,
+    "trade_target": 0,
+    "best_candidate": 0
+  },
+  "max_abs_diff": {
+    "fraction_before": 0.0,
+    "fraction_before_na_mismatch": 0,
+    "holding_fraction": 0.0,
+    "holding_fraction_na_mismatch": 0,
+    "turnover": 0.0,
+    "turnover_na_mismatch": 0,
+    "cost": 0.0,
+    "cost_na_mismatch": 0,
+    "return": 9.952975943416931e-17,
+    "return_na_mismatch": 0,
+    "nav": 7.105427357601002e-15,
+    "nav_na_mismatch": 0,
+    "gross_return": 9.952975943416931e-17,
+    "gross_return_na_mismatch": 0,
+    "asset_return": 9.952975943416931e-17,
+    "asset_return_na_mismatch": 0
+  },
+  "old_window_metric_diffs": {
+    "Full": {
+      "annual": 5.551115123125783e-17,
+      "maxdd": -5.551115123125783e-17,
+      "total": 0.0
+    },
+    "10Y": {
+      "annual": 0.0,
+      "maxdd": -2.7755575615628914e-17,
+      "total": 0.0
+    },
+    "5Y": {
+      "annual": 0.0,
+      "maxdd": -5.551115123125783e-17,
+      "total": 0.0
+    },
+    "3Y": {
+      "annual": 0.0,
+      "maxdd": 0.0,
+      "total": 0.0
+    },
+    "1Y": {
+      "annual": 0.0,
+      "maxdd": -5.551115123125783e-17,
+      "total": 0.0
+    }
+  },
+  "formal_daily_sha256": "d3934020b79fcd8ef6dbcef6467a71af8b49f4eeffcbe9067f34233d85159ff2",
+  "formal_metrics_sha256": "01355d89543bbf01a614c15504f596313daf5504e5d319f252c7536670d6cdbd"
+}

@@ -1,0 +1,191 @@
+{
+  "status": "PASS",
+  "source_sha256_postfix": "b49c86944f0ef843f0eb23eebe396122fee0db5a90c6250789f21b3d110df988",
+  "source_sha256_l1": "21a5867f51367d215a6f9913dafae1a462bf2316f7c59e7a860d43448c63ee72",
+  "source_note": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)]",
+  "l1_raw_sha256": "1e14b2c2eddfaeb42b0b802ab61650229c702a0657d3f4dd80cbd6b7dcbe3fc0",
+  "l1_aligned_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "l2_formal_file_sha256": "d3934020b79fcd8ef6dbcef6467a71af8b49f4eeffcbe9067f34233d85159ff2",
+  "daily_economics_digest_replay": "3088164c22f186edb931ac3525dc5c5caaa3aae14dc295ce0eb0a953de9979ac",
+  "daily_economics_digest_l2": "3088164c22f186edb931ac3525dc5c5caaa3aae14dc295ce0eb0a953de9979ac",
+  "daily_max_abs_diff": {
+    "turnover": 0.0,
+    "cost": 0.0,
+    "gross_return": 3.191891195797325e-16,
+    "return": 5.377642775528102e-16,
+    "nav": 1.4921397450962104e-13
+  },
+  "window_checks": [
+    {
+      "label": "full_sample",
+      "start": "2011-12-09",
+      "end": "2026-09-24",
+      "rows": 3594,
+      "annual_independent": 0.3043564408483701,
+      "maxdd_independent": -0.22006724591954296,
+      "vol_independent": 0.2167494739702768,
+      "sharpe_independent": 1.3338880330986442,
+      "trades": 379,
+      "displayed": {
+        "total": 43.188900000000004,
+        "annual": 0.3044,
+        "maxdd": -0.22010000000000002,
+        "vol": 0.2167,
+        "sharpe": 1.33,
+        "trades": 379
+      }
+    },
+    {
+      "label": "10Y",
+      "start": "2016-05-16",
+      "end": "2026-09-24",
+      "rows": 2520,
+      "annual_independent": 0.35716663958151207,
+      "maxdd_independent": -0.16309804295217434,
+      "vol_independent": 0.22482315346086165,
+      "sharpe_independent": 1.4702615303358346,
+      "trades": 306,
+      "displayed": {
+        "total": 20.1741,
+        "annual": 0.35719999999999996,
+        "maxdd": -0.1631,
+        "vol": 0.2248,
+        "sharpe": 1.47,
+        "trades": 306
+      }
+    },
+    {
+      "label": "5Y",
+      "start": "2021-07-19",
+      "end": "2026-09-24",
+      "rows": 1260,
+      "annual_independent": 0.5425627803742443,
+      "maxdd_independent": -0.15962238350856606,
+      "vol_independent": 0.25527159515904496,
+      "sharpe_independent": 1.8244316581124909,
+      "trades": 155,
+      "displayed": {
+        "total": 7.718999999999999,
+        "annual": 0.5426,
+        "maxdd": -0.15960000000000002,
+        "vol": 0.2553,
+        "sharpe": 1.82,
+        "trades": 155
+      }
+    },
+    {
+      "label": "3Y",
+      "start": "2023-08-15",
+      "end": "2026-09-24",
+      "rows": 756,
+      "annual_independent": 0.6590198158316625,
+      "maxdd_independent": -0.1433795586170047,
+      "vol_independent": 0.2853125465254425,
+      "sharpe_independent": 1.9154559169933458,
+      "trades": 107,
+      "displayed": {
+        "total": 3.557,
+        "annual": 0.659,
+        "maxdd": -0.1434,
+        "vol": 0.2853,
+        "sharpe": 1.92,
+        "trades": 107
+      }
+    },
+    {
+      "label": "1Y",
+      "start": "2025-09-11",
+      "end": "2026-09-24",
+      "rows": 252,
+      "annual_independent": 0.632560607523885,
+      "maxdd_independent": -0.1354158401392186,
+      "vol_independent": 0.30599216283515435,
+      "sharpe_independent": 1.7557841240425558,
+      "trades": 46,
+      "displayed": {
+        "total": 0.6294,
+        "annual": 0.6325999999999999,
+        "maxdd": -0.1354,
+        "vol": 0.306,
+        "sharpe": 1.76,
+        "trades": 46
+      }
+    }
+  ],
+  "year_2020": {
+    "first_day": "2020-01-02",
+    "first_day_return": 0.0202312138728322,
+    "rows": 243,
+    "return": 0.95257062348437,
+    "maxdd": -0.11472516591631576,
+    "displayed_return": 0.9526,
+    "displayed_maxdd": -0.11470000000000001
+  },
+  "signal_model_trade_label": true,
+  "attachment_checks": {
+    "表现": {
+      "range": [
+        "2011-12-09",
+        "2026-09-24"
+      ],
+      "nav_rows": 3594,
+      "nav_end": 44.18887388573992,
+      "drawdown_min": -0.2200672459195429,
+      "trade_rows": 379,
+      "names": [
+        "subd_v13_nav_2011-12-09_2026-09-24.png",
+        "subd_v13_nav_2011-12-09_2026-09-24.csv",
+        "subd_v13_trade_records_2011-12-09_2026-09-24.csv"
+      ],
+      "sha256": {
+        "subd_v13_nav_2011-12-09_2026-09-24.png": "fe0897e4f2c7e2aec145f1475212582973da1cf9d280743fa9aff92e6279810f",
+        "subd_v13_nav_2011-12-09_2026-09-24.csv": "4926f06b09aac0b77f0f2317c235d80dd775bccca9400cbc264eebdc3833c3d3",
+        "subd_v13_trade_records_2011-12-09_2026-09-24.csv": "86deebd9838a8941a1ce8e35ec22c277fb59507da3530aa700e5dccdb2bb00a1"
+      }
+    },
+    "交易记录 过去两个月": {
+      "range": [
+        "2026-07-27",
+        "2026-09-24"
+      ],
+      "nav_rows": 44,
+      "nav_end": 0.8796982006867275,
+      "drawdown_min": -0.1216070425549299,
+      "trade_rows": 8,
+      "names": [
+        "subd_v13_nav_2026-07-27_2026-09-24.png",
+        "subd_v13_nav_2026-07-27_2026-09-24.csv",
+        "subd_v13_trade_records_2026-07-27_2026-09-24.csv"
+      ],
+      "sha256": {
+        "subd_v13_nav_2026-07-27_2026-09-24.png": "b14da08f8af1d5ca487ba1569713b919904d982fa0fc93ba0f397505e5ba8ea5",
+        "subd_v13_nav_2026-07-27_2026-09-24.csv": "185fdb6a530cf5436acd0515fcd813631e9bde360f77b53e7b449f1d4125d0c1",
+        "subd_v13_trade_records_2026-07-27_2026-09-24.csv": "91d3ad1f433ca4e9bf6f88ecd53e61fdcfc47a4aa6e32f857d1d4373c71fc3d7"
+      }
+    },
+    "净值曲线 过去两年": {
+      "range": [
+        "2024-09-27",
+        "2026-09-24"
+      ],
+      "nav_rows": 484,
+      "nav_end": 3.0546200926202007,
+      "drawdown_min": -0.1354158401392194,
+      "trade_rows": 79,
+      "names": [
+        "subd_v13_nav_2024-09-27_2026-09-24.png",
+        "subd_v13_nav_2024-09-27_2026-09-24.csv",
+        "subd_v13_trade_records_2024-09-27_2026-09-24.csv"
+      ],
+      "sha256": {
+        "subd_v13_nav_2024-09-27_2026-09-24.png": "be12bd0f4f5a289e28a9f03b2e71b095c0836adaf2accf2ad522854b516909d5",
+        "subd_v13_nav_2024-09-27_2026-09-24.csv": "30e5b0e1a7cd990ec0cda162a1b98e8042374768f6cb5ebe844f7071edf7201f",
+        "subd_v13_trade_records_2024-09-27_2026-09-24.csv": "b16861aa0ec4d79f50b663d69ed7907025e32d7bb158545076a64fa589f3e94f"
+      }
+    }
+  },
+  "nan_injection": {
+    "error": "missing return inside daily data; return must be finite in daily data: 2026-09-24",
+    "attachments": 0
+  }
+}

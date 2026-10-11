@@ -1,0 +1,314 @@
+{
+  "source_price_sha": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "source_flags_sha": "39c1d4afc5dc73d59ee3742dc4e275a87ab6f400ecfc7b709796e83c46486ee1",
+  "rows": 3594,
+  "first": "2011-12-09",
+  "last": "2026-09-24",
+  "formal_parity": {
+    "position_before_different_days": 0,
+    "position_different_days": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "return_max_abs": 3.86843335142828e-16,
+    "nav_max_abs": 1.5631940186722204e-13
+  },
+  "cases": {
+    "formal": {
+      "off": [],
+      "eligible_asset_days": 4365,
+      "new_eligible_asset_days_vs_formal": 0,
+      "new_eligible_dates_vs_formal": 0,
+      "target_difference_days_vs_formal": 0,
+      "first_target_difference": null,
+      "position_difference_days_vs_formal": 0,
+      "trade_days": 379,
+      "turnover": 573,
+      "cost_fraction_sum": 0.573,
+      "end_nav": 44.18887388573983,
+      "stale_trade_blocks": 0
+    },
+    "floor_off": {
+      "off": [
+        "floor"
+      ],
+      "eligible_asset_days": 9779,
+      "new_eligible_asset_days_vs_formal": 5414,
+      "new_eligible_dates_vs_formal": 2705,
+      "target_difference_days_vs_formal": 839,
+      "first_target_difference": "2012-01-16",
+      "position_difference_days_vs_formal": 839,
+      "trade_days": 497,
+      "turnover": 907,
+      "cost_fraction_sum": 0.907,
+      "end_nav": 46.45269467049193,
+      "stale_trade_blocks": 0
+    },
+    "ceiling_off": {
+      "off": [
+        "ceiling"
+      ],
+      "eligible_asset_days": 4714,
+      "new_eligible_asset_days_vs_formal": 349,
+      "new_eligible_dates_vs_formal": 345,
+      "target_difference_days_vs_formal": 345,
+      "first_target_difference": "2012-02-22",
+      "position_difference_days_vs_formal": 345,
+      "trade_days": 281,
+      "turnover": 411,
+      "cost_fraction_sum": 0.41100000000000003,
+      "end_nav": 33.211792939396716,
+      "stale_trade_blocks": 0
+    },
+    "r2_off": {
+      "off": [
+        "r2"
+      ],
+      "eligible_asset_days": 4666,
+      "new_eligible_asset_days_vs_formal": 301,
+      "new_eligible_dates_vs_formal": 273,
+      "target_difference_days_vs_formal": 101,
+      "first_target_difference": "2012-02-13",
+      "position_difference_days_vs_formal": 101,
+      "trade_days": 382,
+      "turnover": 583,
+      "cost_fraction_sum": 0.583,
+      "end_nav": 29.27560789768391,
+      "stale_trade_blocks": 0
+    },
+    "floor_ceiling_off": {
+      "off": [
+        "ceiling",
+        "floor"
+      ],
+      "eligible_asset_days": 10128,
+      "new_eligible_asset_days_vs_formal": 5763,
+      "new_eligible_dates_vs_formal": 2817,
+      "target_difference_days_vs_formal": 1101,
+      "first_target_difference": "2012-01-16",
+      "position_difference_days_vs_formal": 1101,
+      "trade_days": 391,
+      "turnover": 709,
+      "cost_fraction_sum": 0.7090000000000001,
+      "end_nav": 36.84429901227476,
+      "stale_trade_blocks": 0
+    },
+    "floor_r2_off": {
+      "off": [
+        "floor",
+        "r2"
+      ],
+      "eligible_asset_days": 15373,
+      "new_eligible_asset_days_vs_formal": 11008,
+      "new_eligible_dates_vs_formal": 3366,
+      "target_difference_days_vs_formal": 1114,
+      "first_target_difference": "2012-01-16",
+      "position_difference_days_vs_formal": 1114,
+      "trade_days": 339,
+      "turnover": 671,
+      "cost_fraction_sum": 0.671,
+      "end_nav": 32.09423570126754,
+      "stale_trade_blocks": 0
+    },
+    "ceiling_r2_off": {
+      "off": [
+        "ceiling",
+        "r2"
+      ],
+      "eligible_asset_days": 5015,
+      "new_eligible_asset_days_vs_formal": 650,
+      "new_eligible_dates_vs_formal": 602,
+      "target_difference_days_vs_formal": 443,
+      "first_target_difference": "2012-02-13",
+      "position_difference_days_vs_formal": 443,
+      "trade_days": 282,
+      "turnover": 415,
+      "cost_fraction_sum": 0.41500000000000004,
+      "end_nav": 22.08349963457465,
+      "stale_trade_blocks": 0
+    },
+    "floor_ceiling_r2_off": {
+      "off": [
+        "ceiling",
+        "floor",
+        "r2"
+      ],
+      "eligible_asset_days": 15722,
+      "new_eligible_asset_days_vs_formal": 11357,
+      "new_eligible_dates_vs_formal": 3410,
+      "target_difference_days_vs_formal": 1360,
+      "first_target_difference": "2012-01-16",
+      "position_difference_days_vs_formal": 1360,
+      "trade_days": 238,
+      "turnover": 475,
+      "cost_fraction_sum": 0.47500000000000003,
+      "end_nav": 25.18948271302365,
+      "stale_trade_blocks": 0
+    }
+  },
+  "pair_interactions": {
+    "floor_ceiling_off": {
+      "components": [
+        "floor_off",
+        "ceiling_off"
+      ],
+      "joint_only_eligible_asset_days": 0,
+      "joint_only_eligible_dates": 0,
+      "joint_only_selected_dates": 0,
+      "first_joint_only_selection": null,
+      "pair_target_differs_from_both_singles_days": 0,
+      "first_pair_target_differs_from_both_singles": null,
+      "pair_target_not_equal_either_single_days": 0
+    },
+    "floor_r2_off": {
+      "components": [
+        "floor_off",
+        "r2_off"
+      ],
+      "joint_only_eligible_asset_days": 5293,
+      "joint_only_eligible_dates": 2744,
+      "joint_only_selected_dates": 566,
+      "first_joint_only_selection": {
+        "date": "2012-02-06",
+        "asset": "159915.SZ",
+        "score": -0.5772621486553339,
+        "r2": 0.2149995207118638,
+        "formal_target": "CASH",
+        "single_targets": [
+          "CASH",
+          "CASH"
+        ],
+        "pair_target": "159915.SZ",
+        "pair_position_before": "159915.SZ",
+        "pair_position_after": "159915.SZ",
+        "pair_turnover": 0,
+        "single_positions_before": [
+          "159915.SZ",
+          "CASH"
+        ],
+        "single_turnovers": [
+          1,
+          0
+        ]
+      },
+      "pair_target_differs_from_both_singles_days": 566,
+      "first_pair_target_differs_from_both_singles": {
+        "date": "2012-02-06",
+        "formal": "CASH",
+        "single_a": "CASH",
+        "single_b": "CASH",
+        "pair": "159915.SZ"
+      },
+      "pair_target_not_equal_either_single_days": 566
+    },
+    "ceiling_r2_off": {
+      "components": [
+        "ceiling_off",
+        "r2_off"
+      ],
+      "joint_only_eligible_asset_days": 0,
+      "joint_only_eligible_dates": 0,
+      "joint_only_selected_dates": 0,
+      "first_joint_only_selection": null,
+      "pair_target_differs_from_both_singles_days": 0,
+      "first_pair_target_differs_from_both_singles": null,
+      "pair_target_not_equal_either_single_days": 0
+    }
+  },
+  "floor_off_l4_parity": {
+    "position_before_different_days": 0,
+    "position_different_days": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "return_max_abs": 4.0592529337857286e-16,
+    "nav_max_abs": 1.2434497875801753e-13
+  },
+  "ceiling_off_l4_parity": {
+    "position_before_different_days": 0,
+    "position_different_days": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "return_max_abs": 4.0592529337857286e-16,
+    "nav_max_abs": 7.815970093361102e-14
+  },
+  "r2_off_l4_parity": {
+    "position_before_different_days": 0,
+    "position_different_days": 0,
+    "turnover_max_abs": 0.0,
+    "cost_max_abs": 0.0,
+    "return_max_abs": 3.642919299551295e-16,
+    "nav_max_abs": 1.3500311979441904e-13
+  },
+  "main_l5_parity": {
+    "formal": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 3.86843335142828e-16,
+      "nav_max_abs": 1.5631940186722204e-13
+    },
+    "floor_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 4.0592529337857286e-16,
+      "nav_max_abs": 1.2434497875801753e-13
+    },
+    "ceiling_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 4.0592529337857286e-16,
+      "nav_max_abs": 7.815970093361102e-14
+    },
+    "r2_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 3.642919299551295e-16,
+      "nav_max_abs": 1.3500311979441904e-13
+    },
+    "floor_ceiling_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 5.00901403688303e-16,
+      "nav_max_abs": 4.263256414560601e-14
+    },
+    "floor_r2_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 5.412337245047638e-16,
+      "nav_max_abs": 1.2434497875801753e-13
+    },
+    "ceiling_r2_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 4.2847669856627135e-16,
+      "nav_max_abs": 1.8829382497642655e-13
+    },
+    "floor_ceiling_r2_off": {
+      "position_before_different_days": 0,
+      "position_different_days": 0,
+      "turnover_max_abs": 0.0,
+      "cost_max_abs": 0.0,
+      "return_max_abs": 5.2562121322097255e-16,
+      "nav_max_abs": 1.8118839761882555e-13
+    }
+  },
+  "triple_interaction": {
+    "triple_target_differs_from_all_three_singles_days": 519,
+    "first_such_date": "2012-02-06",
+    "triple_target_differs_from_all_three_pairs_days": 0,
+    "triple_target_differs_from_floor_r2_pair_days": 345
+  },
+  "future_data_prefix_checked_through": "2024-12-31"
+}

@@ -1,0 +1,25 @@
+## SubD六ETF V1.3 参数
+
+| 参数 | 当前值 | 说明 |
+|:-|:-|:-|
+| 版本 | **1.3** | v1_3_naive_score_0p5_5p5_r2_0p25 |
+| 起始日期 | **2010-01-01** | 回测起点 |
+| 评估起点 | **2020-01-02** | 正式统计窗口起点 |
+| 加权斜率窗口 | **25日** | 对数价格加权线性拟合 |
+| Score入选范围 | **0.5 < Score < 5.5** | 超过上限或低于下限只显示，不进入候选池 |
+| R²门槛 | **0.25** | score入选过滤 |
+| 目标波动率 | **关闭** | 固定1倍，不调用波动率叠加层 |
+| 波动率窗口 | **不适用** | 目标波动率已关闭 |
+| 最大杠杆 | **1.0x** | scale上限 |
+| Scale调整阈值 | **不适用** | 目标波动率已关闭 |
+| 切换buffer | **关闭（1.00x）** | 直接选择分数最高的合格候选 |
+| 新资产首笔 | **100%** | 从现金或换新资产时先买入 |
+| 分批建仓 | **关闭** | 一次全额建仓，不等待下跌日 |
+| MA60过热防守 | **关闭** | 不参与信号或仓位计算 |
+| 现金收益 | **0%** | 无合格候选时持有现金 |
+| 单边成本 | **0.1%** | 调仓成本 |
+| SELL腿执行校验 | **需要已验证可卖数量** | 未接券商可卖数量时，含SELL腿的换仓保持monitor-only，不生成可执行动作 |
+| 资产池 | **6只ETF** | 创业板100ETF(159915.SZ), 纳指ETF(159941.SZ), 德国ETF(513030.SH), 日经ETF(513520.SH), 豆粕ETF(159985.SZ), 黄金ETF(518880.SH) |
+| 数据源 | **AkShare/Eastmoney qfq -> Tencent fqkline qfqday -> Eastmoney HTTP qfq** | 历史回测优先使用前复权/连续日收盘价；Tencent仅接受经验证的qfq payload；原始未复权fallback不得进入正式信号或绩效路径 |
+| Live price limit by ETF | **159915.SZ=20%, 159941.SZ=10%, 513030.SH=10%, 513520.SH=10%, 159985.SZ=10%, 518880.SH=10%** | temporary proxy price band based on price-matrix reference previous close, ETF limit ratio, and 0.001 CNY tick; not official exchange reference price |
+| Live history today cross-check | **>3% => backup/review** | history today cross-check has no quote timestamp, so mismatch rejects only the candidate |

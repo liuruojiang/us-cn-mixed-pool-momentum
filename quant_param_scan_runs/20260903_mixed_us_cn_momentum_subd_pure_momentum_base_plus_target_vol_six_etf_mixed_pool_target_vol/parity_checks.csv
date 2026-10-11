@@ -1,0 +1,10 @@
+check,metric,max_abs_diff
+target_vol_off_vs_pure_base,return,0.0
+target_vol_off_vs_pure_base,nav,0.0
+target_vol_off_vs_pure_base,turnover,0.0
+target_vol_off_vs_pure_base,fraction_before,0.0
+target_vol_0.25_runner_vs_poe,return,0.0
+target_vol_0.25_runner_vs_poe,nav,0.0
+target_vol_0.25_runner_vs_poe,turnover,0.0
+target_vol_0.25_runner_vs_poe,exposure_effective,0.0
+target_vol_0.25_runner_vs_poe,target_vol_scale_next,0.0

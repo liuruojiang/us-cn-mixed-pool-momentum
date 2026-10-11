@@ -1,0 +1,27 @@
+init_quant_param_scan_run.py
+run_id=20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback_25_30_fine_rescan
+project=mixed-us-cn-momentum
+strategy=SubD pure momentum core
+subsystem=six-etf mixed pool
+parameter_group=LOOKBACK 25-30 fine rescan
+repo=D:\动量策略\美股A股混合池子动量策略
+
+run_scan.py
+command=python -X utf8 quant_param_scan_runs\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_lookback_25_30_fine_rescan\run_scan.py
+working_directory=D:\动量策略\美股A股混合池子动量策略
+grid=LOOKBACK 25,26,27,28,29,30; step 1
+base=pure momentum; R2 off; Buffer 1.00; full entry; overheat off; target vol off; one-way cost 0.001
+data=frozen qfq six-ETF panel; 2011-12-09 through 2026-09-02; 3578 rows
+recompute=all six daily outputs rebuilt in this new run folder
+elapsed_sec=115.046
+parity=PASS; current 25 versus accepted base and runner versus Poe
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T00:11:23+08:00
+decision=retain_25_baseline_and_29_challenger_pending_user_confirmation
+stability_label=mixed_window_tradeoff
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T00:23:28+08:00
+decision=keep_25_formal_base_record_29_as_unpromoted_right_shift_candidate
+stability_label=mixed_window_tradeoff

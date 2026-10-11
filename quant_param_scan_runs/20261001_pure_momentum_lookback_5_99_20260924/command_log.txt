@@ -1,0 +1,26 @@
+init_quant_param_scan_run.py
+run_id=20261001_pure_momentum_lookback_5_99_20260924
+project=美股A股混合池子动量策略
+strategy=six_etf_v1_3_pure_momentum_research
+subsystem=subd_six_etf
+parameter_group=LOOKBACK
+repo=D:\动量策略\美股A股混合池子动量策略
+
+[2026-10-01 Asia/Shanghai] cwd=D:\动量策略\美股A股混合池子动量策略
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/run_scan.py
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/audit_results.py
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/audit_signals.py
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/build_report.py
+No output-affecting environment variables; no provider request or cache mutation.
+
+[2026-10-01 Asia/Shanghai] cwd=D:\动量策略\美股A股混合池子动量策略
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/run_scan.py
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/audit_results.py
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/audit_signals.py
+python -X utf8 quant_param_scan_runs/20261001_pure_momentum_lookback_5_99_20260924/build_report.py
+No output-affecting environment variables; no provider request or cache mutation.
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-10-01T20:53:27+08:00
+decision=research_only_no_promotion
+stability_label=retrospective_grid_only

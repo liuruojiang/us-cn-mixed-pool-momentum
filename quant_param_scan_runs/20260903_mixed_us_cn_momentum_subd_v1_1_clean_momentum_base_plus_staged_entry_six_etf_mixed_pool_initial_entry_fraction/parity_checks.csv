@@ -1,0 +1,9 @@
+check,metric,max_abs_diff
+baseline_vs_prior,return,9.974659986866641e-17
+baseline_vs_prior,nav,7.105427357601002e-15
+baseline_vs_prior,turnover,0.0
+baseline_vs_prior,holding_fraction,0.0
+cached_half_vs_exact,return,0.0
+cached_half_vs_exact,nav,0.0
+cached_half_vs_exact,turnover,0.0
+cached_half_vs_exact,holding_fraction,0.0

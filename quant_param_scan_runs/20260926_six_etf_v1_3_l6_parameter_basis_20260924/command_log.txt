@@ -1,0 +1,24 @@
+init_quant_param_scan_run.py
+run_id=20260926_six_etf_v1_3_l6_parameter_basis_20260924
+project=美股A股混合池子动量策略
+strategy=six_etf_v1_3
+subsystem=subd_six_etf
+parameter_group=l6_formal_parameter_basis
+repo=D:\动量策略\美股A股混合池子动量策略
+
+cwd=D:\动量策略\美股A股混合池子动量策略
+environment=Python -X utf8; no strategy-specific environment overrides; read-only L1 price/flag files
+freeze=parameter_matrix.csv SHA256 12fb6719c38f10078bedf908eac8a46d64ac26b633e8b237546d4e42f107fff4; freeze_protocol.md SHA256 93362ab6ce21681d4be412d8f250ccc8213ae7bc5e634fb1cff80d714b56146c
+command=python -X utf8 -m py_compile quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/run_l6_scan.py
+command=python -X utf8 quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/run_l6_scan.py
+independent=python -X utf8 outputs/recert_l6_20260926/agent_b_independent_matrix.py
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-26T20:54:23+08:00
+decision=keep_default
+stability_label=narrow_stable
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-26T20:54:38+08:00
+decision=keep_default
+stability_label=narrow_stable

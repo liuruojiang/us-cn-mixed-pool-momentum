@@ -1,0 +1,58 @@
+{
+  "classification": "fault injection using an existing real frozen qfq panel; diagnostic only",
+  "real_input_path": "outputs\\recert_l1_20260926\\prices_raw_qfq_through_20260924.csv.gz",
+  "real_panel_rows": 3594,
+  "real_input_first": "2011-12-09",
+  "real_input_last": "2026-09-24",
+  "primary_short_history": {
+    "injected_asset": "159915.SZ",
+    "injected_rows": 20,
+    "accepted_source": "akshare.fund_etf_hist_em daily close",
+    "accepted_first": "2026-08-28",
+    "accepted_last": "2026-09-24",
+    "accepted_rows": 20,
+    "backup_calls": [],
+    "loaded_panel_first": "2013-07-29",
+    "actual_formal_daily_first": "2013-07-29",
+    "latest_raw_score_is_nan": true,
+    "clean_latest_score": -0.1412339244248192,
+    "clean_latest_r2": 0.05271518390324936,
+    "source_note": "akshare.fund_etf_hist_em daily close [qfq/front-adjusted; adjust=qfq]"
+  },
+  "premature_empty": {
+    "rejected": false,
+    "rows_returned": 640,
+    "first": "2024-02-02",
+    "last": "2026-09-24",
+    "requests": [
+      "sz159915,day,2010-01-01,2026-09-24,640,qfq",
+      "sz159915,day,2010-01-01,2024-02-01,640,qfq",
+      "sz159915,day,2010-01-01,2024-02-01,640,qfq",
+      "sz159915,day,2010-01-01,2024-02-01,640,qfq"
+    ]
+  },
+  "repeated_page": {
+    "rejected": false,
+    "rows_returned": 640,
+    "first": "2024-02-02",
+    "last": "2026-09-24",
+    "requests": [
+      "sz159915,day,2010-01-01,2026-09-24,640,qfq",
+      "sz159915,day,2010-01-01,2024-02-01,640,qfq"
+    ]
+  },
+  "malformed_text_helper_only": {
+    "accepted": true,
+    "filled_value": 3.42,
+    "ffill_flag": false
+  },
+  "official_calendar_not_used_when_provider_unavailable": {
+    "calendar_available": false,
+    "expected_today_session": true,
+    "expected_live_session": "2026-10-07 00:00:00",
+    "expected_confirmed_session": "2026-10-07 00:00:00"
+  },
+  "negative_age_live_cache": {
+    "returned_marker": "future-cache"
+  }
+}

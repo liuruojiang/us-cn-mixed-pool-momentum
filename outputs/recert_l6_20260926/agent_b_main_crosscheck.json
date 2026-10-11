@@ -1,0 +1,13 @@
+{
+  "matrix_rows": 39,
+  "path_rows_checked": 140166,
+  "numeric_field_max_abs": {
+    "turnover": 0.0,
+    "cost": 0.0,
+    "gross_return": 3.0531133177191805e-16,
+    "return": 6.106226635438361e-16,
+    "nav": 4.831690603168681e-13
+  },
+  "mismatches": [],
+  "all_daily_positions_fees_metrics_match": true
+}

@@ -1,0 +1,23 @@
+{
+  "matched_candidate_windows": 234,
+  "candidate_count": 39,
+  "metric_max_abs_or_mismatch": {
+    "ann_return": 8.326672684688674e-15,
+    "max_dd": 2.0816681711721685e-15,
+    "end_nav": 4.121147867408581e-13,
+    "paid_fee_initial_capital_units": 4.707345624410664e-14,
+    "turnover_total": 0.0,
+    "rows_mismatch": 0,
+    "trade_days_mismatch": 0,
+    "cash_days_mismatch": 0,
+    "start_mismatch": 0,
+    "end_mismatch": 0,
+    "max_dd_peak_mismatch": 0,
+    "max_dd_trough_mismatch": 0
+  },
+  "position_mismatch_total": 0,
+  "turnover_max_abs": 0.0,
+  "cost_max_abs": 0.0,
+  "nav_max_abs": 4.831690603168681e-13,
+  "first_event_or_count_mismatches": []
+}

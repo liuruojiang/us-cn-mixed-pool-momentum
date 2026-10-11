@@ -1,0 +1,37 @@
+{
+  "master_start": "2006-07-03",
+  "master_end": "2026-06-30",
+  "master_rows": 5029,
+  "btc_first_us_session": "2014-09-17",
+  "vt_proxy": {
+    "first_vt_date": "2008-06-26",
+    "proxy_weights": {
+      "SPY": 0.6,
+      "EFA": 0.3,
+      "EEM": 0.1
+    },
+    "scale_to_vt_on_first_date": 30.770441286895267
+  },
+  "run_at": "2026-07-01T20:47:05",
+  "target_weights": {
+    "SPY": 0.2,
+    "QQQ": 0.2,
+    "VT": 0.2,
+    "GLD": 0.15,
+    "AGG": 0.15,
+    "DBC": 0.05,
+    "BTC": 0.05
+  },
+  "source_parameters": {
+    "PROD_USE_TIMING": false,
+    "PROD_VS_ENABLED": true,
+    "PROD_VS_TARGET_VOL": 0.15,
+    "PROD_VS_VOL_WINDOW": 15,
+    "PROD_VS_MAX_LEV": 1.5,
+    "PROD_VS_MIN_LEV": 0.5,
+    "PROD_VS_THRESHOLD": 0.1,
+    "PROD_COMMISSION": 0.001,
+    "PROD_REBAL_MONTH": 12,
+    "PROD_CASH": "BIL"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "old_snapshot_sha256": "0cc4af45158d6aaab4594b869b79309a96e8e3cc2f21a0205c38128913bec2aa",
+  "new_raw_sha256": "1e14b2c2eddfaeb42b0b802ab61650229c702a0657d3f4dd80cbd6b7dcbe3fc0",
+  "new_aligned_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+  "old_rows": 3578,
+  "new_rows": 3594,
+  "overlap_rows": 3578,
+  "new_dates": [
+    "2026-09-03",
+    "2026-09-04",
+    "2026-09-07",
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11",
+    "2026-09-14",
+    "2026-09-15",
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24"
+  ],
+  "old_vs_new_raw_mismatch_count": 2,
+  "old_vs_new_raw_first_mismatch": {
+    "date": "2021-02-08",
+    "code": "159915.SZ",
+    "old_snapshot": 3.084,
+    "new_raw": null,
+    "new_aligned": 3.084,
+    "ffill_flag": true
+  },
+  "old_vs_new_raw_all_mismatches": [
+    {
+      "date": "2021-02-08",
+      "code": "159915.SZ",
+      "old_snapshot": 3.084,
+      "new_raw": null,
+      "new_aligned": 3.084,
+      "ffill_flag": true
+    },
+    {
+      "date": "2025-01-23",
+      "code": "513030.SH",
+      "old_snapshot": 1.815,
+      "new_raw": null,
+      "new_aligned": 1.815,
+      "ffill_flag": true
+    }
+  ],
+  "old_vs_new_aligned_mismatch_count": 0,
+  "new_date_missing_count_by_asset": {
+    "159915.SZ": 0,
+    "159941.SZ": 0,
+    "513030.SH": 0,
+    "513520.SH": 0,
+    "159985.SZ": 0,
+    "518880.SH": 0
+  },
+  "ffill_dates_by_asset": {
+    "159915.SZ": [
+      "2021-02-08"
+    ],
+    "159941.SZ": [],
+    "513030.SH": [
+      "2025-01-23"
+    ],
+    "513520.SH": [],
+    "159985.SZ": [],
+    "518880.SH": []
+  },
+  "latest_close": {
+    "159915.SZ": 3.312,
+    "159941.SZ": 1.707,
+    "513030.SH": 1.796,
+    "513520.SH": 2.269,
+    "159985.SZ": 2.319,
+    "518880.SH": 8.788
+  }
+}

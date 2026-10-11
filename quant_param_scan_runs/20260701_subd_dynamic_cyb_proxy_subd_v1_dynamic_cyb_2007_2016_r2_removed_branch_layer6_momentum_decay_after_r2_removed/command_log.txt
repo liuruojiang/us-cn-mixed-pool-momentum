@@ -1,0 +1,17 @@
+init_quant_param_scan_run.py
+run_id=20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer6_momentum_decay_after_r2_removed
+project=subd dynamic cyb proxy
+strategy=subd_v1_dynamic_cyb_2007_2016
+subsystem=r2_removed_branch
+parameter_group=layer6_momentum_decay_after_r2_removed
+repo=D:\动量策略\美股A股混合池子动量策略
+
+[scan]
+cwd=D:\动量策略\美股A股混合池子动量策略
+python run_subd_proxy_dynamic_cyb_r2none_layer6_momentum_decay_scan.py --start-date 2007-01-01 --end-date 2016-12-30 --run-folder quant_param_scan_runs\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_removed_branch_layer6_momentum_decay_after_r2_removed
+elapsed_sec=106.961
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-07-02T00:01:45+08:00
+decision=do_not_add_momentum_decay_keep_layer5_two_lines
+stability_label=no_momentum_decay_pass_keep_previous_two_lines

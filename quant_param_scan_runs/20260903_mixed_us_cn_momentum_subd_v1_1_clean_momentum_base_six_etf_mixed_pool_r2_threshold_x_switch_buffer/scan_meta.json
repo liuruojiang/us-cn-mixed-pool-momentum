@@ -1,0 +1,100 @@
+{
+  "run_id": "20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer",
+  "created_at": "2026-09-03T20:58:20+08:00",
+  "phase": "complete",
+  "project": "mixed-us-cn-momentum",
+  "strategy": "SubD V1.1 clean momentum base",
+  "subsystem": "six-etf mixed pool",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_six_etf_v1_1.py",
+  "git_branch": "codex/previous-research-sync-20260821",
+  "git_commit": "6bf19204abca54f5ff7d15ec1708cf03a0412669",
+  "git_status_before": "",
+  "git_status_after": "?? quant_param_scan_runs/20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer/",
+  "scan_type": "two_parameter_grid",
+  "parameter_group": "R2_THRESHOLD x SWITCH_BUFFER",
+  "baseline": {
+    "candidate": "r2_off_buffer_1.00",
+    "r2_threshold": null,
+    "switch_buffer": 1.0,
+    "description": "25-day weighted-log-slope Top1 momentum base with only transaction costs"
+  },
+  "candidate_grid": {
+    "r2_threshold": [
+      null,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5
+    ],
+    "switch_buffer": [
+      1.0,
+      1.02,
+      1.03,
+      1.05,
+      1.08,
+      1.1,
+      1.15,
+      1.2
+    ]
+  },
+  "data_snapshot": {
+    "raw_data_start": "2011-12-09",
+    "raw_data_end": "2026-09-02",
+    "rows": 3578,
+    "assets": [
+      "159915.SZ",
+      "159941.SZ",
+      "513030.SH",
+      "513520.SH",
+      "159985.SZ",
+      "518880.SH"
+    ],
+    "adjustment": "qfq/front-adjusted",
+    "trading_calendar": "China trading-day calendar required",
+    "last_by_asset": {
+      "159915.SZ": "2026-09-02",
+      "159941.SZ": "2026-09-02",
+      "513030.SH": "2026-09-02",
+      "513520.SH": "2026-09-02",
+      "159985.SZ": "2026-09-02",
+      "518880.SH": "2026-09-02"
+    },
+    "raw_last_by_asset_before_matched_clip": {
+      "159915.SZ": "2026-09-02",
+      "159941.SZ": "2026-09-03",
+      "513030.SH": "2026-09-03",
+      "513520.SH": "2026-09-03",
+      "159985.SZ": "2026-09-03",
+      "518880.SH": "2026-09-03"
+    },
+    "matched_raw_end": "2026-09-02",
+    "price_snapshot": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz",
+    "price_snapshot_sha256": "0cc4af45158d6aaab4594b869b79309a96e8e3cc2f21a0205c38128913bec2aa"
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "asset_switch_turnover": 2.0,
+    "cash_leg_turnover": 1.0
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\command_log.txt"
+  },
+  "decision": "watchlist",
+  "stability_label": "narrow_stable",
+  "parity_check": {
+    "candidate": "r2_0.20_buffer_1.05",
+    "runner_vs_poe_max_abs_return_diff": 0.0,
+    "runner_vs_poe_max_abs_nav_diff": 0.0,
+    "passed": true
+  },
+  "elapsed_sec": 1030.196,
+  "finalized_at": "2026-09-03T21:24:47+08:00"
+}

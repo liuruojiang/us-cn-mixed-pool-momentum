@@ -1,0 +1,355 @@
+{
+  "score_parity": {
+    "asset_days": 15722,
+    "max_raw_score_abs": 1.3642420526593924e-12,
+    "max_r2_abs": 7.771561172376096e-16
+  },
+  "five_window_parity": {
+    "parity_formal": {
+      "max_annual_abs": 1.3322676295501878e-15,
+      "max_drawdown_abs": 2.0816681711721685e-15,
+      "max_trade_days_abs": 0
+    },
+    "parity_floor_off": {
+      "max_annual_abs": 8.326672684688674e-15,
+      "max_drawdown_abs": 9.020562075079397e-16,
+      "max_trade_days_abs": 0
+    },
+    "parity_ceiling_off": {
+      "max_annual_abs": 4.996003610813204e-16,
+      "max_drawdown_abs": 2.220446049250313e-16,
+      "max_trade_days_abs": 0
+    },
+    "parity_r2_off": {
+      "max_annual_abs": 1.0547118733938987e-15,
+      "max_drawdown_abs": 1.8041124150158794e-15,
+      "max_trade_days_abs": 0
+    }
+  },
+  "parameter_group_first_position_events": {
+    "lookback": {
+      "different_position_days": 500,
+      "first_date": "2012-02-14",
+      "formal_position": "159915.SZ",
+      "candidate_position": "CASH",
+      "formal_turnover": 1,
+      "candidate_turnover": 0
+    },
+    "weight_power": {
+      "different_position_days": 826,
+      "first_date": "2012-02-14",
+      "formal_position": "159915.SZ",
+      "candidate_position": "CASH",
+      "formal_turnover": 1,
+      "candidate_turnover": 0
+    },
+    "score_floor": {
+      "different_position_days": 839,
+      "first_date": "2012-01-16",
+      "formal_position": "CASH",
+      "candidate_position": "159915.SZ",
+      "formal_turnover": 0,
+      "candidate_turnover": 1
+    },
+    "score_ceiling": {
+      "different_position_days": 345,
+      "first_date": "2012-02-22",
+      "formal_position": "CASH",
+      "candidate_position": "159915.SZ",
+      "formal_turnover": 1,
+      "candidate_turnover": 0
+    },
+    "r2_threshold": {
+      "different_position_days": 101,
+      "first_date": "2012-02-13",
+      "formal_position": "CASH",
+      "candidate_position": "159915.SZ",
+      "formal_turnover": 0,
+      "candidate_turnover": 1
+    },
+    "switch_buffer": {
+      "different_position_days": 10,
+      "first_date": "2017-04-11",
+      "formal_position": "518880.SH",
+      "candidate_position": "513030.SH",
+      "formal_turnover": 2,
+      "candidate_turnover": 0
+    }
+  },
+  "parameter_group_first_event_scores": {
+    "lookback": {
+      "date": "2012-02-14",
+      "formal_before": "CASH",
+      "formal_eligible": [
+        "159915.SZ"
+      ],
+      "candidate_eligible": [],
+      "formal_score_by_asset": {
+        "159915.SZ": 1.412585465719864,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_score_by_asset": {
+        "159915.SZ": 0.5135244339275027,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "formal_r2_by_asset": {
+        "159915.SZ": 0.26143675587299187,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_r2_by_asset": {
+        "159915.SZ": 0.07421783417237204,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      }
+    },
+    "weight_power": {
+      "date": "2012-02-14",
+      "formal_before": "CASH",
+      "formal_eligible": [
+        "159915.SZ"
+      ],
+      "candidate_eligible": [],
+      "formal_score_by_asset": {
+        "159915.SZ": 1.412585465719864,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_score_by_asset": {
+        "159915.SZ": 0.16842083005013947,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "formal_r2_by_asset": {
+        "159915.SZ": 0.26143675587299187,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_r2_by_asset": {
+        "159915.SZ": 0.011089227580141525,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      }
+    },
+    "score_floor": {
+      "date": "2012-01-16",
+      "formal_before": "CASH",
+      "formal_eligible": [],
+      "candidate_eligible": [
+        "159915.SZ"
+      ],
+      "formal_score_by_asset": {
+        "159915.SZ": -0.8582814025688498,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_score_by_asset": {
+        "159915.SZ": -0.8582814025688498,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "formal_r2_by_asset": {
+        "159915.SZ": 0.6672407163849381,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_r2_by_asset": {
+        "159915.SZ": 0.6672407163849381,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      }
+    },
+    "score_ceiling": {
+      "date": "2012-02-22",
+      "formal_before": "159915.SZ",
+      "formal_eligible": [],
+      "candidate_eligible": [
+        "159915.SZ"
+      ],
+      "formal_score_by_asset": {
+        "159915.SZ": 5.635006590101865,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_score_by_asset": {
+        "159915.SZ": 5.635006590101865,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "formal_r2_by_asset": {
+        "159915.SZ": 0.8888358876205005,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_r2_by_asset": {
+        "159915.SZ": 0.8888358876205005,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      }
+    },
+    "r2_threshold": {
+      "date": "2012-02-13",
+      "formal_before": "CASH",
+      "formal_eligible": [],
+      "candidate_eligible": [
+        "159915.SZ"
+      ],
+      "formal_score_by_asset": {
+        "159915.SZ": 0.8735749134700774,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_score_by_asset": {
+        "159915.SZ": 0.8735749134700774,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "formal_r2_by_asset": {
+        "159915.SZ": 0.1378021942263039,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      },
+      "candidate_r2_by_asset": {
+        "159915.SZ": 0.1378021942263039,
+        "159941.SZ": null,
+        "513030.SH": null,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": null
+      }
+    },
+    "switch_buffer": {
+      "date": "2017-04-11",
+      "formal_before": "513030.SH",
+      "formal_eligible": [
+        "513030.SH",
+        "518880.SH"
+      ],
+      "candidate_eligible": [
+        "513030.SH",
+        "518880.SH"
+      ],
+      "formal_score_by_asset": {
+        "159915.SZ": -0.25310775120721174,
+        "159941.SZ": -0.13918955369318886,
+        "513030.SH": 0.506738453784636,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": 0.5168350585444341
+      },
+      "candidate_score_by_asset": {
+        "159915.SZ": -0.25310775120721174,
+        "159941.SZ": -0.13918955369318886,
+        "513030.SH": 0.506738453784636,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": 0.5168350585444341
+      },
+      "formal_r2_by_asset": {
+        "159915.SZ": 0.4107701569533989,
+        "159941.SZ": 0.2984269043753671,
+        "513030.SH": 0.6970201956578546,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": 0.7780654804190807
+      },
+      "candidate_r2_by_asset": {
+        "159915.SZ": 0.4107701569533989,
+        "159941.SZ": 0.2984269043753671,
+        "513030.SH": 0.6970201956578546,
+        "513520.SH": null,
+        "159985.SZ": null,
+        "518880.SH": 0.7780654804190807
+      },
+      "best_to_current_score_ratio": 1.0199246863631335,
+      "buffer_threshold": 1.02
+    }
+  },
+  "prefix_causality_max_score_r2_abs": 0.0,
+  "future_price_mutation": {
+    "day": "2023-11-20",
+    "asset": "159915.SZ",
+    "old_price": 1.942,
+    "mutated_price": 2.4274999999999998,
+    "past_score_unchanged": true,
+    "mutated_day_score_delta": 3.011468264692258
+  },
+  "fee_mutation": {
+    "date": "2013-08-30",
+    "turnover": 2,
+    "correct_net_return": -0.0317663628831815,
+    "one_leg_omitted_error": 0.0009701739850870653,
+    "both_legs_omitted_error": 0.0019403479701740993
+  },
+  "same_close_new_asset_mutation": {
+    "date": "2012-02-14",
+    "new_asset": "159915.SZ",
+    "correct_signal_day_gross": 0.0,
+    "wrong_new_asset_signal_day_gross": -0.004178272980501441
+  },
+  "gate_boundary_semantics": {
+    "score_equal_floor_rejected": true,
+    "score_equal_ceiling_rejected": true,
+    "r2_equal_threshold_accepted": true,
+    "floor_off_is_negative_infinity": true
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "windows_checked": 162,
+  "max_numeric_abs_difference": {
+    "annual": 8.326672684688674e-15,
+    "maxdd": 2.0816681711721685e-15,
+    "end_nav": 4.121147867408581e-13,
+    "trade_days": 0.0,
+    "two_leg_days": 0.0,
+    "turnover": 0.0,
+    "paid_fee": 4.707345624410664e-14,
+    "cash_days": 0.0,
+    "avg_exposure": 0.0,
+    "buffer_block_days": 0.0,
+    "stale_block_days": 0.0
+  },
+  "identity_mismatch_counts": {
+    "start_main": 0,
+    "end_main": 0,
+    "rows_main": 0,
+    "peak_date": 0,
+    "trough_date": 0
+  },
+  "trigger_rows_checked": 27,
+  "trigger_mismatches": []
+}

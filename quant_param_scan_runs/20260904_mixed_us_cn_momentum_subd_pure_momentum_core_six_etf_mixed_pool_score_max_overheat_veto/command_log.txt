@@ -1,0 +1,26 @@
+init_quant_param_scan_run.py
+run_id=20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_max_overheat_veto
+project=mixed-us-cn-momentum
+strategy=SubD pure momentum core
+subsystem=six-etf mixed pool
+parameter_group=SCORE_MAX overheat veto
+repo=D:\动量策略\美股A股混合池子动量策略
+
+run_scan.py
+command=python -X utf8 quant_param_scan_runs\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_score_max_overheat_veto\run_scan.py
+working_directory=D:\动量策略\美股A股混合池子动量策略
+grid=SCORE_MAX 2,3,4,5,6,7,8,10,inf
+base=LOOKBACK 25; R2 off; Buffer 1.00; full entry; overheat off; target vol off; one-way cost 0.001
+data=frozen qfq six-ETF panel; 2011-12-09 through 2026-09-02; 3578 rows
+elapsed_sec=141.737
+parity=PASS; score max 5 versus accepted base and runner versus Poe
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T00:28:43+08:00
+decision=keep_score_max_5_pending_user_confirmation
+stability_label=supported_5_6_plateau_cap_required
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T00:31:43+08:00
+decision=keep_score_max_5_user_confirmed
+stability_label=supported_5_6_plateau_cap_required

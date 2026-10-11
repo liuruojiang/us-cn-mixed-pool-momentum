@@ -1,0 +1,21 @@
+init_quant_param_scan_run.py
+run_id=20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_recency_weight_exponent
+project=mixed-us-cn-momentum
+strategy=SubD pure momentum core
+subsystem=six-etf mixed pool
+parameter_group=recency weight exponent
+repo=D:\动量策略\美股A股混合池子动量策略
+
+run_scan.py
+command=python -X utf8 quant_param_scan_runs\20260904_mixed_us_cn_momentum_subd_pure_momentum_core_six_etf_mixed_pool_recency_weight_exponent\run_scan.py
+working_directory=D:\动量策略\美股A股混合池子动量策略
+grid=weight power 0,0.25,0.5,0.75,1,1.25,1.5,2 in w_t=t^p
+base=LOOKBACK 25; SCORE_MAX 5; R2 off; Buffer 1.00; full entry; overheat off; target vol off; one-way cost 0.001
+data=frozen qfq six-ETF panel; 2011-12-09 through 2026-09-02; 3578 rows
+elapsed_sec=128.624
+parity=PASS; weight power 1 versus accepted base and runner versus Poe
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-09-04T00:36:56+08:00
+decision=keep_linear_weight_power_1_pending_user_confirmation
+stability_label=broad_0p75_1p25_support_equal_weight_rejected

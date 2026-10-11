@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "metric_parity_max_abs_diff": 1.354472090042691e-14,
+  "negative_best_score_days_baseline": 314,
+  "source_sha256": {
+    "D:\\动量策略\\美股A股混合池子动量策略\\research_subd_six_etf_weighted_slope.py": "287ca3b0505f86e115075c3f676fa5d4818eb89313c4949af281c534f2866c0d",
+    "D:\\动量策略\\美股A股混合池子动量策略\\run_subd_six_etf_v1_1.py": "d2abe0952a3f12944b9ac32939bb8d429de38a73103825a430d09c2a709dd6b4",
+    "D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_1_bot.py": "2852005eab272a4992c6d120cebea9bedc24170cd742adf932ad38a642d139ad",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260903_mixed_us_cn_momentum_subd_v1_1_clean_momentum_base_six_etf_mixed_pool_r2_threshold_x_switch_buffer\\price_snapshot_qfq.csv.gz": "0cc4af45158d6aaab4594b869b79309a96e8e3cc2f21a0205c38128913bec2aa"
+  },
+  "production_module_defaults_readonly": {
+    "score_min": 0.0,
+    "score_max": 5.0
+  }
+}

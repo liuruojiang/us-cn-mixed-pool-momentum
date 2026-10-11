@@ -1,0 +1,10 @@
+{
+  "tag": "subd_proxy_dynamic_cyb_2017_2026ytd_oos_return_diagnosis_20260701",
+  "warmup_start": "2007-01-01",
+  "metric_start": "2017-01-01",
+  "effective_metric_start": "2017-01-03",
+  "end": "2026-06-30",
+  "rows": 4734,
+  "oos_rows": 2302,
+  "command": "python run_subd_proxy_dynamic_cyb_oos_return_diagnosis_2017_2026.py --warmup-start 2007-01-01 --metric-start 2017-01-01 --end-date 2026-06-30 --tag subd_proxy_dynamic_cyb_2017_2026ytd_oos_return_diagnosis_20260701"
+}

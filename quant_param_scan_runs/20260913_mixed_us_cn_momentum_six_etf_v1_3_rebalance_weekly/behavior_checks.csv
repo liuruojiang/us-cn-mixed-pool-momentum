@@ -1,0 +1,6 @@
+candidate,off_schedule_trades,max_trades_per_week,prefix_parity,cost_identity
+weekly_mon,0,1,True,True
+weekly_tue,0,1,True,True
+weekly_wed,0,1,True,True
+weekly_thu,0,1,True,True
+weekly_fri,0,1,True,True

@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "official_build": "unmodified source fallback, alignment, engine and bar metadata",
+  "ui_basis": "same fresh official build reused for response rendering; no further network refresh",
+  "started_at_bj": "2026-10-07T20:16:09.008174+08:00",
+  "finished_at_bj": "2026-10-07T20:18:00.854267+08:00",
+  "code_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "rows": 3597,
+  "start": "2011-12-09",
+  "end": "2026-09-30",
+  "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)]",
+  "calendar_available": true,
+  "signal_valid": true,
+  "tradable": false,
+  "queries": [
+    {
+      "query": "参数",
+      "attachments": []
+    },
+    {
+      "query": "信号",
+      "attachments": []
+    },
+    {
+      "query": "表现",
+      "attachments": [
+        "subd_v13_nav_2011-12-09_2026-09-30.png",
+        "subd_v13_nav_2011-12-09_2026-09-30.csv",
+        "subd_v13_trade_records_2011-12-09_2026-09-30.csv"
+      ]
+    },
+    {
+      "query": "交易记录 2026-09-30",
+      "attachments": [
+        "subd_v13_trade_records_2026-09-30_2026-09-30.csv"
+      ]
+    },
+    {
+      "query": "交易记录 2026-10-07",
+      "attachments": [
+        "subd_v13_trade_records_2026-10-07_2026-10-07.csv"
+      ]
+    },
+    {
+      "query": "表现 2001-06至今",
+      "attachments": [
+        "subd_v13_nav_2011-12-09_2026-09-30.png",
+        "subd_v13_nav_2011-12-09_2026-09-30.csv",
+        "subd_v13_trade_records_2011-12-09_2026-09-30.csv"
+      ]
+    }
+  ],
+  "files": {
+    "confirmed_daily.csv.gz": "9907b425ec3b1c8c816e6bc3e73c72af315a7cd5e738e702d92d7709f99f6456",
+    "raw_prices_qfq.csv.gz": "de8938507d2b978bcc0e05e097d10bc6e2fc38c27d2eb4745aa01463178f3560",
+    "sources.csv": "803586c2f332622addc1fc564c3b23cb56a8cabfb6ce598442bfea7d9c2ed6da",
+    "subd_v13_nav_2011-12-09_2026-09-30.csv": "b7642d5375afeae6857ebfa0d76bc0253f06a0c078da75cd99f563c9a62ab7e1",
+    "subd_v13_nav_2011-12-09_2026-09-30.png": "836f32ce82cfeff826e12ae6872f1265157256e46878554d8bb1ecce92360a50",
+    "subd_v13_trade_records_2011-12-09_2026-09-30.csv": "60503c4b4b97ea7e0fe9b2370f09dc2aee1381e4cd392fbf1f77fb0ac7e23529",
+    "subd_v13_trade_records_2026-09-30_2026-09-30.csv": "6cfbbfbca630fe4bc40de148fdb0eb13e6fdc5e7fe17cd2dfe3ae44abeb998ca",
+    "subd_v13_trade_records_2026-10-07_2026-10-07.csv": "6cfbbfbca630fe4bc40de148fdb0eb13e6fdc5e7fe17cd2dfe3ae44abeb998ca",
+    "window_metrics.csv": "9254f485d69438ef687b7e4157e5d85a2e1f1d55781c28bdd63273e7858d57e6",
+    "交易记录_2026-09-30.txt": "6eae4950458c7673ebd26019f1350da3f071eca258b4acc596870511ca63deec",
+    "交易记录_2026-10-07.txt": "5cc9617b32c794ac8f901c7398fcbd070db38e4a37b088683c6fb79b22b231d8",
+    "信号.txt": "d65dece0efb65bd0418b07c1e5f1956c92aef4c3d38e1e969f329b6bcefe8c64",
+    "参数.txt": "addfdcef2a70bed1cd446a5e980c6f4edf7ed4b4a8946c34eb42e4ab75093e9e",
+    "表现.txt": "42122bf32a33ad8ad7a3131ea4b74f5004bbc80190dbacee5f4d646f405fe790",
+    "表现_2001-06至今.txt": "4fed661c4b1e0ca0415fbed8150fa15282499284ae6fe79c14104e1eebf3bb59"
+  },
+  "limitations": "local Poe-compatible UI only; current holiday does not test active-session live quotes or broker fills"
+}

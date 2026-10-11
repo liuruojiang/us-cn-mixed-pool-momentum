@@ -1,0 +1,131 @@
+{
+  "source_sha256": "b49c86944f0ef843f0eb23eebe396122fee0db5a90c6250789f21b3d110df988",
+  "curve_parity_with_l2": {
+    "rows": 3594,
+    "last": "2026-09-24",
+    "categorical_mismatch_counts": {
+      "position_before": 0,
+      "position": 0,
+      "trade_target": 0
+    },
+    "numeric_max_abs_differences": {
+      "turnover": 0.0,
+      "cost": 0.0,
+      "return": 9.952975943416931e-17,
+      "nav": 7.105427357601002e-15
+    }
+  },
+  "five_windows": [
+    {
+      "window": "Full",
+      "actual": {
+        "start": "2011-12-09",
+        "end": "2026-09-24",
+        "rows": 3594,
+        "annual": 0.3043564408483752,
+        "vol": 0.21674947397027647,
+        "sharpe": 1.3338880330986456,
+        "maxdd": -0.22006724591954097
+      },
+      "difference_from_independent": {
+        "annual": 4.884981308350689e-15,
+        "vol": -4.718447854656915e-16,
+        "sharpe": 4.440892098500626e-16,
+        "maxdd": 2.3314683517128287e-15
+      }
+    },
+    {
+      "window": "10Y",
+      "actual": {
+        "start": "2016-05-16",
+        "end": "2026-09-24",
+        "rows": 2520,
+        "annual": 0.35716663958151784,
+        "vol": 0.22482315346086135,
+        "sharpe": 1.4702615303358364,
+        "maxdd": -0.163098042952171
+      },
+      "difference_from_independent": {
+        "annual": 5.329070518200751e-15,
+        "vol": -3.885780586188048e-16,
+        "sharpe": 0.0,
+        "maxdd": 4.6629367034256575e-15
+      }
+    },
+    {
+      "window": "5Y",
+      "actual": {
+        "start": "2021-07-19",
+        "end": "2026-09-24",
+        "rows": 1260,
+        "annual": 0.5425627803742505,
+        "vol": 0.2552715951590447,
+        "sharpe": 1.8244316581124906,
+        "maxdd": -0.15962238350856472
+      },
+      "difference_from_independent": {
+        "annual": 5.995204332975845e-15,
+        "vol": -4.996003610813204e-16,
+        "sharpe": -2.220446049250313e-16,
+        "maxdd": 9.992007221626409e-16
+      }
+    },
+    {
+      "window": "3Y",
+      "actual": {
+        "start": "2023-08-15",
+        "end": "2026-09-24",
+        "rows": 756,
+        "annual": 0.6590198158316709,
+        "vol": 0.28531254652544225,
+        "sharpe": 1.9154559169933454,
+        "maxdd": -0.14337955861700447
+      },
+      "difference_from_independent": {
+        "annual": 8.43769498715119e-15,
+        "vol": -5.551115123125783e-16,
+        "sharpe": -2.220446049250313e-16,
+        "maxdd": 2.220446049250313e-16
+      }
+    },
+    {
+      "window": "1Y",
+      "actual": {
+        "start": "2025-09-11",
+        "end": "2026-09-24",
+        "rows": 252,
+        "annual": 0.6325606075238941,
+        "vol": 0.305992162835154,
+        "sharpe": 1.7557841240425582,
+        "maxdd": -0.1354158401392178
+      },
+      "difference_from_independent": {
+        "annual": 8.215650382226158e-15,
+        "vol": -4.996003610813204e-16,
+        "sharpe": -3.9968028886505635e-15,
+        "maxdd": 1.2212453270876722e-15
+      }
+    }
+  ],
+  "single_row_error": "绩效窗口至少需要两个已形成净值的交易日。",
+  "year_2020": {
+    "year": 2020,
+    "start": "2020-01-02",
+    "end": "2020-12-31",
+    "rows": 243,
+    "return": 0.9525706234843694,
+    "maxdd": -0.1147251659163161,
+    "vol": 0.28164571800414634,
+    "trades": 42,
+    "avg_exposure": 0.9135802469135802
+  },
+  "year_2020_difference_from_independent": {
+    "return": 0.0,
+    "vol": 0.0,
+    "maxdd": 0.0
+  },
+  "synthetic_first_day_loss": {
+    "return": -0.09999999999999998,
+    "maxdd": -0.09999999999999998
+  }
+}

@@ -1,0 +1,601 @@
+{
+  "classification": "current direct public-source price/date cross-check; recent window only, not full-history qfq certification",
+  "run_at_bj": "2026-10-07T16:47:51.950851+08:00",
+  "official_calendar_url": "https://www.sse.com.cn/disclosure/announcement/general/c/c_20251222_10802507.shtml",
+  "expected_sessions": [
+    "2026-09-16",
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30"
+  ],
+  "receipts": [
+    {
+      "code": "159915.SZ",
+      "provider": "Sina",
+      "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+      "params": {
+        "symbol": "sz159915",
+        "scale": "240",
+        "ma": "no",
+        "datalen": "10"
+      },
+      "ok": false,
+      "error": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+    },
+    {
+      "code": "159915.SZ",
+      "provider": "Tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+      "params": {
+        "param": "sz159915,day,2026-09-16,2026-10-07,10,qfq"
+      },
+      "received_at_bj": "2026-10-07T16:47:33.230068+08:00",
+      "http_status": 200,
+      "response_sha256": "9a33d57ed5a6f0717b86532da53074ad140c4b9e2214e96c151b5c32506ace37",
+      "raw_receipt_path": "data_recent_tencent_159915.SZ.json",
+      "payload_key": "qfqday",
+      "price_basis": "qfq request; actual payload key recorded (day is not universal qfq proof)",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 3.33
+        },
+        {
+          "date": "2026-09-17",
+          "close": 3.319
+        },
+        {
+          "date": "2026-09-18",
+          "close": 3.391
+        },
+        {
+          "date": "2026-09-21",
+          "close": 3.418
+        },
+        {
+          "date": "2026-09-22",
+          "close": 3.42
+        },
+        {
+          "date": "2026-09-23",
+          "close": 3.399
+        },
+        {
+          "date": "2026-09-24",
+          "close": 3.312
+        },
+        {
+          "date": "2026-09-28",
+          "close": 3.159
+        },
+        {
+          "date": "2026-09-29",
+          "close": 3.162
+        },
+        {
+          "date": "2026-09-30",
+          "close": 3.154
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "159941.SZ",
+      "provider": "Sina",
+      "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+      "params": {
+        "symbol": "sz159941",
+        "scale": "240",
+        "ma": "no",
+        "datalen": "10"
+      },
+      "ok": false,
+      "error": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+    },
+    {
+      "code": "159941.SZ",
+      "provider": "Tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+      "params": {
+        "param": "sz159941,day,2026-09-16,2026-10-07,10,qfq"
+      },
+      "received_at_bj": "2026-10-07T16:47:33.242807+08:00",
+      "http_status": 200,
+      "response_sha256": "0c80be572b2496a369dd57ccd754742b6e1670686cf456a978d97f4e96a04e8a",
+      "raw_receipt_path": "data_recent_tencent_159941.SZ.json",
+      "payload_key": "qfqday",
+      "price_basis": "qfq request; actual payload key recorded (day is not universal qfq proof)",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 1.631
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1.64
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1.678
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1.687
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1.714
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1.728
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1.707
+        },
+        {
+          "date": "2026-09-28",
+          "close": 1.698
+        },
+        {
+          "date": "2026-09-29",
+          "close": 1.708
+        },
+        {
+          "date": "2026-09-30",
+          "close": 1.735
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "159985.SZ",
+      "provider": "Sina",
+      "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+      "params": {
+        "symbol": "sz159985",
+        "scale": "240",
+        "ma": "no",
+        "datalen": "10"
+      },
+      "ok": false,
+      "error": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+    },
+    {
+      "code": "159985.SZ",
+      "provider": "Tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+      "params": {
+        "param": "sz159985,day,2026-09-16,2026-10-07,10,qfq"
+      },
+      "received_at_bj": "2026-10-07T16:47:39.537603+08:00",
+      "http_status": 200,
+      "response_sha256": "f634920271080c59b4d1ea1a339a8917c71b6ed2c4bcecd45640bf366319515f",
+      "raw_receipt_path": "data_recent_tencent_159985.SZ.json",
+      "payload_key": "day",
+      "price_basis": "qfq request; actual payload key recorded (day is not universal qfq proof)",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 2.383
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2.373
+        },
+        {
+          "date": "2026-09-18",
+          "close": 2.299
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2.294
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2.323
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2.304
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2.319
+        },
+        {
+          "date": "2026-09-28",
+          "close": 2.264
+        },
+        {
+          "date": "2026-09-29",
+          "close": 2.262
+        },
+        {
+          "date": "2026-09-30",
+          "close": 2.267
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "513030.SH",
+      "provider": "Sina",
+      "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+      "params": {
+        "symbol": "sh513030",
+        "scale": "240",
+        "ma": "no",
+        "datalen": "10"
+      },
+      "ok": false,
+      "error": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+    },
+    {
+      "code": "513030.SH",
+      "provider": "Tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+      "params": {
+        "param": "sh513030,day,2026-09-16,2026-10-07,10,qfq"
+      },
+      "received_at_bj": "2026-10-07T16:47:34.831772+08:00",
+      "http_status": 200,
+      "response_sha256": "53387c698d0d1a1d652fa4513b8f4d50b35141b4b7c32b35aac059fc3a9f75fa",
+      "raw_receipt_path": "data_recent_tencent_513030.SH.json",
+      "payload_key": "day",
+      "price_basis": "qfq request; actual payload key recorded (day is not universal qfq proof)",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 1.82
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1.828
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1.838
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1.833
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1.834
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1.836
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1.796
+        },
+        {
+          "date": "2026-09-28",
+          "close": 1.792
+        },
+        {
+          "date": "2026-09-29",
+          "close": 1.789
+        },
+        {
+          "date": "2026-09-30",
+          "close": 1.803
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "513520.SH",
+      "provider": "Sina",
+      "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+      "params": {
+        "symbol": "sh513520",
+        "scale": "240",
+        "ma": "no",
+        "datalen": "10"
+      },
+      "received_at_bj": "2026-10-07T16:47:37.957630+08:00",
+      "http_status": 200,
+      "response_sha256": "18dea15d5533c5455d1bea82c57a761bf94fc1442d8329164e13e810f73e4bcb",
+      "raw_receipt_path": "data_recent_sina_513520.SH.json",
+      "price_basis": "raw/unadjusted",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 2.25
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2.245
+        },
+        {
+          "date": "2026-09-18",
+          "close": 2.266
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2.272
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2.306
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2.342
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2.269
+        },
+        {
+          "date": "2026-09-28",
+          "close": 2.275
+        },
+        {
+          "date": "2026-09-29",
+          "close": 2.281
+        },
+        {
+          "date": "2026-09-30",
+          "close": 2.352
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "513520.SH",
+      "provider": "Tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+      "params": {
+        "param": "sh513520,day,2026-09-16,2026-10-07,10,qfq"
+      },
+      "received_at_bj": "2026-10-07T16:47:36.442413+08:00",
+      "http_status": 200,
+      "response_sha256": "0a51b193f74222c56e584e4b5fc26e24ef3c1225dbea43b026faf8b94e2cdf69",
+      "raw_receipt_path": "data_recent_tencent_513520.SH.json",
+      "payload_key": "day",
+      "price_basis": "qfq request; actual payload key recorded (day is not universal qfq proof)",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 2.25
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2.245
+        },
+        {
+          "date": "2026-09-18",
+          "close": 2.266
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2.272
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2.306
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2.342
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2.269
+        },
+        {
+          "date": "2026-09-28",
+          "close": 2.275
+        },
+        {
+          "date": "2026-09-29",
+          "close": 2.281
+        },
+        {
+          "date": "2026-09-30",
+          "close": 2.352
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "518880.SH",
+      "provider": "Sina",
+      "url": "https://quotes.sina.cn/cn/api/openapi.php/CN_MarketDataService.getKLineData",
+      "params": {
+        "symbol": "sh518880",
+        "scale": "240",
+        "ma": "no",
+        "datalen": "10"
+      },
+      "received_at_bj": "2026-10-07T16:47:46.761602+08:00",
+      "http_status": 200,
+      "response_sha256": "b126c76a98fb17bf0d86c1b850b72620d65189a1c80dadd2fbed382078cea9a3",
+      "raw_receipt_path": "data_recent_sina_518880.SH.json",
+      "price_basis": "raw/unadjusted",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 8.905
+        },
+        {
+          "date": "2026-09-17",
+          "close": 8.856
+        },
+        {
+          "date": "2026-09-18",
+          "close": 9.009
+        },
+        {
+          "date": "2026-09-21",
+          "close": 8.93
+        },
+        {
+          "date": "2026-09-22",
+          "close": 8.859
+        },
+        {
+          "date": "2026-09-23",
+          "close": 8.897
+        },
+        {
+          "date": "2026-09-24",
+          "close": 8.788
+        },
+        {
+          "date": "2026-09-28",
+          "close": 8.568
+        },
+        {
+          "date": "2026-09-29",
+          "close": 8.519
+        },
+        {
+          "date": "2026-09-30",
+          "close": 8.633
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    },
+    {
+      "code": "518880.SH",
+      "provider": "Tencent",
+      "url": "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+      "params": {
+        "param": "sh518880,day,2026-09-16,2026-10-07,10,qfq"
+      },
+      "received_at_bj": "2026-10-07T16:47:46.739571+08:00",
+      "http_status": 200,
+      "response_sha256": "a1d9342741a350277764f278164491fb1268df9081efbcd3e299b4671495a1ec",
+      "raw_receipt_path": "data_recent_tencent_518880.SH.json",
+      "payload_key": "qfqday",
+      "price_basis": "qfq request; actual payload key recorded (day is not universal qfq proof)",
+      "rows": [
+        {
+          "date": "2026-09-16",
+          "close": 8.905
+        },
+        {
+          "date": "2026-09-17",
+          "close": 8.856
+        },
+        {
+          "date": "2026-09-18",
+          "close": 9.009
+        },
+        {
+          "date": "2026-09-21",
+          "close": 8.93
+        },
+        {
+          "date": "2026-09-22",
+          "close": 8.859
+        },
+        {
+          "date": "2026-09-23",
+          "close": 8.897
+        },
+        {
+          "date": "2026-09-24",
+          "close": 8.788
+        },
+        {
+          "date": "2026-09-28",
+          "close": 8.568
+        },
+        {
+          "date": "2026-09-29",
+          "close": 8.519
+        },
+        {
+          "date": "2026-09-30",
+          "close": 8.633
+        }
+      ],
+      "row_count": 10,
+      "last": "2026-09-30",
+      "exact_expected_sessions": true,
+      "ok": true
+    }
+  ],
+  "comparisons": [
+    {
+      "code": "159915.SZ",
+      "blocked_sources": {
+        "Sina": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+      }
+    },
+    {
+      "code": "159941.SZ",
+      "blocked_sources": {
+        "Sina": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+      }
+    },
+    {
+      "code": "513030.SH",
+      "blocked_sources": {
+        "Sina": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+      }
+    },
+    {
+      "code": "513520.SH",
+      "both_exact_expected_sessions": true,
+      "overlap_rows": 10,
+      "max_abs_close_diff": 0.0,
+      "tencent_last": "2026-09-30",
+      "sina_last": "2026-09-30",
+      "tencent_0930_close": 2.352,
+      "sina_0930_close": 2.352
+    },
+    {
+      "code": "159985.SZ",
+      "blocked_sources": {
+        "Sina": "ReadTimeout: HTTPSConnectionPool(host='quotes.sina.cn', port=443): Read timed out. (read timeout=12)"
+      }
+    },
+    {
+      "code": "518880.SH",
+      "both_exact_expected_sessions": true,
+      "overlap_rows": 10,
+      "max_abs_close_diff": 0.0,
+      "tencent_last": "2026-09-30",
+      "sina_last": "2026-09-30",
+      "tencent_0930_close": 8.633,
+      "sina_0930_close": 8.633
+    }
+  ]
+}

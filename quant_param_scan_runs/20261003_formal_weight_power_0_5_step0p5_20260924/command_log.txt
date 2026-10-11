@@ -1,0 +1,24 @@
+init_quant_param_scan_run.py
+run_id=20261003_r2_off_weight_power_0_5_step0p5_20260924
+project=美股A股混合池子动量策略
+strategy=six_etf_v1_3
+subsystem=subd_six_etf
+parameter_group=WEIGHT_POWER_R2_OFF
+repo=D:\动量策略\美股A股混合池子动量策略
+
+Correction before execution: user specified R² remains active. The initialized
+R²-off directory was renamed to 20261003_formal_weight_power_0_5_step0p5_20260924;
+scan_meta.json and run_scan.py were updated before any weight-grid run.
+No R²-off weight grid was executed.
+
+[2026-10-03T19:34:38.717849+08:00] cwd=D:\动量策略\美股A股混合池子动量策略
+python -X utf8 quant_param_scan_runs/20261003_formal_weight_power_0_5_step0p5_20260924/run_scan.py
+python -X utf8 quant_param_scan_runs/20261003_formal_weight_power_0_5_step0p5_20260924/audit_results.py
+python -X utf8 quant_param_scan_runs/20261003_formal_weight_power_0_5_step0p5_20260924/audit_signals.py
+python -X utf8 quant_param_scan_runs/20261003_formal_weight_power_0_5_step0p5_20260924/build_report.py
+No provider request or cache mutation; no output-affecting environment variables.
+
+finalize_quant_param_scan_run.py
+finalized_at=2026-10-03T19:35:51+08:00
+decision=keep_formal_p1
+stability_label=coarse_local_peak_with_recent_tradeoff

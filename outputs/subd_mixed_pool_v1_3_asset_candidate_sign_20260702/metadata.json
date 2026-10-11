@@ -1,0 +1,58 @@
+{
+  "run_date": "2026-07-02",
+  "entrypoint": "poe_subd_mixed_pool_v1_3_bot.py",
+  "base_pool": {
+    "QQQ": "NASDAQ100_QQQ_PROXY",
+    "GLD": "GOLD_GLD_PROXY",
+    "CN_CYB_399006": "CHINEXT_INDEX_PROXY"
+  },
+  "base_ann_full": 0.17284158986961895,
+  "base_last_nav": 20.000299409883812,
+  "method": "candidate added one-at-a-time to baseline QQQ/GLD/CN_CYB_399006 pool; QQQ/GLD remain core; added assets join dynamically from first available data; V1.3 rules/cost/cash unchanged",
+  "cash_annual_yield": 0.03,
+  "one_way_cost": 0.001,
+  "errors": [
+    {
+      "code": "159915.SZ",
+      "label": "???100ETF 159915",
+      "kind": "cn_etf_qfq",
+      "source_group": "SubD V1.1 six ETF",
+      "error": "RuntimeError(\"All qfq data sources failed. 159915.SZ akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 159915.SZ / 159915; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 159915.SZ Tencent fqkline: '159915.SZ' | 159915.SZ Eastmoney push2his kline: Eastmoney returned no data for 159915.SZ; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\")"
+    },
+    {
+      "code": "159941.SZ",
+      "label": "??ETF 159941",
+      "kind": "cn_etf_qfq",
+      "source_group": "SubD V1.1 six ETF",
+      "error": "RuntimeError(\"All qfq data sources failed. 159941.SZ akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 159941.SZ / 159941; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 159941.SZ Tencent fqkline: '159941.SZ' | 159941.SZ Eastmoney push2his kline: Eastmoney returned no data for 159941.SZ; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\")"
+    },
+    {
+      "code": "513030.SH",
+      "label": "??ETF 513030",
+      "kind": "cn_etf_qfq",
+      "source_group": "SubD V1.1 six ETF",
+      "error": "RuntimeError(\"All qfq data sources failed. 513030.SH akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 513030.SH / 513030; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 513030.SH Tencent fqkline: '513030.SH' | 513030.SH Eastmoney push2his kline: Eastmoney returned no data for 513030.SH; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\")"
+    },
+    {
+      "code": "513520.SH",
+      "label": "??ETF 513520",
+      "kind": "cn_etf_qfq",
+      "source_group": "SubD V1.1 six ETF",
+      "error": "RuntimeError(\"All qfq data sources failed. 513520.SH akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 513520.SH / 513520; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 513520.SH Tencent fqkline: '513520.SH' | 513520.SH Eastmoney push2his kline: Eastmoney returned no data for 513520.SH; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\")"
+    },
+    {
+      "code": "159985.SZ",
+      "label": "??ETF 159985",
+      "kind": "cn_etf_qfq",
+      "source_group": "SubD V1.1 six ETF",
+      "error": "RuntimeError(\"All qfq data sources failed. 159985.SZ akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 159985.SZ / 159985; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 159985.SZ Tencent fqkline: '159985.SZ' | 159985.SZ Eastmoney push2his kline: Eastmoney returned no data for 159985.SZ; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\")"
+    },
+    {
+      "code": "518880.SH",
+      "label": "??ETF 518880",
+      "kind": "cn_etf_qfq",
+      "source_group": "SubD V1.1 six ETF",
+      "error": "RuntimeError(\"All qfq data sources failed. 518880.SH akshare.fund_etf_hist_em daily close: AkShare Eastmoney qfq returned no rows for 518880.SH / 518880; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without respo | 518880.SH Tencent fqkline: '518880.SH' | 518880.SH Eastmoney push2his kline: Eastmoney returned no data for 518880.SH; last_error=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\")"
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="1" tests="118" time="30.229" timestamp="2026-10-07T16:49:42.501751+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_audit_math_20261007" name="test_build_curves_cutoff_truncates_matching_full_snapshot_flags" time="1.113" /><testcase classname="tests.test_v13_audit_math_20261007" name="test_build_curves_cutoff_before_first_price_raises_explicit_validation" time="0.005" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_primary_truncated_history_uses_existing_full_backup[20]" time="0.216" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_primary_truncated_history_uses_existing_full_backup[640]" time="0.192" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_primary_invalid_history_structure_uses_existing_backup[duplicate_date]" time="0.183"><failure message="AssertionError: Series.index are different&#10;&#10;Attribute &quot;names&quot; are different&#10;[left]:  [None]&#10;[right]: ['date']">bot = &lt;module 'v13_data_audit_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000027DDBE4B890&gt;
+fault = 'duplicate_date'
+
+    @pytest.mark.parametrize("fault", ["duplicate_date", "NaT", "constant_zero", "constant_infinite"])
+    def test_primary_invalid_history_structure_uses_existing_backup(bot, real_raw, monkeypatch, fault):
+        target = "159915.SZ"
+        fallback_calls = []
+    
+        def provider(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            values = real_raw[code].dropna()
+            frame = pd.DataFrame({"日期": values.index, "收盘": values.values})
+            if code == target:
+                if fault == "duplicate_date":
+                    frame = pd.concat([frame, frame.tail(1)], ignore_index=True)
+                elif fault == "NaT":
+                    frame.loc[10, "日期"] = pd.NaT
+                elif fault == "constant_zero":
+                    frame["收盘"] = 0.0
+                elif fault == "constant_infinite":
+                    frame["收盘"] = np.inf
+            return frame
+    
+        def backup(code, _end):
+            fallback_calls.append(code)
+            return real_raw[code].dropna().rename(code)
+    
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=provider), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, _ = bot.load_close(bot._build_config(real_raw.index.max()))
+        assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+&gt;       pd.testing.assert_series_equal(loaded[target].dropna(), real_raw[target].dropna(), check_freq=False)
+E       AssertionError: Series.index are different
+E       
+E       Attribute "names" are different
+E       [left]:  [None]
+E       [right]: ['date']
+
+tests\test_v13_audit_data_20261007.py:88: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_data_20261007" name="test_primary_invalid_history_structure_uses_existing_backup[NaT]" time="0.182"><failure message="AssertionError: An invalid primary sequence must not block an existing valid fallback.&#10;assert '159915.SZ' in []">bot = &lt;module 'v13_data_audit_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000027DDBEC5BF0&gt;
+fault = 'NaT'
+
+    @pytest.mark.parametrize("fault", ["duplicate_date", "NaT", "constant_zero", "constant_infinite"])
+    def test_primary_invalid_history_structure_uses_existing_backup(bot, real_raw, monkeypatch, fault):
+        target = "159915.SZ"
+        fallback_calls = []
+    
+        def provider(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            values = real_raw[code].dropna()
+            frame = pd.DataFrame({"日期": values.index, "收盘": values.values})
+            if code == target:
+                if fault == "duplicate_date":
+                    frame = pd.concat([frame, frame.tail(1)], ignore_index=True)
+                elif fault == "NaT":
+                    frame.loc[10, "日期"] = pd.NaT
+                elif fault == "constant_zero":
+                    frame["收盘"] = 0.0
+                elif fault == "constant_infinite":
+                    frame["收盘"] = np.inf
+            return frame
+    
+        def backup(code, _end):
+            fallback_calls.append(code)
+            return real_raw[code].dropna().rename(code)
+    
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=provider), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, _ = bot.load_close(bot._build_config(real_raw.index.max()))
+&gt;       assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+E       AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E       assert '159915.SZ' in []
+
+tests\test_v13_audit_data_20261007.py:87: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_data_20261007" name="test_primary_invalid_history_structure_uses_existing_backup[constant_zero]" time="0.186"><failure message="AssertionError: Series.index are different&#10;&#10;Attribute &quot;names&quot; are different&#10;[left]:  [None]&#10;[right]: ['date']">bot = &lt;module 'v13_data_audit_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000027DDBF07570&gt;
+fault = 'constant_zero'
+
+    @pytest.mark.parametrize("fault", ["duplicate_date", "NaT", "constant_zero", "constant_infinite"])
+    def test_primary_invalid_history_structure_uses_existing_backup(bot, real_raw, monkeypatch, fault):
+        target = "159915.SZ"
+        fallback_calls = []
+    
+        def provider(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            values = real_raw[code].dropna()
+            frame = pd.DataFrame({"日期": values.index, "收盘": values.values})
+            if code == target:
+                if fault == "duplicate_date":
+                    frame = pd.concat([frame, frame.tail(1)], ignore_index=True)
+                elif fault == "NaT":
+                    frame.loc[10, "日期"] = pd.NaT
+                elif fault == "constant_zero":
+                    frame["收盘"] = 0.0
+                elif fault == "constant_infinite":
+                    frame["收盘"] = np.inf
+            return frame
+    
+        def backup(code, _end):
+            fallback_calls.append(code)
+            return real_raw[code].dropna().rename(code)
+    
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=provider), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, _ = bot.load_close(bot._build_config(real_raw.index.max()))
+        assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+&gt;       pd.testing.assert_series_equal(loaded[target].dropna(), real_raw[target].dropna(), check_freq=False)
+E       AssertionError: Series.index are different
+E       
+E       Attribute "names" are different
+E       [left]:  [None]
+E       [right]: ['date']
+
+tests\test_v13_audit_data_20261007.py:88: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_data_20261007" name="test_primary_invalid_history_structure_uses_existing_backup[constant_infinite]" time="0.194"><failure message="AssertionError: Series.index are different&#10;&#10;Attribute &quot;names&quot; are different&#10;[left]:  [None]&#10;[right]: ['date']">bot = &lt;module 'v13_data_audit_20261007' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+real_raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000027DDBBB3350&gt;
+fault = 'constant_infinite'
+
+    @pytest.mark.parametrize("fault", ["duplicate_date", "NaT", "constant_zero", "constant_infinite"])
+    def test_primary_invalid_history_structure_uses_existing_backup(bot, real_raw, monkeypatch, fault):
+        target = "159915.SZ"
+        fallback_calls = []
+    
+        def provider(**kwargs):
+            code = next(code for code in bot.ASSETS if code.split(".")[0] == kwargs["symbol"])
+            values = real_raw[code].dropna()
+            frame = pd.DataFrame({"日期": values.index, "收盘": values.values})
+            if code == target:
+                if fault == "duplicate_date":
+                    frame = pd.concat([frame, frame.tail(1)], ignore_index=True)
+                elif fault == "NaT":
+                    frame.loc[10, "日期"] = pd.NaT
+                elif fault == "constant_zero":
+                    frame["收盘"] = 0.0
+                elif fault == "constant_infinite":
+                    frame["收盘"] = np.inf
+            return frame
+    
+        def backup(code, _end):
+            fallback_calls.append(code)
+            return real_raw[code].dropna().rename(code)
+    
+        monkeypatch.setattr(bot, "_HAS_AKSHARE", True)
+        monkeypatch.setattr(bot, "ak", SimpleNamespace(fund_etf_hist_em=provider), raising=False)
+        monkeypatch.setattr(bot, "_load_tencent_qfq_one_close", backup)
+        loaded, _ = bot.load_close(bot._build_config(real_raw.index.max()))
+        assert target in fallback_calls, "An invalid primary sequence must not block an existing valid fallback."
+&gt;       pd.testing.assert_series_equal(loaded[target].dropna(), real_raw[target].dropna(), check_freq=False)
+E       AssertionError: Series.index are different
+E       
+E       Attribute "names" are different
+E       [left]:  [None]
+E       [right]: ['date']
+
+tests\test_v13_audit_data_20261007.py:88: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_data_20261007" name="test_tencent_incomplete_pagination_is_rejected[empty]" time="0.150" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_tencent_incomplete_pagination_is_rejected[repeated]" time="0.152" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_tencent_complete_real_history_pagination_is_accepted" time="0.170" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nonempty_invalid_prices[0.0]" time="0.149" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nonempty_invalid_prices[-1.0]" time="0.152" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nonempty_invalid_prices[inf]" time="0.150" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nonempty_invalid_prices[-inf]" time="0.149" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nonempty_invalid_prices[not-a-price]" time="0.152" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-03]" time="0.166" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-07]" time="0.153" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_rejects_whole_market_missing_session" time="0.154" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_alignment_records_single_asset_missing_as_stale_fill" time="0.161" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_official_2026_calendar_preserves_holiday_when_remote_calendar_fails" time="0.168" /><testcase classname="tests.test_v13_audit_data_20261007" name="test_normal_live_cache_rejects_negative_age" time="0.149" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_single_day_trade_query_keeps_requested_day_when_metrics_are_na" time="0.191" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_no_session_trade_query_does_not_export_full_history" time="0.180" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_date_range_trade_query_uses_requested_bounds" time="0.188" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_requested_no_trade_day_remains_empty_in_table_and_csv" time="0.183" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_duplicate_daily_sessions[yearly]" time="0.150" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_duplicate_daily_sessions[nav]" time="0.150" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_duplicate_daily_sessions[trade]" time="0.159" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_invalid_nav_even_with_finite_returns[yearly]" time="0.150" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_invalid_nav_even_with_finite_returns[nav]" time="0.150" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_reporting_apis_reject_invalid_nav_even_with_finite_returns[trade]" time="0.151" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_performance_preparation_rejects_single_unconfirmed_row" time="0.156" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_performance_preparation_does_not_retain_future_bar" time="0.151" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2001--]" time="0.148" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2001-/]" time="0.157" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2001-.]" time="0.147" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2010--]" time="0.147" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2010-/]" time="0.147" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2010-.]" time="0.146" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2026--]" time="0.148" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2026-/]" time="0.147" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_year_month_to_now_is_not_shadowed_by_month_day_parser[2026-.]" time="0.148" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_half_year_decimal_request_keeps_its_window" time="0.148" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_older_force_refresh_finishing_late_does_not_replace_newer_cache" time="0.150" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_live_fresh_quote_pairs_can_pass_snapshot_validation]" time="0.175" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_live_snapshot_zero_volume_is_monitor_only]" time="0.177" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_live_buy_leg_at_limit_up_is_not_tradable]" time="0.177" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_live_sell_leg_at_limit_down_is_not_tradable_even_when_sell_available]" time="0.175" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_live_sell_leg_requires_verified_sell_available_quantity]" time="0.178" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_live_fresh_quote_price_must_match_signal_price]" time="0.178" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_stale_same_day_quote_times_are_listed_as_stale_assets]" time="0.177" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_global_final_flag_alone_does_not_confirm_six_asset_close]" time="0.158" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_trade_leg_with_forward_filled_price_blocks_execution]" time="0.193" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_weekend_signal_is_valid_but_not_actionable_now]" time="0.175" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_execution_signal_fails_closed_without_calendar_even_when_not_live]" time="0.169"><failure message="AssertionError">bot = &lt;module 'v13_execution_report_audit' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000027DDF861240&gt;
+check = 'test_execution_signal_fails_closed_without_calendar_even_when_not_live'
+
+    @pytest.mark.parametrize("check", [
+        "test_live_fresh_quote_pairs_can_pass_snapshot_validation",
+        "test_live_snapshot_zero_volume_is_monitor_only",
+        "test_live_buy_leg_at_limit_up_is_not_tradable",
+        "test_live_sell_leg_at_limit_down_is_not_tradable_even_when_sell_available",
+        "test_live_sell_leg_requires_verified_sell_available_quantity",
+        "test_live_fresh_quote_price_must_match_signal_price",
+        "test_stale_same_day_quote_times_are_listed_as_stale_assets",
+        "test_global_final_flag_alone_does_not_confirm_six_asset_close",
+        "test_trade_leg_with_forward_filled_price_blocks_execution",
+        "test_weekend_signal_is_valid_but_not_actionable_now",
+        "test_execution_signal_fails_closed_without_calendar_even_when_not_live",
+        "test_performance_rendered_state_is_isolated_between_contexts",
+        "test_performance_run_uses_only_its_request_rendered_state",
+        "test_performance_run_suppresses_second_response_after_own_render",
+    ])
+    def test_critical_execution_and_response_guards_on_actual_v13(bot, monkeypatch, check):
+        # Reuse independently designed counterexamples against V1.3, rather than V1.1.
+        spec = importlib.util.spec_from_file_location(
+            f"shared_v13_execution_audit_{check}",
+            ROOT / "tests/test_poe_subd_external_review_regressions.py",
+        )
+        shared = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(shared)
+        monkeypatch.setattr(bot, "V11_SCENARIO", bot.V13_SCENARIO, raising=False)
+        monkeypatch.setattr(bot, "SubDSixEtfV11Bot", bot.SubDSixEtfV13Bot, raising=False)
+        monkeypatch.setattr(shared, "load_bot_module", lambda: bot)
+        function = getattr(shared, check)
+&gt;       function(**({"monkeypatch": monkeypatch} if "monkeypatch" in inspect.signature(function).parameters else {}))
+
+tests\test_v13_audit_execution_report_20261007.py:252: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000027DDF861240&gt;
+
+    def test_execution_signal_fails_closed_without_calendar_even_when_not_live(monkeypatch):
+        module = load_bot_module()
+        daily = minimal_daily(module, dates=("2026-06-09",))
+        monkeypatch.setattr(module, "_expected_cn_trading_days", lambda start, end: None)
+    
+        status = module.signal_data_status(
+            daily,
+            live=False,
+            now=datetime(2026, 6, 9, 16, 0),
+            purpose="execution",
+        )
+    
+&gt;       assert status["calendar_available"] is False
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError
+
+tests\test_poe_subd_external_review_regressions.py:2292: AssertionError</failure></testcase><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_performance_rendered_state_is_isolated_between_contexts]" time="0.165" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_performance_run_uses_only_its_request_rendered_state]" time="0.160" /><testcase classname="tests.test_v13_audit_execution_report_20261007" name="test_critical_execution_and_response_guards_on_actual_v13[test_performance_run_suppresses_second_response_after_own_render]" time="0.156" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_frozen_curve_and_all_five_windows_match_selected" time="9.316" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_trade_legs_cash_and_disabled_overlays" time="0.015" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[0.5-0.25-False]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[0.500001-0.25-True]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[5.499999-0.25-True]" time="0.002" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[5.5-0.25-False]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[1-0.249999-False]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[1-0.25-True]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[nan-0.5-False]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_exact_score_and_r2_boundaries[1-nan-False]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_adapter_never_calls_disabled_layers" time="0.030" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_injected_poe_runtime_and_decimal_parameter_display" time="0.171" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_query_routes_render_real_frozen_data[\u4fe1\u53f7]" time="0.129" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_query_routes_render_real_frozen_data[\u5b9e\u65f6\u4fe1\u53f7]" time="0.127" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_query_routes_render_real_frozen_data[\u5b9e\u65f6\u53c2\u6570]" time="0.012" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_query_routes_render_real_frozen_data[\u8868\u73b0]" time="1.069" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_query_routes_render_real_frozen_data[\u4ea4\u6613\u8bb0\u5f55 \u8fc7\u53bb\u4e24\u4e2a\u6708]" time="0.534" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_query_routes_render_real_frozen_data[\u51c0\u503c\u66f2\u7ebf \u8fc7\u53bb\u4e24\u5e74]" time="0.570" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_failed_live_params_keeps_static_parameters" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_provider_failures_are_not_silent_success[\u4fe1\u53f7]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_provider_failures_are_not_silent_success[\u5b9e\u65f6\u4fe1\u53f7]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_provider_failures_are_not_silent_success[\u8868\u73b0]" time="0.001" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_missing_prices_stale_execution_and_input_checks" time="0.021" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_no_future_leakage_on_frozen_prefix" time="0.232" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_score_red_light_preserves_decimal_ceiling" time="0.002" /><testcase classname="tests.test_poe_subd_six_etf_v1_3" name="test_real_network_poe_queries" time="0.001"><skipped type="pytest.skip" message="Opt-in real-provider Poe-compatible smoke">D:\动量策略\美股A股混合池子动量策略\tests\test_poe_subd_six_etf_v1_3.py:249: Opt-in real-provider Poe-compatible smoke</skipped></testcase><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_snapshot_unknown_source_is_monitor_only_even_with_true_flag]" time="0.179" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_quote_loader_retries_stale_primary_before_backup]" time="0.166" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_quote_loader_rejects_skewed_primary_before_backup]" time="0.165" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_snapshot_from_ineligible_source_is_monitor_only]" time="0.179" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_apply_live_quotes_rejects_partial_snapshot_without_today_row]" time="0.150" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_apply_live_quotes_rejects_extreme_move_from_previous_close]" time="0.156" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_apply_live_quotes_rejects_large_mismatch_with_history_today_bar]" time="0.154" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_quote_time_skew_reports_only_lagging_asset]" time="0.173" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_quote_loader_falls_back_when_primary_host_fails]" time="1.156" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_execution_legs_are_disabled_when_signal_is_invalid]" time="0.164" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_execution_legs_are_disabled_for_performance_purpose]" time="0.158" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_qfq_source_validation_rejects_qfq_raw_label]" time="0.164" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_qfq_source_validation_rejects_unapproved_source_even_if_labeled_qfq]" time="0.153" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_mandatory_windows_use_exact_unique_trading_day_counts]" time="0.190" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_formal_v11_load_close_rejects_raw_diagnostic_fallback]" time="0.150" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_quote_loader_falls_back_when_primary_price_quality_fails]" time="0.177" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_159915_twenty_five_percent_quote_rejected_by_security_price_limit]" time="0.155" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_history_today_diff_without_timestamp_tries_backup_candidate]" time="0.174" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_live_quote_loader_raises_when_all_candidates_fail_price_quality]" time="0.166" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_monitor_candidate_prefers_lower_max_age_and_skew_over_latest_single_quote]" time="0.184" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_price_limit_accepts_exchange_tick_rounded_limit_price]" time="0.158" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_price_limit_rejects_quote_above_tick_rounded_limit_price]" time="0.155" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_quote_price_must_be_etf_tick_multiple]" time="0.155" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_prev_close_one_tick_comparison_uses_decimal_boundary]" time="0.155" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_vendor_prev_close_must_match_independent_history_reference]" time="0.169" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_vendor_prev_close_small_mismatch_blocks_execution]" time="0.156" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_vendor_prev_close_must_be_etf_tick_multiple]" time="0.158" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_price_bad_primary_uses_delay_backup_for_monitor_only]" time="0.174" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_stale_monitor_candidate_must_pass_price_quality_before_selection]" time="0.176" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_replay_adversarial_check_on_v13[test_missing_vendor_prev_close_demotes_candidate_to_monitor_only]" time="0.194" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_cache_and_confirmation_contracts[test_get_daily_for_today_force_refresh_bypasses_same_day_cache]" time="0.154" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_cache_and_confirmation_contracts[test_confirmed_signal_drops_intraday_today_bar]" time="0.158" /><testcase classname="tests.test_poe_subd_six_etf_v1_3_safety" name="test_cache_and_confirmation_contracts[test_intraday_cache_is_invalid_after_confirmed_close_boundary]" time="0.152" /></testsuite></testsuites>

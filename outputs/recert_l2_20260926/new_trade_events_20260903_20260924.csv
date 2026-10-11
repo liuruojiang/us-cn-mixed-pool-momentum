@@ -1,0 +1,5 @@
+date,model_signal_and_trade_clock,old_asset,target_asset,selected_candidate,selected_score,sell_asset,sell_price_model_close,sell_shares_initial_capital_units,buy_asset,buy_price_model_close,buy_shares_initial_capital_units,cost_fraction_of_day_wealth,cost_initial_capital_units,nav_after_model_trade
+2026-09-08,T close; confirmed historical bar available only after close,159985.SZ,CASH,CASH,,159985.SZ,2.451,18.849196622643063,,,0.0,0.001,0.0461993809220981,46.153181541176046
+2026-09-09,T close; confirmed historical bar available only after close,CASH,159985.SZ,159985.SZ,5.378262459892151,,,0.0,159985.SZ,2.394,19.25941034237045,0.001,0.046153181541176,46.107028359634874
+2026-09-18,T close; confirmed historical bar available only after close,159985.SZ,CASH,CASH,,159985.SZ,2.299,19.25941034237045,,,0.0,0.001,0.0442773843771096,44.233106992732566
+2026-09-24,T close; confirmed historical bar available only after close,CASH,159941.SZ,159941.SZ,0.5860081074949879,,,0.0,159941.SZ,1.707,25.886862264639618,0.001,0.0442331069927325,44.18887388573983

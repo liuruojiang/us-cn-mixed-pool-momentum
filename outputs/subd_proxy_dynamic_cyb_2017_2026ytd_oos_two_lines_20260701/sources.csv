@@ -1,0 +1,6 @@
+﻿code,name,source,adjustment,first_available,first_used,last,rows,pool_rule,last_aligned,ffill_days_on_cn_calendar
+QQQ,NASDAQ_QQQ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2016-11-02,2017-01-03,2026-06-30,2426,core asset available from 2007 start,2026-06-30,78
+EWG,GERMANY_EWG_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2016-11-02,2017-01-03,2026-06-30,2426,core asset available from 2007 start,2026-06-30,78
+EWJ,JAPAN_EWJ_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2016-11-02,2017-01-03,2026-06-30,2426,core asset available from 2007 start,2026-06-30,78
+GLD,GOLD_GLD_ADJ_CLOSE_PROXY,Yahoo Finance chart API,adjusted close,2016-11-02,2017-01-03,2026-06-30,2426,core asset available from 2007 start,2026-06-30,78
+CN_CYB_399006,CHINEXT_INDEX_PROXY_DYNAMIC_ADD,Eastmoney push2his kline secid=0.399006,index close / price index,2010-06-01,2010-06-01,2026-06-30,3903,dynamic asset; no prices before 2010-06-01 and no backfill,2026-06-30,0

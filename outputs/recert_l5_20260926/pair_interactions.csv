@@ -1,0 +1,4 @@
+pair_arm,joint_only_new_eligible_asset_days,joint_only_new_eligible_dates,joint_only_winner_days,pair_target_novel_days,first_pair_target_novel,position_diff_vs_formal_days,end_nav,log_nav_interaction_residual
+floor_ceiling_off,0,0,0,0,,1101,36.84429901227476,0.05383443634971948
+floor_r2_off,5293,2744,566,566,2012-02-06,1114,32.094235701267486,0.041960325989694215
+ceiling_r2_off,0,0,0,0,,443,22.083499634574498,0.003644045930681025

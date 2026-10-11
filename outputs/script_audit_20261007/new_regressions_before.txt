@@ -1,0 +1,156 @@
+FFFFFFFFFF.....FFF..FFFF.FFFFFFFFFFFFFFFFFFFF..............              [100%]
+================================== FAILURES ===================================
+E   ValueError: price ffill mask must exactly cover the prices index
+D:\动量策略\美股A股混合池子动量策略\.codex_backups\20261007_163920\poe_subd_six_etf_v1_3_bot.py:1418: ValueError: price ffill mask must exactly cover the prices index
+E   ValueError: price ffill mask must exactly cover the prices index
+
+During handling of the above exception, another exception occurred:
+E   AssertionError: Regex pattern did not match.
+      Expected regex: re.compile('(?i)(empty|no price|no rows|nonempty)', re.IGNORECASE)
+      Actual message: 'price ffill mask must exactly cover the prices index'
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_math_20261007.py:45: AssertionError: Regex pattern did not match.
+E   AssertionError: A primary history prefix loss must trigger the existing full backup.
+    assert '159915.SZ' in []
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:54: AssertionError: A primary history prefix loss must trigger the existing full backup.
+E   AssertionError: A primary history prefix loss must trigger the existing full backup.
+    assert '159915.SZ' in []
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:54: AssertionError: A primary history prefix loss must trigger the existing full backup.
+E   ValueError: cannot reindex on an axis with duplicate labels
+C:\Python314\Lib\site-packages\pandas\core\indexes\base.py:4436: ValueError: cannot reindex on an axis with duplicate labels
+E   AssertionError: An invalid primary sequence must not block an existing valid fallback.
+    assert '159915.SZ' in []
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:87: AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E   AssertionError: An invalid primary sequence must not block an existing valid fallback.
+    assert '159915.SZ' in []
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:87: AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E   AssertionError: An invalid primary sequence must not block an existing valid fallback.
+    assert '159915.SZ' in []
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:87: AssertionError: An invalid primary sequence must not block an existing valid fallback.
+E   Failed: DID NOT RAISE <class 'RuntimeError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:118: Failed: DID NOT RAISE <class 'RuntimeError'>
+E   Failed: DID NOT RAISE <class 'RuntimeError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:118: Failed: DID NOT RAISE <class 'RuntimeError'>
+E   Failed: DID NOT RAISE <class 'ValueError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:147: Failed: DID NOT RAISE <class 'ValueError'>
+E   Failed: DID NOT RAISE <class 'ValueError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:155: Failed: DID NOT RAISE <class 'ValueError'>
+E   Failed: DID NOT RAISE <class 'ValueError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:155: Failed: DID NOT RAISE <class 'ValueError'>
+E   assert False
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:185: assert False
+E   assert []
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_data_20261007.py:203: assert []
+E   AssertionError: assert ['2026-06-17'... '2026-06-15'] == ['2026-06-16']
+      
+      At index 0 diff: '2026-06-17' != '2026-06-16'
+      Left contains 2 more items, first extra item: '2026-06-16'
+      Use -v to get more diff
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:108: AssertionError: assert ['2026-06-17'... '2026-06-15'] == ['2026-06-16']
+E   assert False
+     +  where False =          date   strategy  ... price_ffill_518880.SH signal_price_518880.SH\n0  2026-06-17  SubD V1.3  ...              ...                  1.0\n2  2026-06-15  SubD V1.3  ...                 False                    1.0\n\n[3 rows x 49 columns].empty
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:117: assert False
+E   AssertionError: assert '该时段无调仓记录' in '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n📎 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n'
+     +  where '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n📎 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n' = <built-in method join of str object at 0x00007FFB410ED790>(['\n', '## SubD六ETF V1.3 表现\n\n', '数据: diagnostic rows\n', '口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不...新日度数据: **2026-06-17**\n\n', '| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n', ...])
+     +    where <built-in method join of str object at 0x00007FFB410ED790> = ''.join
+     +    and   ['\n', '## SubD六ETF V1.3 表现\n\n', '数据: diagnostic rows\n', '口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不...新日度数据: **2026-06-17**\n\n', '| 窗口 | 实际区间 | 天数 | 总收益 | 年化 | 最大回撤 | 波动率 | Sharpe | 交易数 | 平均敞口 | 零敞口天数 | 现金标签天数 |\n', ...] = <test_v13_audit_execution_report_20261007.CapturePoe object at 0x00000198F1FD7BB0>.writes
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:133: AssertionError: assert '该时段无调仓记录' in '\n## SubD六ETF V1.3 表现\n\n数据: diagnostic rows\n口径：上市后逐步加入的六ETF可用资产池；Full/10Y不等同于固定六ETF共同存续期。仅为策略模型，手动执行，不自动下单。\n最新日度数据....00% | 100.00% | 0.00% | 100.00% | 0.100% | - |\n📎 完整调仓记录CSV: **subd_v13_trade_records_2026-06-15_2026-06-17.csv**\n\n'
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:142: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:142: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:142: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:155: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:155: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:155: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:166: Failed: DID NOT RAISE <class 'fastapi_poe.client.BotError'>
+E   AssertionError: assert [Timestamp('2...18 00:00:00')] == [Timestamp('2...17 00:00:00')]
+      
+      Left contains one more item: Timestamp('2026-06-18 00:00:00')
+      Use -v to get more diff
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:173: AssertionError: assert [Timestamp('2...18 00:00:00')] == [Timestamp('2...17 00:00:00')]
+E   AssertionError: assert Timestamp('2026-01-06 00:00:00') == Timestamp('2001-06-01 00:00:00')
+     +  where Timestamp('2001-06-01 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2001-06-01')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:180: AssertionError: assert Timestamp('2026-01-06 00:00:00') == Timestamp('2001-06-01 00:00:00')
+E   AssertionError: assert Timestamp('2026-01-06 00:00:00') == Timestamp('2001-06-01 00:00:00')
+     +  where Timestamp('2001-06-01 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2001-06-01')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:180: AssertionError: assert Timestamp('2026-01-06 00:00:00') == Timestamp('2001-06-01 00:00:00')
+E   AssertionError: assert Timestamp('2026-01-06 00:00:00') == Timestamp('2001-06-01 00:00:00')
+     +  where Timestamp('2001-06-01 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2001-06-01')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:180: AssertionError: assert Timestamp('2026-01-06 00:00:00') == Timestamp('2001-06-01 00:00:00')
+E   AssertionError: assert Timestamp('2026-10-06 00:00:00') == Timestamp('2010-06-01 00:00:00')
+     +  where Timestamp('2010-06-01 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2010-06-01')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:180: AssertionError: assert Timestamp('2026-10-06 00:00:00') == Timestamp('2010-06-01 00:00:00')
+E   AssertionError: assert Timestamp('2026-10-06 00:00:00') == Timestamp('2010-06-01 00:00:00')
+     +  where Timestamp('2010-06-01 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2010-06-01')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:180: AssertionError: assert Timestamp('2026-10-06 00:00:00') == Timestamp('2010-06-01 00:00:00')
+E   AssertionError: assert Timestamp('2026-10-06 00:00:00') == Timestamp('2010-06-01 00:00:00')
+     +  where Timestamp('2010-06-01 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2010-06-01')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:180: AssertionError: assert Timestamp('2026-10-06 00:00:00') == Timestamp('2010-06-01 00:00:00')
+E   ValueError: 非法日期: 26-06至今
+D:\动量策略\美股A股混合池子动量策略\.codex_backups\20261007_163920\poe_subd_six_etf_v1_3_bot.py:4877: ValueError: 非法日期: 26-06至今
+E   ValueError: 非法日期: 26/06至今
+D:\动量策略\美股A股混合池子动量策略\.codex_backups\20261007_163920\poe_subd_six_etf_v1_3_bot.py:4877: ValueError: 非法日期: 26/06至今
+E   ValueError: 非法日期: 26.06至今
+D:\动量策略\美股A股混合池子动量策略\.codex_backups\20261007_163920\poe_subd_six_etf_v1_3_bot.py:4877: ValueError: 非法日期: 26.06至今
+E   AssertionError: assert None == Timestamp('2026-04-07 00:00:00')
+     +  where Timestamp('2026-04-07 00:00:00') = <class 'pandas._libs.tslibs.timestamps.Timestamp'>('2026-04-07')
+     +    where <class 'pandas._libs.tslibs.timestamps.Timestamp'> = pd.Timestamp
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:186: AssertionError: assert None == Timestamp('2026-04-07 00:00:00')
+E   assert datetime.datetime(2026, 6, 18, 14, 54, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800))) == datetime.datetime(2026, 6, 18, 14, 55, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800)))
+D:\动量策略\美股A股混合池子动量策略\outputs\tmp\script_audit_20261007_before\test_v13_audit_execution_report_20261007.py:220: assert datetime.datetime(2026, 6, 18, 14, 54, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800))) == datetime.datetime(2026, 6, 18, 14, 55, tzinfo=datetime.timezone(datetime.timedelta(seconds=28800)))
+============================== warnings summary ===============================
+outputs/tmp/script_audit_20261007_before/test_v13_audit_math_20261007.py::test_build_curves_cutoff_truncates_matching_full_snapshot_flags
+  C:\Python314\Lib\site-packages\fastapi_poe\types.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RequestContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_math_20261007.py::test_build_curves_cutoff_truncates_matching_full_snapshot_flags
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_math_20261007.py::test_build_curves_cutoff_before_first_price_raises_explicit_validation
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_primary_truncated_history_uses_existing_full_backup[20]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_primary_truncated_history_uses_existing_full_backup[640]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[duplicate_date]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[NaT]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[constant_zero]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_primary_invalid_history_structure_uses_existing_backup[constant_infinite]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_tencent_incomplete_pagination_is_rejected[empty]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_tencent_incomplete_pagination_is_rejected[repeated]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_alignment_rejects_nonempty_invalid_prices[not-a-price]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-03]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_alignment_rejects_nontrading_row_when_expected_sessions_is_empty[2026-10-07]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_official_2026_calendar_preserves_holiday_when_remote_calendar_fails
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_data_20261007.py::test_normal_live_cache_rejects_negative_age
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_single_day_trade_query_keeps_requested_day_when_metrics_are_na
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_no_session_trade_query_does_not_export_full_history
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_requested_no_trade_day_remains_empty_in_table_and_csv
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_reporting_apis_reject_duplicate_daily_sessions[yearly]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_reporting_apis_reject_duplicate_daily_sessions[nav]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_reporting_apis_reject_duplicate_daily_sessions[trade]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_reporting_apis_reject_invalid_nav_even_with_finite_returns[yearly]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_reporting_apis_reject_invalid_nav_even_with_finite_returns[nav]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_reporting_apis_reject_invalid_nav_even_with_finite_returns[trade]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_performance_preparation_rejects_single_unconfirmed_row
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_performance_preparation_does_not_retain_future_bar
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2001--]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2001-/]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2001-.]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2010--]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2010-/]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2010-.]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2026--]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2026-/]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_year_month_to_now_is_not_shadowed_by_month_day_parser[2026-.]
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_half_year_decimal_request_keeps_its_window
+FAILED outputs/tmp/script_audit_20261007_before/test_v13_audit_execution_report_20261007.py::test_older_force_refresh_finishing_late_does_not_replace_newer_cache
+37 failed, 22 passed, 1 warning in 10.65s

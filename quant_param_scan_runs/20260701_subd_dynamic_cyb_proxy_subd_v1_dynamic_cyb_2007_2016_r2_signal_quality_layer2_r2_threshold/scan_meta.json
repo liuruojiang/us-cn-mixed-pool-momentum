@@ -1,0 +1,307 @@
+{
+  "run_id": "20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold",
+  "created_at": "2026-07-01T19:24:21+08:00",
+  "phase": "complete",
+  "project": "subd_dynamic_cyb_proxy",
+  "strategy": "subd_v1_dynamic_cyb_2007_2016",
+  "subsystem": "r2_signal_quality",
+  "repo_root": "D:\\动量策略\\美股A股混合池子动量策略",
+  "entrypoint": "run_subd_proxy_dynamic_cyb_layer2_r2_scan.py",
+  "git_branch": "codex/cleanup-test-files-sync",
+  "git_commit": "41fd8cbcf819868d8bcd47a9b4ca395980a41228",
+  "git_status_before": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_zz500_layer0.py",
+  "git_status_after": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_dynamic_cyb_layer2_r2_scan.py\n?? run_subd_proxy_zz500_layer0.py",
+  "scan_type": "layer2_grid_scan",
+  "parameter_group": "layer2_r2_threshold",
+  "baseline": {
+    "rule": "same-lookback r2_none"
+  },
+  "candidate_grid": [
+    {
+      "lookback": 25,
+      "r2_threshold": null
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.1
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.15
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.2
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.25
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.3
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.35
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.4
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.5
+    },
+    {
+      "lookback": 25,
+      "r2_threshold": 0.6
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": null
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.1
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.15
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.2
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.25
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.3
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.35
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.4
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.5
+    },
+    {
+      "lookback": 26,
+      "r2_threshold": 0.6
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": null
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.1
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.15
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.2
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.25
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.3
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.35
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.4
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.5
+    },
+    {
+      "lookback": 28,
+      "r2_threshold": 0.6
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": null
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.1
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.15
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.2
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.25
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.3
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.35
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.4
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.5
+    },
+    {
+      "lookback": 30,
+      "r2_threshold": 0.6
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": null
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.1
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.15
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.2
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.25
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.3
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.35
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.4
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.5
+    },
+    {
+      "lookback": 32,
+      "r2_threshold": 0.6
+    }
+  ],
+  "data_snapshot": {
+    "start": "2007-01-04",
+    "end": "2016-12-30",
+    "rows": 2432,
+    "calendar": "A-share trading-day cache",
+    "pool_rule": "QQQ/EWG/EWJ/GLD from 2007 start; CN_CYB_399006 joins from own data with no backfill",
+    "ffill_counts_on_cn_calendar": {
+      "QQQ": 80,
+      "EWG": 80,
+      "EWJ": 80,
+      "GLD": 80,
+      "CN_CYB_399006": 0
+    }
+  },
+  "cost_model": {
+    "one_way_cost": 0.001,
+    "stale_trade_guard": true
+  },
+  "outputs": {
+    "record": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold\\record.md",
+    "scan_summary": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold\\scan_summary.csv",
+    "window_metrics": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold\\window_metrics.csv",
+    "scan_meta": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold\\scan_meta.json",
+    "command_log": "quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold\\command_log.txt"
+  },
+  "decision": "carry_forward_lb28_r2_0p50",
+  "stability_label": "primary_pass_r2_0p50_width_supported_by_0p40",
+  "execution_assumptions": {
+    "signal": "close-to-close weighted-slope ranking with R2 threshold",
+    "overlays": "none in Layer 2 beyond R2 filter",
+    "mixed_market_calendar": "diagnostic A-share calendar with US proxy forward-filled; trades on stale trade legs blocked"
+  },
+  "layer2_selection": {
+    "selected": {
+      "candidate": "lb_28_r2_0p50",
+      "baseline_candidate": "lb_28_r2_none",
+      "lookback": 28,
+      "r2_threshold": 0.5,
+      "r2_label": "0p50",
+      "ann_return_full": 0.10092426114601971,
+      "max_dd_full": -0.2630208809879706,
+      "reason_full": "",
+      "ann_return_last_10y": NaN,
+      "max_dd_last_10y": NaN,
+      "reason_last_10y": "insufficient rows: 2432 < 2520 trading days",
+      "ann_return_last_5y": 0.1039073319173871,
+      "max_dd_last_5y": -0.2072997034402897,
+      "reason_last_5y": "",
+      "ann_return_last_3y": 0.07125512347785312,
+      "max_dd_last_3y": -0.2058168143083119,
+      "reason_last_3y": "",
+      "ann_return_last_1y": 7.50844519465943e-05,
+      "max_dd_last_1y": -0.2058168143083119,
+      "reason_last_1y": "",
+      "ann_delta_full_pp": 0.23502861026798438,
+      "mdd_improve_full_pp": 10.006908907707423,
+      "ann_delta_last_10y_pp": NaN,
+      "mdd_improve_last_10y_pp": NaN,
+      "ann_delta_last_5y_pp": 8.892709381555509,
+      "mdd_improve_last_5y_pp": 15.57902666247546,
+      "ann_delta_last_3y_pp": 11.136714892035593,
+      "mdd_improve_last_3y_pp": 15.727315575673162,
+      "ann_delta_last_1y_pp": 26.20098325379232,
+      "mdd_improve_last_1y_pp": 12.641849774466019,
+      "dd_improve_window_count": 4,
+      "return_tolerance_ok": true,
+      "full_mdd_improved": true,
+      "layer2_pass": true,
+      "pass_reason": "pass"
+    },
+    "decision": "carry_forward_primary_r2_pass",
+    "stability_label": "primary_pass"
+  },
+  "comparison_reference": {
+    "original_layer2_candidate": "orig_layer2_lb25_r2_0p20",
+    "original_full_strategy_candidate": "orig_full_v1_1_reference",
+    "note": "Original Layer2 comparator is lb25 with R2 0.20 before later overlays; full strategy reference is context only."
+  },
+  "git_status_after_scan": "M docs/new_strategy_test_standard_process.md\n?? docs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? docs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? docs/subd_proxy_zz500_2007_2016_layer0/\n?? outputs/subd_proxy_cyb_dynamic_2007_2016_layer0/\n?? outputs/subd_proxy_dynamic_cyb_2007_2016_layer0/\n?? outputs/subd_proxy_zz500_2007_2016_layer0/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold/\n?? quant_param_scan_runs/20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_raw_weighted_slope_layer1_lookback_width/\n?? run_subd_proxy_cyb_dynamic_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer0.py\n?? run_subd_proxy_dynamic_cyb_layer1_scan.py\n?? run_subd_proxy_dynamic_cyb_layer2_r2_scan.py\n?? run_subd_proxy_zz500_layer0.py",
+  "elapsed_sec": 185.242,
+  "command": "python run_subd_proxy_dynamic_cyb_layer2_r2_scan.py --start-date 2007-01-01 --end-date 2016-12-30 --run-folder quant_param_scan_runs\\20260701_subd_dynamic_cyb_proxy_subd_v1_dynamic_cyb_2007_2016_r2_signal_quality_layer2_r2_threshold",
+  "warnings": [
+    "10Y mandatory window is N/A because sample has fewer than 2520 trading days.",
+    "This is proxy research; US adjusted closes are aligned to an A-share calendar for this diagnostic."
+  ],
+  "finalized_at": "2026-07-01T19:33:35+08:00"
+}

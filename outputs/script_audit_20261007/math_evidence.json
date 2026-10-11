@@ -1,0 +1,97 @@
+{
+  "scope": "Latest local formal six-ETF V1.3, offline script math and paper ledger audit; not deployment or execution certification",
+  "entrypoint": "D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py",
+  "entrypoint_sha256": "7a4cf15ff1603764dbf3469aab9b85f33756c98129116b4ce7dedb46eb48e1e3",
+  "data": {
+    "prices": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l1_20260926\\prices_aligned_qfq_through_20260924.csv.gz",
+    "prices_sha256": "20a9a3bec118a4bc5b6829e19699d506d1617acee2dfe8ea7bb836e1404211e8",
+    "flags": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l1_20260926\\price_ffill_flags_through_20260924.csv.gz",
+    "flags_sha256": "39c1d4afc5dc73d59ee3742dc4e275a87ab6f400ecfc7b709796e83c46486ee1",
+    "rows": 3594,
+    "start": "2011-12-09",
+    "end": "2026-09-24",
+    "adjustment": "preserved qfq/front-adjusted snapshot",
+    "network_refreshed": false
+  },
+  "formal_frozen_parameters": {
+    "lookback": 25,
+    "score_min_strict": 0.5,
+    "score_max_strict": 5.5,
+    "r2_threshold_inclusive": 0.25,
+    "switch_buffer": 1.0,
+    "one_way_cost": 0.001,
+    "initial_entry": 1.0
+  },
+  "timing": "Old holding earns today's close-close return, then paper switch at same final close; new asset starts next row",
+  "independent_real_snapshot_checks": {
+    "position_before_different_rows": 0,
+    "position_different_rows": 0,
+    "best_candidate_different_rows": 0,
+    "trade_blocked_by_stale_price_different_rows": 0,
+    "nav_max_abs_difference": 8.526512829121202e-14,
+    "return_max_abs_difference": 3.3306690738754696e-16,
+    "gross_return_max_abs_difference": 2.220446049250313e-16,
+    "turnover_max_abs_difference": 0.0,
+    "cost_max_abs_difference": 0.0,
+    "raw_score_max_abs_difference": 1.3642420526593924e-12,
+    "r2_max_abs_difference": 6.661338147750939e-16,
+    "costed_nav_never_exceeds_same_path_no_cost": true,
+    "cost_enters_return_as_multiplicative_deduction": true,
+    "buy_plus_sell_equals_turnover": true,
+    "fee_equals_turnover_times_one_way_cost": true,
+    "exposure_binary": true,
+    "cash_has_zero_shares": true,
+    "ETF_holding_has_zero_cash": true,
+    "prefix_causality": [
+      {
+        "rows": 25,
+        "passed": true
+      },
+      {
+        "rows": 550,
+        "passed": true
+      },
+      {
+        "rows": 1600,
+        "passed": true
+      },
+      {
+        "rows": 3593,
+        "passed": true
+      }
+    ]
+  },
+  "constructed_contract_checks_not_performance": {
+    "invalid_window_NaN": true,
+    "invalid_window_positive_infinity": true,
+    "invalid_window_negative_infinity": true,
+    "invalid_window_zero": true,
+    "invalid_window_negative": true,
+    "exponential_overflow_returns_nan_score_without_exception": true,
+    "overflow_asset_does_not_abort_pool_or_block_valid_asset": true,
+    "all_nan_pool_remains_cash_nav_one": true,
+    "24_row_warmup_cash_nav_one": true,
+    "missing_held_close_fails_explicitly": true,
+    "nonfinite_negative_or_nav_erasing_cost_rejected": true,
+    "tie_uses_asset_order_consistently_with_frozen_core": true,
+    "earlier_end_with_full_flags": {
+      "outcome": "returned",
+      "rows": 30
+    },
+    "empty_after_cutoff": {
+      "outcome": "exception",
+      "type": "ValueError",
+      "message": "No prices on or before the requested end_date"
+    },
+    "direct_engine_empty_after_cutoff": {
+      "type": "ValueError",
+      "message": "No prices on or before the requested end_date"
+    }
+  },
+  "limitations": [
+    "Data cutoff is 2026-09-24; no claim of current prices",
+    "Price snapshots and adjustment labels are preserved evidence, no point-in-time corporate-action recertification",
+    "No actual orders, broker fills, liquidity, T+1, limit-up/down execution, QDII premium or hosted Poe runtime certification",
+    "Only full-entry formal path is audited; legacy inactive overlays retain separate assumptions"
+  ]
+}

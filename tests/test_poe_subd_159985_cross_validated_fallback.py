@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BOT_PATHS = (
     ROOT / "poe_subd_six_etf_v1_1_bot.py",
     ROOT / "poe_subd_mixed_pool_v1_3_bot.py",
+    ROOT / "poe_subd_six_etf_v1_3_bot.py",
 )
 
 
@@ -23,7 +24,7 @@ class FakeResponse:
         return self._payload
 
 
-@pytest.fixture(params=BOT_PATHS, ids=("v1_1", "v1_3"))
+@pytest.fixture(params=BOT_PATHS, ids=("v1_1", "mixed_v1_3", "six_etf_v1_3"))
 def module(request):
     path = request.param
     spec = importlib.util.spec_from_file_location(f"{path.stem}_cross_validated_test", path)

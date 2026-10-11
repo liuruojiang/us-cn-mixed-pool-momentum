@@ -1,0 +1,11 @@
+check,metric,max_abs_diff
+score_min_0_vs_accepted_pure_base,return,9.974659986866641e-17
+score_min_0_vs_accepted_pure_base,nav,3.552713678800501e-15
+score_min_0_vs_accepted_pure_base,turnover,0.0
+score_min_0_vs_accepted_pure_base,fraction_before,0.0
+score_min_0_vs_accepted_pure_base,position,0.0
+score_min_0_runner_vs_poe,return,0.0
+score_min_0_runner_vs_poe,nav,0.0
+score_min_0_runner_vs_poe,turnover,0.0
+score_min_0_runner_vs_poe,fraction_before,0.0
+score_min_0_runner_vs_poe,position,0.0
