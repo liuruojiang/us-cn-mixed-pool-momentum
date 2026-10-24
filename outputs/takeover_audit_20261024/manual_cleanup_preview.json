@@ -1,0 +1,16 @@
+{
+  "status": "PASS_READ_ONLY_PREVIEW",
+  "batch_sha256": "9ab0c424977e6865f96a10249a2d0bf22af73342e791df81771fd4780cac5cdf",
+  "cmd_exe_returncode": 0,
+  "stdout": "READY: outputs/takeover_audit_20261024/scratch\nREADY: outputs/takeover_audit_20261024/data/scratch\nPreviously blocked targets excluded: 23\nManifest file count: 41\nVerified internal directory links: 17\nPREVIEW PASS. No backup, deletion, or filesystem mutation performed.\n",
+  "stderr": "",
+  "target_directory_count": 2,
+  "file_count": 41,
+  "directory_link_count": 17,
+  "bytes": 1658789,
+  "previously_blocked_excluded": 23,
+  "deletion_executed": false,
+  "target_hashes_unchanged": true,
+  "original_tracked_files_unchanged": 1520,
+  "runtime_backup_and_deletion": "not executed; user manual run only"
+}

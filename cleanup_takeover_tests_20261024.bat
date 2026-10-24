@@ -1,0 +1,459 @@
+@echo off
+setlocal
+set "TAKEOVER_CLEANUP_SELF=%~f0"
+set "TAKEOVER_CLEANUP_MODE=%~1"
+powershell.exe -NoLogo -NoProfile -Command "$s=[IO.File]::ReadAllText($env:TAKEOVER_CLEANUP_SELF,[Text.Encoding]::UTF8); $m='# TAKEOVER_PS_PAYLOAD'; Invoke-Expression ($s.Substring($s.LastIndexOf($m)+$m.Length))"
+set "TAKEOVER_CLEANUP_EXIT=%ERRORLEVEL%"
+if /I "%~1"=="--preview" exit /b %TAKEOVER_CLEANUP_EXIT%
+echo.
+echo Exit code: %TAKEOVER_CLEANUP_EXIT%
+pause
+exit /b %TAKEOVER_CLEANUP_EXIT%
+# TAKEOVER_PS_PAYLOAD
+
+$ErrorActionPreference = 'Stop'
+try {
+    $plan = ConvertFrom-Json @'
+{
+  "workspace": "D:\\动量策略\\美股A股混合池子动量策略",
+  "targets": [
+    {
+      "directory": "outputs/takeover_audit_20261024/scratch",
+      "files": [
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/daily.csv.gz",
+          "sha256": "27a0d244c9de23f418a17ca2a6437b25a3f0ba07aafd733ca481721da291dc30",
+          "bytes": 583926
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/metrics.csv",
+          "sha256": "b879a5703928042318872df8cdabfe4ddcd68dceb46fb46391787512ff1b9a0a",
+          "bytes": 1209
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/parity.json",
+          "sha256": "06159b7c26c7eee8883a6120ae5ab62a7718f285079cd31172958e8e272d09eb",
+          "bytes": 389
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_params.txt",
+          "sha256": "addfdcef2a70bed1cd446a5e980c6f4edf7ed4b4a8946c34eb42e4ab75093e9e",
+          "bytes": 2122
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_交易记录_过去两个月.txt",
+          "sha256": "2155de5154832dd81a8478a340c90b3749cf30e40ab9773cdcea95aa396a5950",
+          "bytes": 3571
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_信号.txt",
+          "sha256": "d2b43812affdb977fcdf79f02bea55d91057e2a137ce7a5fe31c92cc02cf4c84",
+          "bytes": 4815
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_净值曲线_过去两年.txt",
+          "sha256": "974d23a150d2870d3b39ed6157b57328ca1dba0ca58975aca273fb7f479e7d05",
+          "bytes": 6279
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_实时信号.txt",
+          "sha256": "ddae4fc2f1b3158c1f969f21fa2f0fde48e5a856a119826b68212f878ea590e1",
+          "bytes": 5345
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_实时参数.txt",
+          "sha256": "65a673c11a27b22a1c0428a2bb0ceee85f5a511f17d1dac3c17f7a057c79f900",
+          "bytes": 6163
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_表现.txt",
+          "sha256": "9c5e23ec185166d1fa13eaefa7b9f1102bd9a543a3068e49b335f44c072da4e1",
+          "bytes": 6154
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2011-12-09_2026-09-02.csv",
+          "sha256": "b460974e785be0e1b31427d90aff335e47b204b684565034850d817347530237",
+          "bytes": 176471
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2011-12-09_2026-09-02.png",
+          "sha256": "b31cb8bf6c68457761a126cfd6a9a0eecae6e5be4b79843be49ef829237b4755",
+          "bytes": 121401
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2024-09-03_2026-09-02.csv",
+          "sha256": "a84e2ad1579479f4b61a99fa2d4cc6ad1414a04e34dc94c0fd86ec7a05911705",
+          "bytes": 23637
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2024-09-03_2026-09-02.png",
+          "sha256": "027d866e7b3fea34765128f6e1f67eb54370e9cfa7b070d8567a72e0af5be1a0",
+          "bytes": 131593
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2026-07-03_2026-09-02.csv",
+          "sha256": "69c009a9e3f81f28002c9f4d0a4e875f2044e16c7ec3f9c391c6fc45e798a241",
+          "bytes": 2178
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2026-07-03_2026-09-02.png",
+          "sha256": "9f3c7cacb29d841c6647bfa8902b50bd9576cd3bd62f74e7e70e1d393c7c443e",
+          "bytes": 103063
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_trade_records_2011-12-09_2026-09-02.csv",
+          "sha256": "5e94f9648b52799cc4bbd666cdff59670d5a40070051f35f3d5a5467e3d91964",
+          "bytes": 378978
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_trade_records_2024-09-03_2026-09-02.csv",
+          "sha256": "dc463686c9d18fb6c18a56b3c2b867b2de2c3fe0fd96b5e029cd1e079aa24233",
+          "bytes": 88915
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_trade_records_2026-07-03_2026-09-02.csv",
+          "sha256": "f78f1c3419a180035c92afe7ce4d3087bf581902dcff23ff7c2b5029a79a45d2",
+          "bytes": 8272
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/test_runner_expected_cn_tradin0/cn_trading_days_cache.csv",
+          "sha256": "3decd48d36fa7c32c092daf795a7d880e6be2cf6c548d4265f8edab87f5bba13",
+          "bytes": 116
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_align_prices_rejects_stal0/cn_trading_days_cache.csv",
+          "sha256": "c88af1cb34d233683a5a28abd612d750b922698488429b62b67e8da6730ea114",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_calendar_cache_rejects_in0/cn_trading_days_cache.csv",
+          "sha256": "1b53d3d963d81ef2e7f3bfc0dca1805250558cc909e14e9334c3ea82615220a4",
+          "bytes": 88
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_cnfin_calendar_cache_pres0/cn_trading_days_cache.csv",
+          "sha256": "4aad2541a9cebd24f259f9a7788f5da9f1b4283158fbf53c4461837347764e6b",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_empty_akshare_calendar_do0/cn_trading_days_cache.csv",
+          "sha256": "cd281cbfc7821096c62fa742d5704e18cac0baaa53e6fd033bad68a82d22c81c",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_latest_market_date_must_b0/cn_trading_days_cache.csv",
+          "sha256": "a9a4f10ec7aad36736c506d894a198a9ee07ed9d48e2785c6c197488e0321e0e",
+          "bytes": 185
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_official_2026_calendar_co0/missing_cn_trading_days_cache.csv",
+          "sha256": "1ef9c7ce10975d5663600eb22081f69e029f50941e9364abd42f61d5dfed472d",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_akshare_calendar_do0/cn_trading_days_cache.csv",
+          "sha256": "ca0047758df2fcca006ea6af1054afe875cc23f0c6d16ed59fda89086c508669",
+          "bytes": 168
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_calendar_cache_is_r0/cn_trading_days_cache.csv",
+          "sha256": "c88af1cb34d233683a5a28abd612d750b922698488429b62b67e8da6730ea114",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf0/missing_cn_trading_days_cache.csv",
+          "sha256": "900279647563fd003eaf9c11ba90d73e45202ac12ffa17fd0cae1732864eb984",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf1/missing_cn_trading_days_cache.csv",
+          "sha256": "5d9bd3d9932ef916f206c05582ed1a28cd741ed2c542c869b6801931ad27a062",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf2/missing_cn_trading_days_cache.csv",
+          "sha256": "590935f55d56629f936cca6ab82801fcee2b560aadd3ea9ed11c65e57c20b3d4",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_loc0/cn_trading_days_cache.csv",
+          "sha256": "ef1bdcd2272974330c6aa9b30f645d000828a575a199a745d3bf9af913a736c5",
+          "bytes": 153
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_0/cn_trading_days_cache.csv",
+          "sha256": "b25b7bb60ee674288f9cd5b086f5acca242e05ec46dc2e9cd3868936b0a5b510",
+          "bytes": 216
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_1/cn_trading_days_cache.csv",
+          "sha256": "2db848d8ff83b86a7a97660e0115a20c2b5e3dc19724d5005365c1ecf7869663",
+          "bytes": 174
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_2/cn_trading_days_cache.csv",
+          "sha256": "09babf9555c11e015d5302345bdc0e9a2aa3117075f979104b1d672edfedc64a",
+          "bytes": 141
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_accept0/missing_cn_trading_days_cache.csv",
+          "sha256": "cf61fd976cedb8e19f29d50eea6ef800564069bd205bcf2dd5a9e8a3e610b0c5",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_accept1/missing_cn_trading_days_cache.csv",
+          "sha256": "057cdec7cebae652bd28fbf6ae7978575ab829270c70cfff6ae8b052af034c12",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_cache_0/cn_trading_days_cache.csv",
+          "sha256": "ce2e6aedf926dd472e8d5408a3599e79eb443414cabc5e432a9da73208031cc2",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_official_2026_calenda0/missing_cn_trading_days_cache.csv",
+          "sha256": "15b05eb2642168e0b44eeecf6426321cc4350354c284ca75ac683d2777b06847",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_ca0/cn_trading_days_cache.csv",
+          "sha256": "2db848d8ff83b86a7a97660e0115a20c2b5e3dc19724d5005365c1ecf7869663",
+          "bytes": 174
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_ca1/cn_trading_days_cache.csv",
+          "sha256": "09babf9555c11e015d5302345bdc0e9a2aa3117075f979104b1d672edfedc64a",
+          "bytes": 141
+        }
+      ],
+      "links": [
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v13current",
+          "target": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/test_runner_expected_cn_tradincurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/baseline/test_runner_expected_cn_tradin0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_align_prices_rejects_stalcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_align_prices_rejects_stal0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_calendar_cache_rejects_incurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_calendar_cache_rejects_in0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_cnfin_calendar_cache_prescurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_cnfin_calendar_cache_pres0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_empty_akshare_calendar_docurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_empty_akshare_calendar_do0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_latest_market_date_must_bcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_latest_market_date_must_b0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_official_2026_calendar_cocurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_official_2026_calendar_co0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_akshare_calendar_docurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_akshare_calendar_do0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_calendar_cache_is_rcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_calendar_cache_is_r0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnfcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf2"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_loccurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_loc0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_current",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_2"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_acceptcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_accept1"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_cache_current",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_cache_0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_official_2026_calendacurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_official_2026_calenda0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_cacurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_ca1"
+        }
+      ]
+    },
+    {
+      "directory": "outputs/takeover_audit_20261024/data/scratch",
+      "files": [],
+      "links": []
+    }
+  ],
+  "previously_blocked_excluded": [
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\full_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\final_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\verified_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\tests\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260926_six_etf_v1_3_l6_parameter_basis_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261001_lookback_5_99_step2_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261001_pure_momentum_lookback_5_99_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_formal_lookback_5_100_step5_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_formal_weight_power_0_5_step0p5_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_r2_threshold_0_2_step0p05_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l2_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l3_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l5_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l6_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l7_20260927\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l8_20260927\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\.pytest_cache",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\pytest_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-26_2026-09-24_signal.txt",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-26_2026-09-25_signal.txt",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-27_2026-09-24_signal.txt"
+  ],
+  "file_count": 41,
+  "directory_link_count": 17,
+  "bytes": 1658789,
+  "execution": "manual only; preview verified by agent; no deletion by agent"
+}
+'@
+    $root = [IO.Path]::GetFullPath([string]$plan.workspace).TrimEnd('\')
+    $scriptRoot = [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($env:TAKEOVER_CLEANUP_SELF))
+    if ($root -ne $scriptRoot) { throw 'Keep this batch in its original project root.' }
+    function Get-Sha([string]$path) {
+        $alg = [Security.Cryptography.SHA256]::Create()
+        $stream = [IO.File]::OpenRead($path)
+        try { return [BitConverter]::ToString($alg.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
+        finally { $stream.Dispose(); $alg.Dispose() }
+    }
+    function Check-Path([string]$path) {
+        $full = [IO.Path]::GetFullPath($path)
+        if (-not $full.StartsWith($root + '\', [StringComparison]::OrdinalIgnoreCase)) { throw "Outside workspace: $full" }
+        $walk = $full
+        while ($walk) {
+            if (Test-Path -LiteralPath $walk) {
+                if ((Get-Item -Force -LiteralPath $walk).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse point rejected: $walk" }
+            }
+            $parent = [IO.Path]::GetDirectoryName($walk)
+            if ($parent -eq $walk) { break }
+            $walk = $parent
+        }
+        return $full
+    }
+    function Check-Link($link, [string]$dir) {
+        $path = [IO.Path]::GetFullPath((Join-Path $root $link.path))
+        if (-not $path.StartsWith($dir + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Link outside target.' }
+        $null = Check-Path ([IO.Path]::GetDirectoryName($path))
+        $item = Get-Item -LiteralPath $path -Force
+        if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or -not $item.PSIsContainer) { throw 'Expected directory link changed.' }
+        $to = [string]@($item.Target)[0]
+        if ($to.StartsWith('\\?\')) { $to = $to.Substring(4) }
+        if (-not [IO.Path]::IsPathRooted($to)) { $to = Join-Path ([IO.Path]::GetDirectoryName($path)) $to }
+        $to = Check-Path $to
+        $expected = [IO.Path]::GetFullPath((Join-Path $root $link.target))
+        if ($to -ne $expected -or -not $to.StartsWith($dir + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Directory link target changed.' }
+        return $path
+    }
+    function Get-ItemsWithoutFollowingLinks([string]$dir) {
+        foreach ($item in Get-ChildItem -LiteralPath $dir -Force) {
+            $item
+            if ($item.PSIsContainer -and -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+                Get-ItemsWithoutFollowingLinks $item.FullName
+            }
+        }
+    }
+    function Check-Target($target) {
+        $dir = Check-Path (Join-Path $root $target.directory)
+        if (-not (Test-Path -LiteralPath $dir)) { return $false }
+        $items = @(Get-ItemsWithoutFollowingLinks $dir)
+        $links = @($items | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint })
+        if ($links.Count -ne @($target.links).Count) { throw 'Directory link set changed.' }
+        foreach ($link in $target.links) { $null = Check-Link $link $dir }
+        foreach ($item in $items) {
+            if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { $null = Check-Path $item.FullName }
+        }
+        $actual = @($items | Where-Object { -not $_.PSIsContainer -and -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) })
+        if ($actual.Count -ne @($target.files).Count) { throw "File set changed; stopped: $dir" }
+        foreach ($f in $target.files) {
+            $path = Check-Path (Join-Path $root $f.path)
+            if (-not $path.StartsWith($dir + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Manifest scope mismatch.' }
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "File missing: $path" }
+            if ((Get-Item -LiteralPath $path).Length -ne $f.bytes -or (Get-Sha $path) -ne $f.sha256) { throw "File changed; stopped: $path" }
+        }
+        return $true
+    }
+    $active = @()
+    foreach ($target in $plan.targets) {
+        if (Check-Target $target) { $active += $target; Write-Host ('READY: ' + $target.directory) }
+        else { Write-Host ('ALREADY ABSENT: ' + $target.directory) }
+    }
+    Write-Host ('Previously blocked targets excluded: ' + @($plan.previously_blocked_excluded).Count)
+    Write-Host ('Manifest file count: ' + $plan.file_count)
+    Write-Host ('Verified internal directory links: ' + $plan.directory_link_count)
+    if ($env:TAKEOVER_CLEANUP_MODE -eq '--preview') {
+        Write-Host 'PREVIEW PASS. No backup, deletion, or filesystem mutation performed.'
+        exit 0
+    }
+    if ($active.Count -eq 0) { Write-Host 'Nothing remains to clean.'; exit 0 }
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $backupDir = Check-Path (Join-Path $root '.codex_backups')
+    $null = New-Item -ItemType Directory -Force -Path $backupDir
+    $archive = Join-Path $backupDir ('manual_takeover_cleanup_' + (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' + [Guid]::NewGuid().ToString('N') + '.zip')
+    $zip = [IO.Compression.ZipFile]::Open($archive, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+        $entry = $zip.CreateEntry('manual_cleanup_manifest.json')
+        $writer = New-Object IO.StreamWriter($entry.Open(), [Text.Encoding]::UTF8)
+        try { $writer.Write(($plan | ConvertTo-Json -Depth 20)) } finally { $writer.Dispose() }
+        foreach ($target in $active) { foreach ($f in $target.files) {
+            $null = [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $root $f.path), $f.path, [IO.Compression.CompressionLevel]::Optimal)
+        }}
+    } finally { $zip.Dispose() }
+    $zip = [IO.Compression.ZipFile]::OpenRead($archive)
+    try {
+        foreach ($target in $active) { foreach ($f in $target.files) {
+            $entry = $zip.GetEntry($f.path)
+            if ($null -eq $entry -or $entry.Length -ne $f.bytes) { throw 'Backup entry missing or size mismatch.' }
+            $stream = $entry.Open(); $alg = [Security.Cryptography.SHA256]::Create()
+            try { $hash = [BitConverter]::ToString($alg.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
+            finally { $stream.Dispose(); $alg.Dispose() }
+            if ($hash -ne $f.sha256) { throw 'Backup hash mismatch; no cleanup performed.' }
+        }}
+    } finally { $zip.Dispose() }
+    # Revalidate the entire frozen scope after backup, before any removal.
+    foreach ($target in $active) { if (-not (Check-Target $target)) { throw 'Target changed during backup.' } }
+    Write-Host ('Verified recovery archive: ' + $archive)
+    foreach ($target in $active) {
+        $dir = Check-Path (Join-Path $root $target.directory)
+        foreach ($link in $target.links) {
+            $linkPath = Check-Link $link $dir
+            # Non-recursive deletion removes this verified reparse point itself.
+            [IO.Directory]::Delete($linkPath, $false)
+        }
+        Remove-Item -LiteralPath $dir -Recurse -Force
+        if (Test-Path -LiteralPath $dir) { throw "Removal incomplete: $dir" }
+        Write-Host ('REMOVED: ' + $target.directory)
+    }
+    Write-Host 'Cleanup complete. Regression tests, audit evidence and old blocked targets were retained.'
+    exit 0
+} catch {
+    Write-Host ('STOPPED: ' + $_.Exception.Message) -ForegroundColor Red
+    exit 1
+}

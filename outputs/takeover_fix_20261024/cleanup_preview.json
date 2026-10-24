@@ -1,0 +1,7 @@
+{
+  "status": "PASS_READ_ONLY_PREVIEW",
+  "exit_code": 0,
+  "stdout": "READY: outputs/takeover_audit_20261024/scratch\nREADY: outputs/takeover_audit_20261024/data/scratch\nREADY: outputs/takeover_fix_20261024/scratch\nREADY: outputs/takeover_fix_20261024/data/scratch\nPreviously blocked targets excluded: 23\nManifest file count: 83\nVerified internal directory links: 34\nPREVIEW PASS. No backup, deletion, or filesystem mutation performed.\n",
+  "stderr": "",
+  "deletion_executed": false
+}

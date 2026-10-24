@@ -1,0 +1,27 @@
+{
+  "audit_status": "FAIL_TWO_CONFIRMED_P2_FINDINGS_NOT_REPAIRED",
+  "code_sha256": "8354e9c4b835c77f11809d5d0b727f54e75e7f7bc5a1fc5aa282ccb73bfd1f57",
+  "head": "f1fe6ac989e21c60b230cd75ad0949bad1a45cf3",
+  "original_tracked_files_verified_unchanged": 1520,
+  "baseline_unique_passed": 740,
+  "baseline_skipped": 1,
+  "baseline_initial_setup_errors": 21,
+  "baseline_setup_rerun_passed": 21,
+  "baseline_single_clean_full_run": false,
+  "new_adversarial_passed": 25,
+  "new_adversarial_failed": 7,
+  "new_adversarial_errors": 0,
+  "all_unique_tests": 773,
+  "all_unique_passed": 765,
+  "all_unique_failed": 7,
+  "all_unique_skipped": 1,
+  "math_exact_parity": {
+    "rows": 3597,
+    "columns": 105
+  },
+  "data_cutoff": "2026-09-30",
+  "production_modified": false,
+  "remote_write": false,
+  "orders": false,
+  "deletion_executed_by_agent": false
+}

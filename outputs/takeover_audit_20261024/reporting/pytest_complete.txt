@@ -1,0 +1,50 @@
+FF......FF..........                                                     [100%]
+================================== FAILURES ===================================
+___ test_all_explicit_years_reach_actual_handler_csv[\uff0c-chinese_comma] ____
+tests\test_v13_takeover_reporting_20261024.py:81: in test_all_explicit_years_reach_actual_handler_csv
+    assert len(exports) == 2, evidence
+E   AssertionError: {'actual_exports': {'subd_v13_trade_records_2024-01-02_2024-12-31.csv': 30}, 'expected_trade_rows': {'2024': 30, '2025': 35}, 'query': '交易记录 2024年，2025年'}
+E   assert 1 == 2
+E    +  where 1 = len({'subd_v13_trade_records_2024-01-02_2024-12-31.csv':           date   strategy  ... last_date_159985.SZ last_date_5188...30          2026-09-30\n29  2024-01-22  SubD V1.3  ...          2026-09-30          2026-09-30\n\n[30 rows x 110 columns]})
+_______ test_all_explicit_years_reach_actual_handler_csv[,-ascii_comma] _______
+tests\test_v13_takeover_reporting_20261024.py:81: in test_all_explicit_years_reach_actual_handler_csv
+    assert len(exports) == 2, evidence
+E   AssertionError: {'actual_exports': {'subd_v13_trade_records_2024-01-02_2024-12-31.csv': 30}, 'expected_trade_rows': {'2024': 30, '2025': 35}, 'query': '交易记录 2024年,2025年'}
+E   assert 1 == 2
+E    +  where 1 = len({'subd_v13_trade_records_2024-01-02_2024-12-31.csv':           date   strategy  ... last_date_159985.SZ last_date_5188...30          2026-09-30\n29  2024-01-22  SubD V1.3  ...          2026-09-30          2026-09-30\n\n[30 rows x 110 columns]})
+_____ test_disjoint_month_ranges_reach_handler_csv[\uff0c-chinese_comma] ______
+tests\test_v13_takeover_reporting_20261024.py:104: in test_disjoint_month_ranges_reach_handler_csv
+    assert actual == expected, evidence
+E   AssertionError: {'actual': ['subd_v13_trade_records_2024-11-01_2025-01-27.csv'], 'expected': ['subd_v13_trade_records_2024-11-01_2025-01-31.csv', 'subd_v13_trade_records_2025-06-01_2025-08-31.csv'], 'query': '交易记录 2024年11月至2025年1月，2025年6月至2025年8月'}
+E   assert {'subd_v13_tr...25-01-27.csv'} == {'subd_v13_tr...25-08-31.csv'}
+E     
+E     Extra items in the left set:
+E     'subd_v13_trade_records_2024-11-01_2025-01-27.csv'
+E     Extra items in the right set:
+E     'subd_v13_trade_records_2025-06-01_2025-08-31.csv'
+E     'subd_v13_trade_records_2024-11-01_2025-01-31.csv'
+E     Use -v to get more diff
+_________ test_disjoint_month_ranges_reach_handler_csv[,-ascii_comma] _________
+tests\test_v13_takeover_reporting_20261024.py:104: in test_disjoint_month_ranges_reach_handler_csv
+    assert actual == expected, evidence
+E   AssertionError: {'actual': ['subd_v13_trade_records_2024-11-01_2025-01-27.csv'], 'expected': ['subd_v13_trade_records_2024-11-01_2025-01-31.csv', 'subd_v13_trade_records_2025-06-01_2025-08-31.csv'], 'query': '交易记录 2024年11月至2025年1月,2025年6月至2025年8月'}
+E   assert {'subd_v13_tr...25-01-27.csv'} == {'subd_v13_tr...25-08-31.csv'}
+E     
+E     Extra items in the left set:
+E     'subd_v13_trade_records_2024-11-01_2025-01-27.csv'
+E     Extra items in the right set:
+E     'subd_v13_trade_records_2025-06-01_2025-08-31.csv'
+E     'subd_v13_trade_records_2024-11-01_2025-01-31.csv'
+E     Use -v to get more diff
+============================== warnings summary ===============================
+tests/test_v13_takeover_reporting_20261024.py::test_all_explicit_years_reach_actual_handler_csv[\uff0c-chinese_comma]
+  C:\Python314\Lib\site-packages\fastapi_poe\types.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RequestContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_v13_takeover_reporting_20261024.py::test_all_explicit_years_reach_actual_handler_csv[\uff0c-chinese_comma]
+FAILED tests/test_v13_takeover_reporting_20261024.py::test_all_explicit_years_reach_actual_handler_csv[,-ascii_comma]
+FAILED tests/test_v13_takeover_reporting_20261024.py::test_disjoint_month_ranges_reach_handler_csv[\uff0c-chinese_comma]
+FAILED tests/test_v13_takeover_reporting_20261024.py::test_disjoint_month_ranges_reach_handler_csv[,-ascii_comma]
+4 failed, 16 passed, 1 warning in 10.30s

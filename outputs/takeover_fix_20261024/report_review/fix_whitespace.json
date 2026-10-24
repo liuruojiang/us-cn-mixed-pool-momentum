@@ -1,0 +1,8 @@
+{
+  "query": "交易记录 2024年\t，\n 2025年 ,\t2026年1月",
+  "exports": {
+    "subd_v13_trade_records_2026-01-01_2026-01-31.csv": 3,
+    "subd_v13_trade_records_2025-01-01_2025-12-31.csv": 35,
+    "subd_v13_trade_records_2024-01-01_2024-12-31.csv": 30
+  }
+}

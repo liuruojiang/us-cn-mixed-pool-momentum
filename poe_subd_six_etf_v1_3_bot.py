@@ -2491,36 +2491,35 @@ def _recover_calendar_price_conflict(
     observed: pd.Index,
     expected: pd.DatetimeIndex | None,
 ) -> pd.DatetimeIndex | None:
-    """Retry a conflicting calendar once; never infer sessions from price rows."""
+    """Reconcile official coverage; never infer sessions from price rows."""
     global _CN_TRADING_DAY_CACHE, _CN_TRADING_DAY_CACHE_COVERAGE_END
     global _CN_TRADING_DAY_CACHE_QUERIED_START, _CN_TRADING_DAY_CACHE_QUERIED_END
     if expected is None:
         return None
     unexpected = pd.DatetimeIndex(observed).difference(expected)
-    if not len(unexpected):
-        return expected
-    # A known closure is a bad provider bar, not evidence for refreshing a calendar.
-    if (unexpected.dayofweek >= 5).any():
-        return expected
     official_start = max(pd.Timestamp(start), OFFICIAL_CN_CALENDAR_2026_START)
     official_end = min(pd.Timestamp(end), OFFICIAL_CN_CALENDAR_2026_END)
     official = (
         _load_official_cn_trading_calendar_2026(official_start, official_end)
         if official_start <= official_end else None
     )
-    if official is not None:
-        in_year = unexpected[(unexpected >= official_start) & (unexpected <= official_end)]
-        if len(in_year.difference(official[0])):
-            return expected
-    # Unknown historical conflicts keep their existing rejection. Recovery needs
-    # an independent session reference, not the disputed market-data response.
-    if official is None or len(unexpected.difference(official[0])):
+    if official is None:
         return expected
+    verified = official[0][(official[0] >= official_start) & (official[0] <= official_end)]
+    provider_in_coverage = expected[(expected >= official_start) & (expected <= official_end)]
+    if provider_in_coverage.equals(verified):
+        return expected
+    # Independently reconcile the whole covered interval, even when prices and
+    # the provider calendar share a hole, or the calendar includes a closure.
+    # A bad/unknown price date never triggers refresh or becomes a valid session.
+    may_refresh = bool(len(unexpected)) and not len(unexpected.difference(verified))
     with _CN_TRADING_DAY_CACHE_LOCK:
-        try:
-            refreshed = _load_cn_trading_calendar(start, end, force_refresh=True)
-        except Exception:
-            refreshed = None
+        refreshed = None
+        if may_refresh:
+            try:
+                refreshed = _load_cn_trading_calendar(start, end, force_refresh=True)
+            except Exception:
+                refreshed = None
         candidate = expected if refreshed is None else pd.DatetimeIndex(refreshed[0])
         # The independent published calendar resolves only its explicit coverage;
         # older dates retain the original/fresh provider calendar and all normal gates.
@@ -5236,7 +5235,7 @@ def parse_date_range(text, now=None):
 def parse_all_date_ranges(text, now=None):
     parts = [
         subpart
-        for part in re.split(r"以及|、|；|;\s*", text)
+        for part in re.split(r"以及|[、，,；;]\s*", text)
         for subpart in re.split(r"(?<=[年月日\d])\s*和\s*(?=[近最过今去前\d])", part)
     ]
     ranges: list[tuple[pd.Timestamp, pd.Timestamp]] = []

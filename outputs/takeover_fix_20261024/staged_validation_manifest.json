@@ -1,0 +1,20 @@
+{
+  "path": "D:\\Codex\\repository-sync\\20261024-takeover-fix-validation",
+  "files": {
+    "poe_subd_six_etf_v1_3_bot.py": "daf96cf4b39ab2919c9e8b7d82e74f96177748a1f4c5a6be2da7b5637e4965ca",
+    "tests/test_v13_takeover_data_20261024.py": "37bd98b021a5916663d83c0e3df5ee5874ac3090d3b2898a534db2c3487622c6",
+    "tests/test_v13_takeover_reporting_20261024.py": "c9531a776d92ac469e7b25045bd3a2ea0b09cff4dc1ded25b819771354fd2444",
+    "tests/test_v13_takeover_math_20261024.py": "d146e44266689b7630ae88cc69ba62bf9419bc0321c76360aebefbe42dc04166",
+    "tests/test_v13_takeover_fix_data_20261024.py": "febdbdb207bfce55d9b8bf163e303f38eae224f094485388b939d3199a5fff29",
+    "tests/test_v13_takeover_fix_reporting_20261024.py": "e9577b4c7faeb767e3ae84377367a0ba29cae821962bdd02167acc5a84e58092",
+    "outputs/doublecheck_script_audit_20261007/final_network/raw_prices_qfq.csv.gz": "de8938507d2b978bcc0e05e097d10bc6e2fc38c27d2eb4745aa01463178f3560",
+    "outputs/doublecheck_script_audit_20261007/final_network/sources.csv": "803586c2f332622addc1fc564c3b23cb56a8cabfb6ce598442bfea7d9c2ed6da",
+    "outputs/doublecheck_script_audit_20261007/final_network/confirmed_daily.csv.gz": "9907b425ec3b1c8c816e6bc3e73c72af315a7cd5e738e702d92d7709f99f6456",
+    "outputs/doublecheck_script_audit_20261007/final_network/manifest.json": "cf26c76a6e5ff461fc3e68506ab9fc8fa5478ca3a7e98a084d0c7baa4ad317c3",
+    "outputs/script_audit_20261007/calendar_cache_for_replay.csv": "a357c2cd14fd9f95f53c394d4ff9527e998d658fe5c8e31563804a2a22e398f6",
+    "outputs/doublecheck_script_audit_20261007/math_calendar_final.csv": "a357c2cd14fd9f95f53c394d4ff9527e998d658fe5c8e31563804a2a22e398f6",
+    "outputs/takeover_fix_20261024/source_snapshots/before_fix.py": "8354e9c4b835c77f11809d5d0b727f54e75e7f7bc5a1fc5aa282ccb73bfd1f57",
+    "outputs/takeover_fix_20261024/math/independent_math_audit.py": "982191d0799a8e95bf878a0fe723c6e6323610eb3fa8e6a57d3b4ffb9ffa0574"
+  },
+  "source": "Git index blobs; no original workspace backup dependency"
+}

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="6" time="14.096" timestamp="2026-10-24T14:45:34.864170+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_takeover_data_20261024" name="test_unchanged_real_history_and_reference_calendar_pass" time="1.358" /><testcase classname="tests.test_v13_takeover_data_20261024" name="test_price_only_hole_is_rejected" time="0.192" /><testcase classname="tests.test_v13_takeover_data_20261024" name="test_calendar_only_hole_is_recovered_from_official_reference" time="0.204" /><testcase classname="tests.test_v13_takeover_data_20261024" name="test_matching_price_and_calendar_hole_must_not_hide_official_session" time="0.215"><failure message="Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)">bot = &lt;module 'takeover_data_v13' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+
+    def test_matching_price_and_calendar_hole_must_not_hide_official_session(bot, prices, calendar):
+        omitted = pd.Timestamp('2026-09-22')
+        assert omitted in bot._load_official_cn_trading_calendar_2026(omitted, omitted)[0]
+        seed(bot, calendar.drop(omitted))
+&gt;       with pytest.raises((ValueError, RuntimeError), match='missing common trading dates|calendar|日历'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)
+
+tests\test_v13_takeover_data_20261024.py:74: Failed</failure></testcase><testcase classname="tests.test_v13_takeover_data_20261024" name="test_spurious_calendar_holiday_should_not_reject_real_complete_prices" time="0.184"><failure message="ValueError: Prices are missing common trading dates: 2026-01-01">bot = &lt;module 'takeover_data_v13' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+
+    def test_spurious_calendar_holiday_should_not_reject_real_complete_prices(bot, prices, calendar):
+        holiday = pd.Timestamp('2026-01-01')
+        assert holiday not in bot._load_official_cn_trading_calendar_2026(holiday, holiday)[0]
+        seed(bot, calendar.union(pd.DatetimeIndex([holiday])).sort_values())
+&gt;       aligned, end, _ = bot.align_prices_to_common_valid_date(prices, list(bot.ASSETS))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_takeover_data_20261024.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+asset_cols = ['159915.SZ', '159941.SZ', '513030.SH', '513520.SH', '159985.SZ', '518880.SH']
+calendar_validation_mode = 'required'
+
+    def align_prices_to_common_valid_date(
+        prices: pd.DataFrame,
+        asset_cols: list[str] | tuple[str, ...],
+        calendar_validation_mode: Literal["required", "warning"] = "required",
+    ) -&gt; tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+        if calendar_validation_mode not in {"required", "warning"}:
+            raise ValueError(f"Unknown calendar validation mode: {calendar_validation_mode}")
+        asset_cols = list(asset_cols)
+        missing = [col for col in asset_cols if col not in prices.columns]
+        if missing:
+            raise ValueError(f"Missing asset columns: {missing}")
+        if not prices.index.is_unique:
+            duplicates = pd.Index(prices.index[prices.index.duplicated()]).unique()
+            first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+            raise ValueError(f"Price index must be unique; first duplicate={first}")
+        if not prices.index.is_monotonic_increasing:
+            raise ValueError("Price index must be strictly increasing")
+        aligned_prices = prices.copy()
+        rows_with_any_asset_price = prices[asset_cols].notna().any(axis=1)
+        last_by_asset: dict[str, pd.Timestamp] = {}
+        for col in asset_cols:
+            series = pd.to_numeric(aligned_prices[col], errors="coerce")
+            finite = np.isfinite(series.to_numpy(dtype=float))
+            invalid = prices[col].notna() &amp; (series.isna() | ~finite | (series &lt;= 0))
+            if invalid.any():
+                first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
+                raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
+            valid_dates = aligned_prices.index[series.notna()]
+            if len(valid_dates):
+                filled = series.ffill()
+                aligned_prices.loc[rows_with_any_asset_price, col] = filled.loc[rows_with_any_asset_price]
+            last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+        valid_all = aligned_prices[asset_cols].notna().all(axis=1)
+        if not valid_all.any():
+            raise ValueError("No date has valid close prices for all assets")
+        common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
+        # Full history starts before all six ETFs have data. Validate every date
+        # represented by any asset, preserving per-asset suspension/missing fills.
+        market_price_dates = pd.DatetimeIndex(
+            aligned_prices.index[rows_with_any_asset_price &amp; (aligned_prices.index &lt;= common_last)]
+        ).normalize().unique().sort_values()
+        first_observed = pd.Timestamp(market_price_dates.min())
+        expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+        expected_sessions = _recover_calendar_price_conflict(
+            first_observed, common_last, market_price_dates, expected_sessions,
+        )
+        if expected_sessions is None:
+            reason = _calendar_failure_reason()
+            if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
+                raise RuntimeError(reason)
+            if calendar_validation_mode == "required":
+                raise RuntimeError(reason or "交易日历不可用，无法校验历史行情完整性")
+            warnings.warn(
+                reason or "交易日历不可用，未校验历史行情完整性",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        else:
+            expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
+            missing_common = pd.DatetimeIndex(expected_sessions).difference(market_price_dates)
+            if len(missing_common):
+                sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
+                more = "..." if len(missing_common) &gt; 5 else ""
+&gt;               raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
+E               ValueError: Prices are missing common trading dates: 2026-01-01
+
+poe_subd_six_etf_v1_3_bot.py:2604: ValueError</failure></testcase><testcase classname="tests.test_v13_takeover_data_20261024" name="test_formal_provider_to_build_rejects_matching_calendar_and_price_hole" time="10.686"><failure message="Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)">bot = &lt;module 'takeover_data_v13' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000215E7471E50&gt;
+
+    def test_formal_provider_to_build_rejects_matching_calendar_and_price_hole(bot, prices, calendar, monkeypatch):
+        """Runs actual provider validation, load_close and formal _build_v13_daily."""
+        from datetime import datetime
+        omitted = pd.Timestamp('2026-09-22')
+        broken = prices.drop(omitted)
+        seed(bot, calendar.drop(omitted))
+        monkeypatch.setattr(bot, '_load_akshare_eastmoney_qfq_one_close', lambda code, end: broken[code].dropna().copy())
+        monkeypatch.setattr(bot, '_load_tencent_qfq_one_close', lambda *a: pytest.fail('Unexpected provider fallback'))
+        monkeypatch.setattr(bot, '_load_eastmoney_one_close', lambda *a: pytest.fail('Unexpected provider fallback'))
+&gt;       with pytest.raises((ValueError, RuntimeError), match='missing common trading dates|calendar|日历'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)
+
+tests\test_v13_takeover_data_20261024.py:96: Failed</failure></testcase></testsuite></testsuites>

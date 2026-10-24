@@ -1,0 +1,7 @@
+{
+  "query": "交易记录 过去0.5年，过去1.5年",
+  "exports": {
+    "subd_v13_trade_records_2026-04-24_2026-10-24.csv": 20,
+    "subd_v13_trade_records_2025-04-24_2026-10-24.csv": 57
+  }
+}

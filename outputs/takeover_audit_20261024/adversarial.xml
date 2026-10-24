@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="7" skipped="0" tests="32" time="38.697" timestamp="2026-10-24T14:47:16.389394+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_takeover_data_20261024" name="test_unchanged_real_history_and_reference_calendar_pass" time="1.466" /><testcase classname="tests.test_v13_takeover_data_20261024" name="test_price_only_hole_is_rejected" time="0.259" /><testcase classname="tests.test_v13_takeover_data_20261024" name="test_calendar_only_hole_is_recovered_from_official_reference" time="0.353" /><testcase classname="tests.test_v13_takeover_data_20261024" name="test_matching_price_and_calendar_hole_must_not_hide_official_session" time="0.241"><failure message="Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)">bot = &lt;module 'takeover_data_v13' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+
+    def test_matching_price_and_calendar_hole_must_not_hide_official_session(bot, prices, calendar):
+        omitted = pd.Timestamp('2026-09-22')
+        assert omitted in bot._load_official_cn_trading_calendar_2026(omitted, omitted)[0]
+        seed(bot, calendar.drop(omitted))
+&gt;       with pytest.raises((ValueError, RuntimeError), match='missing common trading dates|calendar|日历'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)
+
+tests\test_v13_takeover_data_20261024.py:74: Failed</failure></testcase><testcase classname="tests.test_v13_takeover_data_20261024" name="test_spurious_calendar_holiday_should_not_reject_real_complete_prices" time="0.220"><failure message="ValueError: Prices are missing common trading dates: 2026-01-01">bot = &lt;module 'takeover_data_v13' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+
+    def test_spurious_calendar_holiday_should_not_reject_real_complete_prices(bot, prices, calendar):
+        holiday = pd.Timestamp('2026-01-01')
+        assert holiday not in bot._load_official_cn_trading_calendar_2026(holiday, holiday)[0]
+        seed(bot, calendar.union(pd.DatetimeIndex([holiday])).sort_values())
+&gt;       aligned, end, _ = bot.align_prices_to_common_valid_date(prices, list(bot.ASSETS))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_takeover_data_20261024.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+asset_cols = ['159915.SZ', '159941.SZ', '513030.SH', '513520.SH', '159985.SZ', '518880.SH']
+calendar_validation_mode = 'required'
+
+    def align_prices_to_common_valid_date(
+        prices: pd.DataFrame,
+        asset_cols: list[str] | tuple[str, ...],
+        calendar_validation_mode: Literal["required", "warning"] = "required",
+    ) -&gt; tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+        if calendar_validation_mode not in {"required", "warning"}:
+            raise ValueError(f"Unknown calendar validation mode: {calendar_validation_mode}")
+        asset_cols = list(asset_cols)
+        missing = [col for col in asset_cols if col not in prices.columns]
+        if missing:
+            raise ValueError(f"Missing asset columns: {missing}")
+        if not prices.index.is_unique:
+            duplicates = pd.Index(prices.index[prices.index.duplicated()]).unique()
+            first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+            raise ValueError(f"Price index must be unique; first duplicate={first}")
+        if not prices.index.is_monotonic_increasing:
+            raise ValueError("Price index must be strictly increasing")
+        aligned_prices = prices.copy()
+        rows_with_any_asset_price = prices[asset_cols].notna().any(axis=1)
+        last_by_asset: dict[str, pd.Timestamp] = {}
+        for col in asset_cols:
+            series = pd.to_numeric(aligned_prices[col], errors="coerce")
+            finite = np.isfinite(series.to_numpy(dtype=float))
+            invalid = prices[col].notna() &amp; (series.isna() | ~finite | (series &lt;= 0))
+            if invalid.any():
+                first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
+                raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
+            valid_dates = aligned_prices.index[series.notna()]
+            if len(valid_dates):
+                filled = series.ffill()
+                aligned_prices.loc[rows_with_any_asset_price, col] = filled.loc[rows_with_any_asset_price]
+            last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+        valid_all = aligned_prices[asset_cols].notna().all(axis=1)
+        if not valid_all.any():
+            raise ValueError("No date has valid close prices for all assets")
+        common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
+        # Full history starts before all six ETFs have data. Validate every date
+        # represented by any asset, preserving per-asset suspension/missing fills.
+        market_price_dates = pd.DatetimeIndex(
+            aligned_prices.index[rows_with_any_asset_price &amp; (aligned_prices.index &lt;= common_last)]
+        ).normalize().unique().sort_values()
+        first_observed = pd.Timestamp(market_price_dates.min())
+        expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+        expected_sessions = _recover_calendar_price_conflict(
+            first_observed, common_last, market_price_dates, expected_sessions,
+        )
+        if expected_sessions is None:
+            reason = _calendar_failure_reason()
+            if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
+                raise RuntimeError(reason)
+            if calendar_validation_mode == "required":
+                raise RuntimeError(reason or "交易日历不可用，无法校验历史行情完整性")
+            warnings.warn(
+                reason or "交易日历不可用，未校验历史行情完整性",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        else:
+            expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
+            missing_common = pd.DatetimeIndex(expected_sessions).difference(market_price_dates)
+            if len(missing_common):
+                sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
+                more = "..." if len(missing_common) &gt; 5 else ""
+&gt;               raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
+E               ValueError: Prices are missing common trading dates: 2026-01-01
+
+poe_subd_six_etf_v1_3_bot.py:2604: ValueError</failure></testcase><testcase classname="tests.test_v13_takeover_data_20261024" name="test_formal_provider_to_build_rejects_matching_calendar_and_price_hole" time="12.244"><failure message="Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)">bot = &lt;module 'takeover_data_v13' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F0A4663750&gt;
+
+    def test_formal_provider_to_build_rejects_matching_calendar_and_price_hole(bot, prices, calendar, monkeypatch):
+        """Runs actual provider validation, load_close and formal _build_v13_daily."""
+        from datetime import datetime
+        omitted = pd.Timestamp('2026-09-22')
+        broken = prices.drop(omitted)
+        seed(bot, calendar.drop(omitted))
+        monkeypatch.setattr(bot, '_load_akshare_eastmoney_qfq_one_close', lambda code, end: broken[code].dropna().copy())
+        monkeypatch.setattr(bot, '_load_tencent_qfq_one_close', lambda *a: pytest.fail('Unexpected provider fallback'))
+        monkeypatch.setattr(bot, '_load_eastmoney_one_close', lambda *a: pytest.fail('Unexpected provider fallback'))
+&gt;       with pytest.raises((ValueError, RuntimeError), match='missing common trading dates|calendar|日历'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (&lt;class 'ValueError'&gt;, &lt;class 'RuntimeError'&gt;)
+
+tests\test_v13_takeover_data_20261024.py:96: Failed</failure></testcase><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_all_explicit_years_reach_actual_handler_csv[\uff0c-chinese_comma]" time="0.545"><failure message="AssertionError: {'actual_exports': {'subd_v13_trade_records_2024-01-02_2024-12-31.csv': 30}, 'expected_trade_rows': {'2024': 30, '2025': 35}, 'query': '交易记录 2024年，2025年'}&#10;assert 1 == 2&#10; +  where 1 = len({'subd_v13_trade_records_2024-01-02_2024-12-31.csv':           date   strategy  ... last_date_159985.SZ last_date_5188...30          2026-09-30\n29  2024-01-22  SubD V1.3  ...          2026-09-30          2026-09-30\n\n[30 rows x 110 columns]})">context = (&lt;module 'takeover_reporting' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;,            date  version  ...0          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns])
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F0A0298250&gt;
+separator = '，', case = 'chinese_comma'
+
+    @pytest.mark.parametrize("separator,case", [("，", "chinese_comma"), (",", "ascii_comma"), ("、", "enumeration"), ("；", "semicolon"), ("和", "conjunction")])
+    def test_all_explicit_years_reach_actual_handler_csv(context, monkeypatch, separator, case):
+        _, daily = context
+        query = f"交易记录 2024年{separator}2025年"
+        cap = run_query(context, monkeypatch, query)
+        exports = {item["name"]: pd.read_csv(io.BytesIO(item["contents"])) for item in cap.attachments}
+        expected_counts = {
+            str(year): int((daily.date.between(f"{year}-01-01", f"{year}-12-31") &amp; daily.turnover.gt(1e-12)).sum())
+            for year in (2024, 2025)
+        }
+        evidence = {"query": query, "actual_exports": {name: len(frame) for name, frame in exports.items()}, "expected_trade_rows": expected_counts}
+        (EVIDENCE / f"requested_years_{case}.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+        (EVIDENCE / f"requested_years_{case}.txt").write_text("".join(cap.writes), encoding="utf-8")
+&gt;       assert len(exports) == 2, evidence
+E       AssertionError: {'actual_exports': {'subd_v13_trade_records_2024-01-02_2024-12-31.csv': 30}, 'expected_trade_rows': {'2024': 30, '2025': 35}, 'query': '交易记录 2024年，2025年'}
+E       assert 1 == 2
+E        +  where 1 = len({'subd_v13_trade_records_2024-01-02_2024-12-31.csv':           date   strategy  ... last_date_159985.SZ last_date_5188...30          2026-09-30\n29  2024-01-22  SubD V1.3  ...          2026-09-30          2026-09-30\n\n[30 rows x 110 columns]})
+
+tests\test_v13_takeover_reporting_20261024.py:81: AssertionError</failure></testcase><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_all_explicit_years_reach_actual_handler_csv[,-ascii_comma]" time="0.509"><failure message="AssertionError: {'actual_exports': {'subd_v13_trade_records_2024-01-02_2024-12-31.csv': 30}, 'expected_trade_rows': {'2024': 30, '2025': 35}, 'query': '交易记录 2024年,2025年'}&#10;assert 1 == 2&#10; +  where 1 = len({'subd_v13_trade_records_2024-01-02_2024-12-31.csv':           date   strategy  ... last_date_159985.SZ last_date_5188...30          2026-09-30\n29  2024-01-22  SubD V1.3  ...          2026-09-30          2026-09-30\n\n[30 rows x 110 columns]})">context = (&lt;module 'takeover_reporting' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;,            date  version  ...0          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns])
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F0A4A5B3E0&gt;
+separator = ',', case = 'ascii_comma'
+
+    @pytest.mark.parametrize("separator,case", [("，", "chinese_comma"), (",", "ascii_comma"), ("、", "enumeration"), ("；", "semicolon"), ("和", "conjunction")])
+    def test_all_explicit_years_reach_actual_handler_csv(context, monkeypatch, separator, case):
+        _, daily = context
+        query = f"交易记录 2024年{separator}2025年"
+        cap = run_query(context, monkeypatch, query)
+        exports = {item["name"]: pd.read_csv(io.BytesIO(item["contents"])) for item in cap.attachments}
+        expected_counts = {
+            str(year): int((daily.date.between(f"{year}-01-01", f"{year}-12-31") &amp; daily.turnover.gt(1e-12)).sum())
+            for year in (2024, 2025)
+        }
+        evidence = {"query": query, "actual_exports": {name: len(frame) for name, frame in exports.items()}, "expected_trade_rows": expected_counts}
+        (EVIDENCE / f"requested_years_{case}.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+        (EVIDENCE / f"requested_years_{case}.txt").write_text("".join(cap.writes), encoding="utf-8")
+&gt;       assert len(exports) == 2, evidence
+E       AssertionError: {'actual_exports': {'subd_v13_trade_records_2024-01-02_2024-12-31.csv': 30}, 'expected_trade_rows': {'2024': 30, '2025': 35}, 'query': '交易记录 2024年,2025年'}
+E       assert 1 == 2
+E        +  where 1 = len({'subd_v13_trade_records_2024-01-02_2024-12-31.csv':           date   strategy  ... last_date_159985.SZ last_date_5188...30          2026-09-30\n29  2024-01-22  SubD V1.3  ...          2026-09-30          2026-09-30\n\n[30 rows x 110 columns]})
+
+tests\test_v13_takeover_reporting_20261024.py:81: AssertionError</failure></testcase><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_all_explicit_years_reach_actual_handler_csv[\u3001-enumeration]" time="0.545" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_all_explicit_years_reach_actual_handler_csv[\uff1b-semicolon]" time="0.631" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_all_explicit_years_reach_actual_handler_csv[\u548c-conjunction]" time="0.654" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_invalid_later_explicit_date_not_silently_ignored[\uff0c]" time="0.265" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_invalid_later_explicit_date_not_silently_ignored[,]" time="0.252" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_invalid_later_explicit_date_not_silently_ignored[\u3001]" time="0.287" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_disjoint_month_ranges_reach_handler_csv[\uff0c-chinese_comma]" time="0.694"><failure message="AssertionError: {'actual': ['subd_v13_trade_records_2024-11-01_2025-01-27.csv'], 'expected': ['subd_v13_trade_records_2024-11-01_2025-01-31.csv', 'subd_v13_trade_records_2025-06-01_2025-08-31.csv'], 'query': '交易记录 2024年11月至2025年1月，2025年6月至2025年8月'}&#10;assert {'subd_v13_tr...25-01-27.csv'} == {'subd_v13_tr...25-08-31.csv'}&#10;  &#10;  Extra items in the left set:&#10;  'subd_v13_trade_records_2024-11-01_2025-01-27.csv'&#10;  Extra items in the right set:&#10;  'subd_v13_trade_records_2024-11-01_2025-01-31.csv'&#10;  'subd_v13_trade_records_2025-06-01_2025-08-31.csv'&#10;  Use -v to get more diff">context = (&lt;module 'takeover_reporting' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;,            date  version  ...0          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns])
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F0A5AD1390&gt;
+separator = '，', case = 'chinese_comma'
+
+    @pytest.mark.parametrize("separator,case", [("，", "chinese_comma"), (",", "ascii_comma"), ("、", "enumeration")])
+    def test_disjoint_month_ranges_reach_handler_csv(context, monkeypatch, separator, case):
+        query = f"交易记录 2024年11月至2025年1月{separator}2025年6月至2025年8月"
+        cap = run_query(context, monkeypatch, query)
+        expected = {"subd_v13_trade_records_2024-11-01_2025-01-31.csv", "subd_v13_trade_records_2025-06-01_2025-08-31.csv"}
+        actual = {item["name"] for item in cap.attachments}
+        evidence = {"query": query, "actual": sorted(actual), "expected": sorted(expected)}
+        (EVIDENCE / f"requested_months_{case}.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+&gt;       assert actual == expected, evidence
+E       AssertionError: {'actual': ['subd_v13_trade_records_2024-11-01_2025-01-27.csv'], 'expected': ['subd_v13_trade_records_2024-11-01_2025-01-31.csv', 'subd_v13_trade_records_2025-06-01_2025-08-31.csv'], 'query': '交易记录 2024年11月至2025年1月，2025年6月至2025年8月'}
+E       assert {'subd_v13_tr...25-01-27.csv'} == {'subd_v13_tr...25-08-31.csv'}
+E         
+E         Extra items in the left set:
+E         'subd_v13_trade_records_2024-11-01_2025-01-27.csv'
+E         Extra items in the right set:
+E         'subd_v13_trade_records_2024-11-01_2025-01-31.csv'
+E         'subd_v13_trade_records_2025-06-01_2025-08-31.csv'
+E         Use -v to get more diff
+
+tests\test_v13_takeover_reporting_20261024.py:104: AssertionError</failure></testcase><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_disjoint_month_ranges_reach_handler_csv[,-ascii_comma]" time="0.585"><failure message="AssertionError: {'actual': ['subd_v13_trade_records_2024-11-01_2025-01-27.csv'], 'expected': ['subd_v13_trade_records_2024-11-01_2025-01-31.csv', 'subd_v13_trade_records_2025-06-01_2025-08-31.csv'], 'query': '交易记录 2024年11月至2025年1月,2025年6月至2025年8月'}&#10;assert {'subd_v13_tr...25-01-27.csv'} == {'subd_v13_tr...25-08-31.csv'}&#10;  &#10;  Extra items in the left set:&#10;  'subd_v13_trade_records_2024-11-01_2025-01-27.csv'&#10;  Extra items in the right set:&#10;  'subd_v13_trade_records_2024-11-01_2025-01-31.csv'&#10;  'subd_v13_trade_records_2025-06-01_2025-08-31.csv'&#10;  Use -v to get more diff">context = (&lt;module 'takeover_reporting' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;,            date  version  ...0          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns])
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001F0A6561E90&gt;
+separator = ',', case = 'ascii_comma'
+
+    @pytest.mark.parametrize("separator,case", [("，", "chinese_comma"), (",", "ascii_comma"), ("、", "enumeration")])
+    def test_disjoint_month_ranges_reach_handler_csv(context, monkeypatch, separator, case):
+        query = f"交易记录 2024年11月至2025年1月{separator}2025年6月至2025年8月"
+        cap = run_query(context, monkeypatch, query)
+        expected = {"subd_v13_trade_records_2024-11-01_2025-01-31.csv", "subd_v13_trade_records_2025-06-01_2025-08-31.csv"}
+        actual = {item["name"] for item in cap.attachments}
+        evidence = {"query": query, "actual": sorted(actual), "expected": sorted(expected)}
+        (EVIDENCE / f"requested_months_{case}.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+&gt;       assert actual == expected, evidence
+E       AssertionError: {'actual': ['subd_v13_trade_records_2024-11-01_2025-01-27.csv'], 'expected': ['subd_v13_trade_records_2024-11-01_2025-01-31.csv', 'subd_v13_trade_records_2025-06-01_2025-08-31.csv'], 'query': '交易记录 2024年11月至2025年1月,2025年6月至2025年8月'}
+E       assert {'subd_v13_tr...25-01-27.csv'} == {'subd_v13_tr...25-08-31.csv'}
+E         
+E         Extra items in the left set:
+E         'subd_v13_trade_records_2024-11-01_2025-01-27.csv'
+E         Extra items in the right set:
+E         'subd_v13_trade_records_2024-11-01_2025-01-31.csv'
+E         'subd_v13_trade_records_2025-06-01_2025-08-31.csv'
+E         Use -v to get more diff
+
+tests\test_v13_takeover_reporting_20261024.py:104: AssertionError</failure></testcase><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_disjoint_month_ranges_reach_handler_csv[\u3001-enumeration]" time="0.850" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_dispatch_preserves_live_and_static_intent[\u5b9e\u65f6 \u4fe1\u53f7 \u51c0\u503c\u66f2\u7ebf-live_signal]" time="0.271" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_dispatch_preserves_live_and_static_intent[\u5b9e \u65f6 \u53c2\u6570 \u56de\u64a4-live_params]" time="0.296" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_dispatch_preserves_live_and_static_intent[\u4ea4\u6613\u8bb0\u5f55 2024\u5e74-performance]" time="0.363" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_dispatch_preserves_live_and_static_intent[\u53c2\u6570-params]" time="0.395" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_stale_archived_data_never_claims_execution[\u4fe1\u53f7]" time="0.454" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_stale_archived_data_never_claims_execution[\u5b9e\u65f6\u4fe1\u53f7]" time="0.484" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_stale_archived_data_never_claims_execution[\u5b9e\u65f6\u53c2\u6570]" time="0.370" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_nav_csv_metric_agreement_and_png_signature" time="1.504" /><testcase classname="tests.test_v13_takeover_reporting_20261024" name="test_csv_upload_failure_preserves_real_png_and_reports_na" time="0.838" /><testcase classname="tests.test_v13_takeover_math_20261024" name="test_real_trade_day_return_belongs_to_previous_holding" time="2.160" /><testcase classname="tests.test_v13_takeover_math_20261024" name="test_cost_change_preserves_trade_path_and_multiplicative_ledger[0.0]" time="1.812" /><testcase classname="tests.test_v13_takeover_math_20261024" name="test_cost_change_preserves_trade_path_and_multiplicative_ledger[0.002]" time="1.780" /><testcase classname="tests.test_v13_takeover_math_20261024" name="test_per_asset_unit_changes_preserve_real_decisions" time="1.978" /><testcase classname="tests.test_v13_takeover_math_20261024" name="test_future_tail_mutation_cannot_change_any_prior_engine_column" time="1.868" /><testcase classname="tests.test_v13_takeover_math_20261024" name="test_input_column_order_has_no_effect_on_tie_order_or_ledger" time="1.812" /></testsuite></testsuites>

@@ -19,3 +19,11 @@ tests/test_poe_subd_external_review_regressions.py -text
 tests/test_v13_repair_20261024.py -text
 tests/test_v13_postfix_data_20261024.py -text
 tests/test_v13_postfix_reporting_20261024.py -text
+
+# Preserve byte-exact takeover failure and repair evidence.
+outputs/takeover_audit_20261024/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+outputs/takeover_fix_20261024/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+tests/test_v13_takeover*_20261024.py -text whitespace=cr-at-eol
+docs/subd_six_etf_v1_3_takeover*_20261024.md -text whitespace=cr-at-eol
+cleanup_takeover_tests_20261024.bat -text whitespace=cr-at-eol
+cleanup_after_fix_20261024.bat -text whitespace=cr-at-eol

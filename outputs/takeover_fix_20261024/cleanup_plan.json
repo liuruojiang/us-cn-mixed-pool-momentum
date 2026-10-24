@@ -1,0 +1,610 @@
+{
+  "workspace": "D:\\动量策略\\美股A股混合池子动量策略",
+  "targets": [
+    {
+      "directory": "outputs/takeover_audit_20261024/scratch",
+      "files": [
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/daily.csv.gz",
+          "sha256": "27a0d244c9de23f418a17ca2a6437b25a3f0ba07aafd733ca481721da291dc30",
+          "bytes": 583926
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/metrics.csv",
+          "sha256": "b879a5703928042318872df8cdabfe4ddcd68dceb46fb46391787512ff1b9a0a",
+          "bytes": 1209
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/parity.json",
+          "sha256": "06159b7c26c7eee8883a6120ae5ab62a7718f285079cd31172958e8e272d09eb",
+          "bytes": 389
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_params.txt",
+          "sha256": "addfdcef2a70bed1cd446a5e980c6f4edf7ed4b4a8946c34eb42e4ab75093e9e",
+          "bytes": 2122
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_交易记录_过去两个月.txt",
+          "sha256": "2155de5154832dd81a8478a340c90b3749cf30e40ab9773cdcea95aa396a5950",
+          "bytes": 3571
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_信号.txt",
+          "sha256": "d2b43812affdb977fcdf79f02bea55d91057e2a137ce7a5fe31c92cc02cf4c84",
+          "bytes": 4815
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_净值曲线_过去两年.txt",
+          "sha256": "974d23a150d2870d3b39ed6157b57328ca1dba0ca58975aca273fb7f479e7d05",
+          "bytes": 6279
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_实时信号.txt",
+          "sha256": "ddae4fc2f1b3158c1f969f21fa2f0fde48e5a856a119826b68212f878ea590e1",
+          "bytes": 5345
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_实时参数.txt",
+          "sha256": "65a673c11a27b22a1c0428a2bb0ceee85f5a511f17d1dac3c17f7a057c79f900",
+          "bytes": 6163
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/poe_表现.txt",
+          "sha256": "9c5e23ec185166d1fa13eaefa7b9f1102bd9a543a3068e49b335f44c072da4e1",
+          "bytes": 6154
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2011-12-09_2026-09-02.csv",
+          "sha256": "b460974e785be0e1b31427d90aff335e47b204b684565034850d817347530237",
+          "bytes": 176471
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2011-12-09_2026-09-02.png",
+          "sha256": "b31cb8bf6c68457761a126cfd6a9a0eecae6e5be4b79843be49ef829237b4755",
+          "bytes": 121401
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2024-09-03_2026-09-02.csv",
+          "sha256": "a84e2ad1579479f4b61a99fa2d4cc6ad1414a04e34dc94c0fd86ec7a05911705",
+          "bytes": 23637
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2024-09-03_2026-09-02.png",
+          "sha256": "027d866e7b3fea34765128f6e1f67eb54370e9cfa7b070d8567a72e0af5be1a0",
+          "bytes": 131593
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2026-07-03_2026-09-02.csv",
+          "sha256": "69c009a9e3f81f28002c9f4d0a4e875f2044e16c7ec3f9c391c6fc45e798a241",
+          "bytes": 2178
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_nav_2026-07-03_2026-09-02.png",
+          "sha256": "9f3c7cacb29d841c6647bfa8902b50bd9576cd3bd62f74e7e70e1d393c7c443e",
+          "bytes": 103063
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_trade_records_2011-12-09_2026-09-02.csv",
+          "sha256": "5e94f9648b52799cc4bbd666cdff59670d5a40070051f35f3d5a5467e3d91964",
+          "bytes": 378978
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_trade_records_2024-09-03_2026-09-02.csv",
+          "sha256": "dc463686c9d18fb6c18a56b3c2b867b2de2c3fe0fd96b5e029cd1e079aa24233",
+          "bytes": 88915
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130/subd_v13_trade_records_2026-07-03_2026-09-02.csv",
+          "sha256": "f78f1c3419a180035c92afe7ce4d3087bf581902dcff23ff7c2b5029a79a45d2",
+          "bytes": 8272
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/test_runner_expected_cn_tradin0/cn_trading_days_cache.csv",
+          "sha256": "3decd48d36fa7c32c092daf795a7d880e6be2cf6c548d4265f8edab87f5bba13",
+          "bytes": 116
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_align_prices_rejects_stal0/cn_trading_days_cache.csv",
+          "sha256": "c88af1cb34d233683a5a28abd612d750b922698488429b62b67e8da6730ea114",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_calendar_cache_rejects_in0/cn_trading_days_cache.csv",
+          "sha256": "1b53d3d963d81ef2e7f3bfc0dca1805250558cc909e14e9334c3ea82615220a4",
+          "bytes": 88
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_cnfin_calendar_cache_pres0/cn_trading_days_cache.csv",
+          "sha256": "4aad2541a9cebd24f259f9a7788f5da9f1b4283158fbf53c4461837347764e6b",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_empty_akshare_calendar_do0/cn_trading_days_cache.csv",
+          "sha256": "cd281cbfc7821096c62fa742d5704e18cac0baaa53e6fd033bad68a82d22c81c",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_latest_market_date_must_b0/cn_trading_days_cache.csv",
+          "sha256": "a9a4f10ec7aad36736c506d894a198a9ee07ed9d48e2785c6c197488e0321e0e",
+          "bytes": 185
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_official_2026_calendar_co0/missing_cn_trading_days_cache.csv",
+          "sha256": "1ef9c7ce10975d5663600eb22081f69e029f50941e9364abd42f61d5dfed472d",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_akshare_calendar_do0/cn_trading_days_cache.csv",
+          "sha256": "ca0047758df2fcca006ea6af1054afe875cc23f0c6d16ed59fda89086c508669",
+          "bytes": 168
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_calendar_cache_is_r0/cn_trading_days_cache.csv",
+          "sha256": "c88af1cb34d233683a5a28abd612d750b922698488429b62b67e8da6730ea114",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf0/missing_cn_trading_days_cache.csv",
+          "sha256": "900279647563fd003eaf9c11ba90d73e45202ac12ffa17fd0cae1732864eb984",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf1/missing_cn_trading_days_cache.csv",
+          "sha256": "5d9bd3d9932ef916f206c05582ed1a28cd741ed2c542c869b6801931ad27a062",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf2/missing_cn_trading_days_cache.csv",
+          "sha256": "590935f55d56629f936cca6ab82801fcee2b560aadd3ea9ed11c65e57c20b3d4",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_loc0/cn_trading_days_cache.csv",
+          "sha256": "ef1bdcd2272974330c6aa9b30f645d000828a575a199a745d3bf9af913a736c5",
+          "bytes": 153
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_0/cn_trading_days_cache.csv",
+          "sha256": "b25b7bb60ee674288f9cd5b086f5acca242e05ec46dc2e9cd3868936b0a5b510",
+          "bytes": 216
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_1/cn_trading_days_cache.csv",
+          "sha256": "2db848d8ff83b86a7a97660e0115a20c2b5e3dc19724d5005365c1ecf7869663",
+          "bytes": 174
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_2/cn_trading_days_cache.csv",
+          "sha256": "09babf9555c11e015d5302345bdc0e9a2aa3117075f979104b1d672edfedc64a",
+          "bytes": 141
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_accept0/missing_cn_trading_days_cache.csv",
+          "sha256": "cf61fd976cedb8e19f29d50eea6ef800564069bd205bcf2dd5a9e8a3e610b0c5",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_accept1/missing_cn_trading_days_cache.csv",
+          "sha256": "057cdec7cebae652bd28fbf6ae7978575ab829270c70cfff6ae8b052af034c12",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_cache_0/cn_trading_days_cache.csv",
+          "sha256": "ce2e6aedf926dd472e8d5408a3599e79eb443414cabc5e432a9da73208031cc2",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_official_2026_calenda0/missing_cn_trading_days_cache.csv",
+          "sha256": "15b05eb2642168e0b44eeecf6426321cc4350354c284ca75ac683d2777b06847",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_ca0/cn_trading_days_cache.csv",
+          "sha256": "2db848d8ff83b86a7a97660e0115a20c2b5e3dc19724d5005365c1ecf7869663",
+          "bytes": 174
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_ca1/cn_trading_days_cache.csv",
+          "sha256": "09babf9555c11e015d5302345bdc0e9a2aa3117075f979104b1d672edfedc64a",
+          "bytes": 141
+        }
+      ],
+      "links": [
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v13current",
+          "target": "outputs/takeover_audit_20261024/scratch/baseline/subd_six_etf_v130"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/baseline/test_runner_expected_cn_tradincurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/baseline/test_runner_expected_cn_tradin0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_align_prices_rejects_stalcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_align_prices_rejects_stal0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_calendar_cache_rejects_incurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_calendar_cache_rejects_in0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_cnfin_calendar_cache_prescurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_cnfin_calendar_cache_pres0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_empty_akshare_calendar_docurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_empty_akshare_calendar_do0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_latest_market_date_must_bcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_latest_market_date_must_b0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_official_2026_calendar_cocurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_official_2026_calendar_co0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_akshare_calendar_docurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_akshare_calendar_do0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_calendar_cache_is_rcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_stale_calendar_cache_is_r0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnfcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_cnf2"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_loccurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_trading_calendar_uses_loc0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_current",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_untrusted_calendar_cache_2"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_acceptcurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_accept1"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_cache_current",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_cnfin_calendar_cache_0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_official_2026_calendacurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_official_2026_calenda0"
+        },
+        {
+          "path": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_cacurrent",
+          "target": "outputs/takeover_audit_20261024/scratch/setup_rerun/test_v13_untrusted_calendar_ca1"
+        }
+      ]
+    },
+    {
+      "directory": "outputs/takeover_audit_20261024/data/scratch",
+      "files": [],
+      "links": []
+    },
+    {
+      "directory": "outputs/takeover_fix_20261024/scratch",
+      "files": [
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/daily.csv.gz",
+          "sha256": "a8477ae0001ff561537c6b1723cf96d0ea85698d4f922cf08fbcfc273a7214bf",
+          "bytes": 583926
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/metrics.csv",
+          "sha256": "b879a5703928042318872df8cdabfe4ddcd68dceb46fb46391787512ff1b9a0a",
+          "bytes": 1209
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/parity.json",
+          "sha256": "c1a63b7ca0d6417d7b4a17b13214a8354fa6595e74314f0ecc774e828dd6c662",
+          "bytes": 389
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_params.txt",
+          "sha256": "addfdcef2a70bed1cd446a5e980c6f4edf7ed4b4a8946c34eb42e4ab75093e9e",
+          "bytes": 2122
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_交易记录_过去两个月.txt",
+          "sha256": "2155de5154832dd81a8478a340c90b3749cf30e40ab9773cdcea95aa396a5950",
+          "bytes": 3571
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_信号.txt",
+          "sha256": "d2b43812affdb977fcdf79f02bea55d91057e2a137ce7a5fe31c92cc02cf4c84",
+          "bytes": 4815
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_净值曲线_过去两年.txt",
+          "sha256": "974d23a150d2870d3b39ed6157b57328ca1dba0ca58975aca273fb7f479e7d05",
+          "bytes": 6279
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_实时信号.txt",
+          "sha256": "ddae4fc2f1b3158c1f969f21fa2f0fde48e5a856a119826b68212f878ea590e1",
+          "bytes": 5345
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_实时参数.txt",
+          "sha256": "65a673c11a27b22a1c0428a2bb0ceee85f5a511f17d1dac3c17f7a057c79f900",
+          "bytes": 6163
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/poe_表现.txt",
+          "sha256": "9c5e23ec185166d1fa13eaefa7b9f1102bd9a543a3068e49b335f44c072da4e1",
+          "bytes": 6154
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_nav_2011-12-09_2026-09-02.csv",
+          "sha256": "b460974e785be0e1b31427d90aff335e47b204b684565034850d817347530237",
+          "bytes": 176471
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_nav_2011-12-09_2026-09-02.png",
+          "sha256": "b31cb8bf6c68457761a126cfd6a9a0eecae6e5be4b79843be49ef829237b4755",
+          "bytes": 121401
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_nav_2024-09-03_2026-09-02.csv",
+          "sha256": "a84e2ad1579479f4b61a99fa2d4cc6ad1414a04e34dc94c0fd86ec7a05911705",
+          "bytes": 23637
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_nav_2024-09-03_2026-09-02.png",
+          "sha256": "027d866e7b3fea34765128f6e1f67eb54370e9cfa7b070d8567a72e0af5be1a0",
+          "bytes": 131593
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_nav_2026-07-03_2026-09-02.csv",
+          "sha256": "69c009a9e3f81f28002c9f4d0a4e875f2044e16c7ec3f9c391c6fc45e798a241",
+          "bytes": 2178
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_nav_2026-07-03_2026-09-02.png",
+          "sha256": "9f3c7cacb29d841c6647bfa8902b50bd9576cd3bd62f74e7e70e1d393c7c443e",
+          "bytes": 103063
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_trade_records_2011-12-09_2026-09-02.csv",
+          "sha256": "5e94f9648b52799cc4bbd666cdff59670d5a40070051f35f3d5a5467e3d91964",
+          "bytes": 378978
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_trade_records_2024-09-03_2026-09-02.csv",
+          "sha256": "dc463686c9d18fb6c18a56b3c2b867b2de2c3fe0fd96b5e029cd1e079aa24233",
+          "bytes": 88915
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130/subd_v13_trade_records_2026-07-03_2026-09-02.csv",
+          "sha256": "f78f1c3419a180035c92afe7ce4d3087bf581902dcff23ff7c2b5029a79a45d2",
+          "bytes": 8272
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_align_prices_rejects_stal0/cn_trading_days_cache.csv",
+          "sha256": "c88af1cb34d233683a5a28abd612d750b922698488429b62b67e8da6730ea114",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_calendar_cache_rejects_in0/cn_trading_days_cache.csv",
+          "sha256": "1b53d3d963d81ef2e7f3bfc0dca1805250558cc909e14e9334c3ea82615220a4",
+          "bytes": 88
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_cnfin_calendar_cache_pres0/cn_trading_days_cache.csv",
+          "sha256": "e75e416a5abb3cc645920b937364fdfe1dcae0a5339290b33df27938ecd8e416",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_empty_akshare_calendar_do0/cn_trading_days_cache.csv",
+          "sha256": "cd281cbfc7821096c62fa742d5704e18cac0baaa53e6fd033bad68a82d22c81c",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_latest_market_date_must_b0/cn_trading_days_cache.csv",
+          "sha256": "a9a4f10ec7aad36736c506d894a198a9ee07ed9d48e2785c6c197488e0321e0e",
+          "bytes": 185
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_official_2026_calendar_co0/missing_cn_trading_days_cache.csv",
+          "sha256": "f2db9ef4faa54e88d6acccc092231fa2954270e54a518c18f45a3525a002b364",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_runner_expected_cn_tradin0/cn_trading_days_cache.csv",
+          "sha256": "3decd48d36fa7c32c092daf795a7d880e6be2cf6c548d4265f8edab87f5bba13",
+          "bytes": 116
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_stale_akshare_calendar_do0/cn_trading_days_cache.csv",
+          "sha256": "ca0047758df2fcca006ea6af1054afe875cc23f0c6d16ed59fda89086c508669",
+          "bytes": 168
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_stale_calendar_cache_is_r0/cn_trading_days_cache.csv",
+          "sha256": "c88af1cb34d233683a5a28abd612d750b922698488429b62b67e8da6730ea114",
+          "bytes": 36
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_cnf0/missing_cn_trading_days_cache.csv",
+          "sha256": "fa32578e5dda45b79060ac56c9938d1b43951d37232784b9a361eace810f6a38",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_cnf1/missing_cn_trading_days_cache.csv",
+          "sha256": "6e5af9a27f659889426c15cd9d04c1ff0b776904ad950ecbd95a4fd0f1fe6e8e",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_cnf2/missing_cn_trading_days_cache.csv",
+          "sha256": "f3520993c382a0d92d19b78e019bd2c23efa03a9276f0099962ed1780f4ee779",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_loc0/cn_trading_days_cache.csv",
+          "sha256": "ef1bdcd2272974330c6aa9b30f645d000828a575a199a745d3bf9af913a736c5",
+          "bytes": 153
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_untrusted_calendar_cache_0/cn_trading_days_cache.csv",
+          "sha256": "b25b7bb60ee674288f9cd5b086f5acca242e05ec46dc2e9cd3868936b0a5b510",
+          "bytes": 216
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_untrusted_calendar_cache_1/cn_trading_days_cache.csv",
+          "sha256": "2db848d8ff83b86a7a97660e0115a20c2b5e3dc19724d5005365c1ecf7869663",
+          "bytes": 174
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_untrusted_calendar_cache_2/cn_trading_days_cache.csv",
+          "sha256": "09babf9555c11e015d5302345bdc0e9a2aa3117075f979104b1d672edfedc64a",
+          "bytes": 141
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_accept0/missing_cn_trading_days_cache.csv",
+          "sha256": "1e486ddda86a5795c50a7327982de427b8272e3d542f498178161514bed472d1",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_accept1/missing_cn_trading_days_cache.csv",
+          "sha256": "5a532f0c4f5d688ce58d230a5cba75dca24afda8fe08217890b47ebed49dec5f",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_cache_0/cn_trading_days_cache.csv",
+          "sha256": "773559ef8a7ee7d433a1e9fd5e110718dbe75fc5d6db161aaf9f2c7301003ba0",
+          "bytes": 348
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_official_2026_calenda0/missing_cn_trading_days_cache.csv",
+          "sha256": "d6cdea83315e79d0e5e6081a280affe5d913aa451e73e2c17747dd5de9f687be",
+          "bytes": 226
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_untrusted_calendar_ca0/cn_trading_days_cache.csv",
+          "sha256": "2db848d8ff83b86a7a97660e0115a20c2b5e3dc19724d5005365c1ecf7869663",
+          "bytes": 174
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_untrusted_calendar_ca1/cn_trading_days_cache.csv",
+          "sha256": "09babf9555c11e015d5302345bdc0e9a2aa3117075f979104b1d672edfedc64a",
+          "bytes": 141
+        }
+      ],
+      "links": [
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v13current",
+          "target": "outputs/takeover_fix_20261024/scratch/full/subd_six_etf_v130"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_align_prices_rejects_stalcurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_align_prices_rejects_stal0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_calendar_cache_rejects_incurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_calendar_cache_rejects_in0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_cnfin_calendar_cache_prescurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_cnfin_calendar_cache_pres0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_empty_akshare_calendar_docurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_empty_akshare_calendar_do0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_latest_market_date_must_bcurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_latest_market_date_must_b0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_official_2026_calendar_cocurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_official_2026_calendar_co0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_runner_expected_cn_tradincurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_runner_expected_cn_tradin0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_stale_akshare_calendar_docurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_stale_akshare_calendar_do0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_stale_calendar_cache_is_rcurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_stale_calendar_cache_is_r0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_cnfcurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_cnf2"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_loccurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_trading_calendar_uses_loc0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_untrusted_calendar_cache_current",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_untrusted_calendar_cache_2"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_acceptcurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_accept1"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_cache_current",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_v13_cnfin_calendar_cache_0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_official_2026_calendacurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_v13_official_2026_calenda0"
+        },
+        {
+          "path": "outputs/takeover_fix_20261024/scratch/full/test_v13_untrusted_calendar_cacurrent",
+          "target": "outputs/takeover_fix_20261024/scratch/full/test_v13_untrusted_calendar_ca1"
+        }
+      ]
+    },
+    {
+      "directory": "outputs/takeover_fix_20261024/data/scratch",
+      "files": [
+        {
+          "path": "outputs/takeover_fix_20261024/data/scratch/baseline_f1fe6ac.py",
+          "sha256": "8354e9c4b835c77f11809d5d0b727f54e75e7f7bc5a1fc5aa282ccb73bfd1f57",
+          "bytes": 292634
+        }
+      ],
+      "links": []
+    }
+  ],
+  "previously_blocked_excluded": [
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\full_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\final_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\verified_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\tests\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260926_six_etf_v1_3_l6_parameter_basis_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261001_lookback_5_99_step2_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261001_pure_momentum_lookback_5_99_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_formal_lookback_5_100_step5_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_formal_weight_power_0_5_step0p5_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_r2_threshold_0_2_step0p05_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l2_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l3_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l5_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l6_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l7_20260927\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l8_20260927\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\.pytest_cache",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\pytest_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-26_2026-09-24_signal.txt",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-26_2026-09-25_signal.txt",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-27_2026-09-24_signal.txt"
+  ],
+  "file_count": 83,
+  "directory_link_count": 34,
+  "bytes": 3610212,
+  "execution": "After verified commit/push only; no old blocked targets; backup and hash verification required."
+}

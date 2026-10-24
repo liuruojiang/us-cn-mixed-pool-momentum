@@ -2,9 +2,9 @@
 
 ## Current Focus
 
-Six-ETF naive V1.3 independent Double-check and repairs completed locally on 2026-10-07. Three new audit agents verified the prior 14 defect classes' evidence and exposed three remaining calendar/provider/pagination boundaries; these are repaired in SHA256 e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881. Executed verification totals 690 unique passed tests and 1 optional skip: full run 685 passed/1 skipped/1 upstream warning, plus 5 newly added data guards after collection. New cases total 65 (27 data, 38 execution/report). Final real-provider build at 20:16-20:18 Beijing covers 3597 rows through 2026-09-30 and six local Poe-compatible queries; fresh raw/daily/five-window outputs equal the prior run. Formal parameters, holdings, costs and NAV remain unchanged. V1.1 and mixed-proxy V1.3 remain unchanged; hosted deployment/testing is not performed. Latest evidence and rollback: `docs/subd_six_etf_v1_3_script_doublecheck_20261007.md`.
+2026-10-24 takeover audit identified two remaining P2 boundaries in the formal six-ETF V1.3. Both are repaired: reconcile all independently known 2026 calendar sessions even when prices and provider calendar agree on a hole; recognize Chinese/ASCII commas between explicit query ranges. Source SHA256: daf96cf4b39ab2919c9e8b7d82e74f96177748a1f4c5a6be2da7b5637e4965ca. Three independent reviewers rechecked data, reporting and math. Normal-input replay is exactly unchanged across 3597 rows and 105 columns, through 2026-09-30. Formal parameters, costs and same-close paper assumptions remain unchanged. No hosted deployment or orders.
 
-User-authorized GitHub synchronization uses the existing `origin/codex/previous-research-sync-20260821` branch. Source, tests and audit evidence are included with exact b49/7a source snapshot inputs and byte-preserving attributes. A separate staged-file validation directory passed all 124 new tests and independent evidence/delivery checks. Scope and fresh-checkout preparation: `docs/remote_sync_audit_20261007.md`; main and hosted Poe remain separate.
+Latest repair, verification, user-authorized main synchronization and cleanup handoff: `docs/subd_six_etf_v1_3_takeover_fix_20261024.md`. Pre-repair failures remain in `outputs/takeover_audit_20261024/`; repaired evidence is in `outputs/takeover_fix_20261024/`. Preserve regression tests and frozen evidence. Old policy-blocked cleanup targets are listed in `outputs/audit_sync_20261024/cleanup_record.json` and must not be retried via another deletion tool.
 
 ## Key Paths
 
@@ -12,10 +12,10 @@ User-authorized GitHub synchronization uses the existing `origin/codex/previous-
 - V1.3 mixed-pool Poe bot entrypoint: `poe_subd_mixed_pool_v1_3_bot.py`
 - V1.3 six-ETF naive Poe bot: `poe_subd_six_etf_v1_3_bot.py`
 - Six-ETF V1.3 specification and acceptance: `docs/subd_six_etf_v1_3_20260904.md`
-- Latest six-ETF V1.3 Double-check and rollback: `docs/subd_six_etf_v1_3_script_doublecheck_20261007.md`
+- Latest six-ETF V1.3 repair and rollback: `docs/subd_six_etf_v1_3_takeover_fix_20261024.md`
 - Previous six-ETF V1.3 script audit: `docs/subd_six_etf_v1_3_script_audit_20261007.md`
-- Latest script audit artifacts: `outputs/doublecheck_script_audit_20261007/`
-- Audit GitHub synchronization and fresh-checkout preparation: `docs/remote_sync_audit_20261007.md`
+- Latest script audit artifacts: `outputs/takeover_fix_20261024/`
+- Latest GitHub synchronization: `docs/subd_six_etf_v1_3_takeover_fix_20261024.md`; older fresh-checkout preparation: `docs/remote_sync_audit_20261024.md`
 - Six-ETF research decisions: `docs/subd_v11_naive_simplification_decisions_20260903.md`
 - Six-ETF V1.3 tests: `tests/test_poe_subd_six_etf_v1_3.py`, `tests/test_poe_subd_six_etf_v1_3_safety.py`
 - Formal local runner: `run_subd_six_etf_v1_1.py`

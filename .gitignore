@@ -13,3 +13,7 @@ outputs/adversarial_audit_20261024/pytest_tmp/
 outputs/repair_audit_20261024/full_tmp/
 outputs/repair_audit_20261024/final_tmp/
 outputs/repair_audit_20261024/verified_tmp/
+
+# Disposable workspaces from the takeover audit and its verified repair.
+outputs/takeover_audit_20261024/**/scratch/
+outputs/takeover_fix_20261024/**/scratch/

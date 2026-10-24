@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "source_sha256": "daf96cf4b39ab2919c9e8b7d82e74f96177748a1f4c5a6be2da7b5637e4965ca",
+  "before_sha256": "8354e9c4b835c77f11809d5d0b727f54e75e7f7bc5a1fc5aa282ccb73bfd1f57",
+  "full_suite": {
+    "tests": 798,
+    "passed": 797,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "prior_adversarial": {
+    "tests": 32,
+    "passed": 25,
+    "failed": 7,
+    "errors": 0,
+    "skipped": 0
+  },
+  "previous_seven_failures_repaired": true,
+  "additional_boundary_tests": 25,
+  "isolated_index_export_tests": 57,
+  "isolated_math_exact_parity": {
+    "rows": 3597,
+    "columns": 105
+  },
+  "old_evidence_entries_verified": 46,
+  "data_cutoff": "2026-09-30",
+  "hosted_deployment": false,
+  "orders": false,
+  "cleanup_status": "See cleanup_result.json when created; Git cleanliness is separate."
+}

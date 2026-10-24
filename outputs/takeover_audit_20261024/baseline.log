@@ -1,0 +1,335 @@
+........................................................................ [  9%]
+.........................................EEEEE...EEEEE..EEEE..E......... [ 19%]
+........................................................................ [ 29%]
+........................................................................ [ 38%]
+...................................EEE..EEE............................. [ 48%]
+........................................................................ [ 58%]
+........................................s............................... [ 68%]
+........................................................................ [ 77%]
+........................................................................ [ 87%]
+........................................................................ [ 97%]
+.....................                                                    [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_trading_calendar_uses_local_cache_when_akshare_unavailable _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_trading_calendar_uses_cnfin_when_akshare_and_cache_unavailable _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_trading_calendar_uses_cnfin_when_required_start_is_workday_holiday _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_trading_calendar_uses_cnfin_when_required_end_is_non_session _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_official_2026_calendar_covers_july_31_when_quote_calendar_lags _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+__ ERROR at setup of test_cnfin_calendar_cache_preserves_queried_boundaries ___
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_untrusted_calendar_cache_source_does_not_relax_session_boundaries[akshare.tool_trade_date_hist_sina] _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_untrusted_calendar_cache_source_does_not_relax_session_boundaries[CNFin forged] _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_untrusted_calendar_cache_source_does_not_relax_session_boundaries[None] _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_stale_calendar_cache_is_rejected_when_market_data_is_newer _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_calendar_cache_rejects_inconsistent_coverage_metadata _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+____ ERROR at setup of test_latest_market_date_must_be_a_calendar_session _____
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_stale_akshare_calendar_does_not_override_better_local_cache _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_align_prices_rejects_stale_calendar_cache_instead_of_skipping_common_gap_check _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_empty_akshare_calendar_does_not_overwrite_valid_local_cache _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_v13_cnfin_calendar_accepts_workday_holiday_required_start _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_v13_cnfin_calendar_accepts_non_session_required_end __
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_v13_official_2026_calendar_covers_july_31_when_quote_calendar_lags _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_v13_cnfin_calendar_cache_preserves_queried_boundaries _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_v13_untrusted_calendar_cache_source_does_not_relax_boundaries[CNFin forged] _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+_ ERROR at setup of test_v13_untrusted_calendar_cache_source_does_not_relax_boundaries[None] _
+
+self = WindowsPath('D:/动量策略/美股A股混合池子动量策略/outputs/takeover_audit_20261024/scratch/baseline')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 3] 系统找不到指定的路径。: 'D:\\动量策略\\美股A股混合池子动量策略\\outputs\\takeover_audit_20261024\\scratch\\baseline'
+
+C:\Python314\Lib\pathlib\__init__.py:1011: FileNotFoundError
+============================== warnings summary ===============================
+tests/test_poe_subd_159985_cross_validated_fallback.py::test_direct_sina_loader_parses_raw_daily_close_without_akshare[v1_1]
+  C:\Python314\Lib\site-packages\fastapi_poe\types.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RequestContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_poe_subd_external_review_regressions.py::test_trading_calendar_uses_local_cache_when_akshare_unavailable
+ERROR tests/test_poe_subd_external_review_regressions.py::test_trading_calendar_uses_cnfin_when_akshare_and_cache_unavailable
+ERROR tests/test_poe_subd_external_review_regressions.py::test_trading_calendar_uses_cnfin_when_required_start_is_workday_holiday
+ERROR tests/test_poe_subd_external_review_regressions.py::test_trading_calendar_uses_cnfin_when_required_end_is_non_session
+ERROR tests/test_poe_subd_external_review_regressions.py::test_official_2026_calendar_covers_july_31_when_quote_calendar_lags
+ERROR tests/test_poe_subd_external_review_regressions.py::test_cnfin_calendar_cache_preserves_queried_boundaries
+ERROR tests/test_poe_subd_external_review_regressions.py::test_untrusted_calendar_cache_source_does_not_relax_session_boundaries[akshare.tool_trade_date_hist_sina]
+ERROR tests/test_poe_subd_external_review_regressions.py::test_untrusted_calendar_cache_source_does_not_relax_session_boundaries[CNFin forged]
+ERROR tests/test_poe_subd_external_review_regressions.py::test_untrusted_calendar_cache_source_does_not_relax_session_boundaries[None]
+ERROR tests/test_poe_subd_external_review_regressions.py::test_stale_calendar_cache_is_rejected_when_market_data_is_newer
+ERROR tests/test_poe_subd_external_review_regressions.py::test_calendar_cache_rejects_inconsistent_coverage_metadata
+ERROR tests/test_poe_subd_external_review_regressions.py::test_latest_market_date_must_be_a_calendar_session
+ERROR tests/test_poe_subd_external_review_regressions.py::test_stale_akshare_calendar_does_not_override_better_local_cache
+ERROR tests/test_poe_subd_external_review_regressions.py::test_align_prices_rejects_stale_calendar_cache_instead_of_skipping_common_gap_check
+ERROR tests/test_poe_subd_external_review_regressions.py::test_empty_akshare_calendar_does_not_overwrite_valid_local_cache
+ERROR tests/test_poe_subd_mixed_pool_v1_3_regressions.py::test_v13_cnfin_calendar_accepts_workday_holiday_required_start
+ERROR tests/test_poe_subd_mixed_pool_v1_3_regressions.py::test_v13_cnfin_calendar_accepts_non_session_required_end
+ERROR tests/test_poe_subd_mixed_pool_v1_3_regressions.py::test_v13_official_2026_calendar_covers_july_31_when_quote_calendar_lags
+ERROR tests/test_poe_subd_mixed_pool_v1_3_regressions.py::test_v13_cnfin_calendar_cache_preserves_queried_boundaries
+ERROR tests/test_poe_subd_mixed_pool_v1_3_regressions.py::test_v13_untrusted_calendar_cache_source_does_not_relax_boundaries[CNFin forged]
+ERROR tests/test_poe_subd_mixed_pool_v1_3_regressions.py::test_v13_untrusted_calendar_cache_source_does_not_relax_boundaries[None]
+719 passed, 1 skipped, 1 warning, 21 errors in 257.78s (0:04:17)
