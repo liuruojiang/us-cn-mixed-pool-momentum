@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="20" time="46.319" timestamp="2026-10-24T14:00:44.772137+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_repair_20261024" name="test_missing_price_block_survives_real_build_and_report[2026-09-24-159941.SZ]" time="16.861" /><testcase classname="tests.test_v13_repair_20261024" name="test_missing_price_block_survives_real_build_and_report[2026-09-18-159985.SZ]" time="10.149"><failure message="assert np.False_&#10; +  where np.False_ = date                   2026-09-18 00:00:00\nversion                                1.3\nentry_case                      ...date_159985.SZ             2026-09-17\nlast_date_518880.SH             2026-09-18\nName: 3589, Length: 105, dtype: object.trade_blocked_by_stale_price">bot = &lt;module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001B2EBC93E10&gt;
+day = Timestamp('2026-09-18 00:00:00'), asset = '159985.SZ'
+
+    @pytest.mark.parametrize('day,asset', [
+        ('2026-09-24', '159941.SZ'),  # CASH -&gt; ETF
+        ('2026-09-18', '159985.SZ'),  # ETF -&gt; CASH
+        ('2026-09-01', '518880.SH'),  # ETF -&gt; ETF
+    ])
+    def test_missing_price_block_survives_real_build_and_report(bot, raw, calendar, monkeypatch, day, asset):
+        day = pd.Timestamp(day)
+        prices = raw.loc[:day].copy()
+        prices.loc[day, asset] = float('nan')
+        sources = pd.read_csv(SAVED / 'sources.csv')
+        use_calendar(bot, monkeypatch, calendar)
+        monkeypatch.setattr(bot, 'load_close', lambda config: (prices.copy(), sources.copy()))
+        monkeypatch.setattr(bot, '_load_live_quotes_for_prices', lambda *a, **k: pd.DataFrame())
+        now = datetime(day.year, day.month, day.day, 14, 55, tzinfo=bot.CN_TZ)
+        frame, source = bot._build_v13_daily(end_date=day, data_state='live', now=now)
+&gt;       assert frame.iloc[-1].trade_blocked_by_stale_price
+E       assert np.False_
+E        +  where np.False_ = date                   2026-09-18 00:00:00\nversion                                1.3\nentry_case                      ...date_159985.SZ             2026-09-17\nlast_date_518880.SH             2026-09-18\nName: 3589, Length: 105, dtype: object.trade_blocked_by_stale_price
+
+tests\test_v13_repair_20261024.py:62: AssertionError</failure></testcase><testcase classname="tests.test_v13_repair_20261024" name="test_missing_price_block_survives_real_build_and_report[2026-09-01-518880.SH]" time="12.483" /><testcase classname="tests.test_v13_repair_20261024" name="test_status_uses_calendar_independent_of_price_cutoff[2026-09-19-2026-09-18-True-2026-09-18]" time="0.219" /><testcase classname="tests.test_v13_repair_20261024" name="test_status_uses_calendar_independent_of_price_cutoff[2026-09-19-2026-09-17-False-2026-09-18]" time="0.166" /><testcase classname="tests.test_v13_repair_20261024" name="test_status_uses_calendar_independent_of_price_cutoff[2026-09-20-2026-09-17-False-2026-09-18]" time="0.166" /><testcase classname="tests.test_v13_repair_20261024" name="test_status_uses_calendar_independent_of_price_cutoff[2026-09-28-2026-09-24-False-2026-09-28]" time="0.165" /><testcase classname="tests.test_v13_repair_20261024" name="test_status_uses_calendar_independent_of_price_cutoff[2026-10-03-2026-09-30-True-2026-09-30]" time="0.169" /><testcase classname="tests.test_v13_repair_20261024" name="test_status_uses_calendar_independent_of_price_cutoff[2026-10-24-2026-09-30-False-2026-10-23]" time="0.166" /><testcase classname="tests.test_v13_repair_20261024" name="test_truncated_calendar_recovers_before_rejecting_valid_prices[alignment]" time="0.211" /><testcase classname="tests.test_v13_repair_20261024" name="test_truncated_calendar_recovers_before_rejecting_valid_prices[provider]" time="0.249" /><testcase classname="tests.test_v13_repair_20261024" name="test_disk_calendar_cannot_mask_forced_refresh" time="0.215" /><testcase classname="tests.test_v13_repair_20261024" name="test_calendar_recovery_keeps_non_session_rejection[2026-09-19]" time="0.188" /><testcase classname="tests.test_v13_repair_20261024" name="test_calendar_recovery_keeps_non_session_rejection[2026-01-01]" time="0.205" /><testcase classname="tests.test_v13_repair_20261024" name="test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2024\u5e74\u30012025\u5e74-2]" time="0.467" /><testcase classname="tests.test_v13_repair_20261024" name="test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74\u30012025\u5e74-1]" time="0.366" /><testcase classname="tests.test_v13_repair_20261024" name="test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74\u30012025\u5e741\u6708-2]" time="0.419" /><testcase classname="tests.test_v13_repair_20261024" name="test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2026-10-07\u30012025\u5e74-2]" time="0.422" /><testcase classname="tests.test_v13_repair_20261024" name="test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74-1]" time="0.416" /><testcase classname="tests.test_v13_repair_20261024" name="test_each_explicit_record_window_is_exported[\u8868\u73b0-1]" time="0.587" /></testsuite></testsuites>

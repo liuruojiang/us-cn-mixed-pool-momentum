@@ -1344,6 +1344,9 @@ def _load_public_close_with_per_code_fallback(codes: list[str], end_date: pd.Tim
                     calendar_start = first_observed
                     expected_sessions = _expected_cn_trading_days(calendar_start, pd.Timestamp(end_date).normalize())
                     calendar_unavailable = expected_sessions is None
+                expected_sessions = _recover_calendar_price_conflict(
+                    calendar_start, pd.Timestamp(end_date).normalize(), close.index, expected_sessions,
+                )
                 _validate_historical_close(code, close, end_date, source_name, expected_sessions)
                 source_detail = str(close.attrs.get("source_detail") or source_detail)
                 record = _source_record(code, source_name, adjustment, close, source_detail)
@@ -2322,6 +2325,7 @@ _CN_TRADING_DAY_CACHE_LOCK = RLock()
 def _load_cn_trading_calendar_unlocked(
     required_start: pd.Timestamp,
     required_end: pd.Timestamp,
+    *, force_refresh: bool = False,
 ) -> tuple[
     pd.DatetimeIndex,
     pd.Timestamp | None,
@@ -2334,7 +2338,7 @@ def _load_cn_trading_calendar_unlocked(
     required_end = pd.Timestamp(required_end).normalize()
     _set_calendar_failure("")
     if (
-        _CN_TRADING_DAY_CACHE is not None
+        not force_refresh and _CN_TRADING_DAY_CACHE is not None
         and _calendar_is_usable(
             _CN_TRADING_DAY_CACHE,
             required_start,
@@ -2370,7 +2374,7 @@ def _load_cn_trading_calendar_unlocked(
             source_errors.append(str(exc))
 
     try:
-        cached = _load_cached_cn_trading_days()
+        cached = None if force_refresh else _load_cached_cn_trading_days()
         if cached is not None:
             cached_calendar, cached_coverage_end, cached_queried_start, cached_queried_end = cached
             candidates.append(
@@ -2456,6 +2460,7 @@ def _load_cn_trading_calendar_unlocked(
 def _load_cn_trading_calendar(
     required_start: pd.Timestamp,
     required_end: pd.Timestamp,
+    *, force_refresh: bool = False,
 ) -> tuple[
     pd.DatetimeIndex,
     pd.Timestamp | None,
@@ -2463,6 +2468,8 @@ def _load_cn_trading_calendar(
     pd.Timestamp | None,
 ] | None:
     with _CN_TRADING_DAY_CACHE_LOCK:
+        if force_refresh:
+            return _load_cn_trading_calendar_unlocked(required_start, required_end, force_refresh=True)
         return _load_cn_trading_calendar_unlocked(required_start, required_end)
 
 
@@ -2476,6 +2483,59 @@ def _expected_cn_trading_days(start: pd.Timestamp, end: pd.Timestamp) -> pd.Date
         return None
     calendar, _, _, _ = loaded
     return pd.DatetimeIndex(calendar[(calendar >= start) & (calendar <= end)])
+
+
+def _recover_calendar_price_conflict(
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    observed: pd.Index,
+    expected: pd.DatetimeIndex | None,
+) -> pd.DatetimeIndex | None:
+    """Retry a conflicting calendar once; never infer sessions from price rows."""
+    global _CN_TRADING_DAY_CACHE, _CN_TRADING_DAY_CACHE_COVERAGE_END
+    global _CN_TRADING_DAY_CACHE_QUERIED_START, _CN_TRADING_DAY_CACHE_QUERIED_END
+    if expected is None:
+        return None
+    unexpected = pd.DatetimeIndex(observed).difference(expected)
+    if not len(unexpected):
+        return expected
+    # A known closure is a bad provider bar, not evidence for refreshing a calendar.
+    if (unexpected.dayofweek >= 5).any():
+        return expected
+    official_start = max(pd.Timestamp(start), OFFICIAL_CN_CALENDAR_2026_START)
+    official_end = min(pd.Timestamp(end), OFFICIAL_CN_CALENDAR_2026_END)
+    official = (
+        _load_official_cn_trading_calendar_2026(official_start, official_end)
+        if official_start <= official_end else None
+    )
+    if official is not None:
+        in_year = unexpected[(unexpected >= official_start) & (unexpected <= official_end)]
+        if len(in_year.difference(official[0])):
+            return expected
+    # Unknown historical conflicts keep their existing rejection. Recovery needs
+    # an independent session reference, not the disputed market-data response.
+    if official is None or len(unexpected.difference(official[0])):
+        return expected
+    with _CN_TRADING_DAY_CACHE_LOCK:
+        try:
+            refreshed = _load_cn_trading_calendar(start, end, force_refresh=True)
+        except Exception:
+            refreshed = None
+        candidate = expected if refreshed is None else pd.DatetimeIndex(refreshed[0])
+        # The independent published calendar resolves only its explicit coverage;
+        # older dates retain the original/fresh provider calendar and all normal gates.
+        outside = candidate[(candidate < official_start) | (candidate > official_end)]
+        verified = official[0][(official[0] >= official_start) & (official[0] <= official_end)]
+        result = pd.DatetimeIndex(outside).union(verified).sort_values()
+        # Keep the verified composite in memory for the provider -> alignment
+        # chain even if forced network refresh cleared the previous cache.
+        # Do not persist it under a raw provider's disk-cache provenance.
+        _CN_TRADING_DAY_CACHE = result.copy()
+        _CN_TRADING_DAY_CACHE_COVERAGE_END = pd.Timestamp(result.max())
+        _CN_TRADING_DAY_CACHE_QUERIED_START = min(pd.Timestamp(start), pd.Timestamp(result.min()))
+        _CN_TRADING_DAY_CACHE_QUERIED_END = max(pd.Timestamp(end), pd.Timestamp(result.max()))
+        _set_calendar_failure("")
+    return result[(result >= start) & (result <= end)]
 
 
 def align_prices_to_common_valid_date(
@@ -2521,6 +2581,9 @@ def align_prices_to_common_valid_date(
     ).normalize().unique().sort_values()
     first_observed = pd.Timestamp(market_price_dates.min())
     expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+    expected_sessions = _recover_calendar_price_conflict(
+        first_observed, common_last, market_price_dates, expected_sessions,
+    )
     if expected_sessions is None:
         reason = _calendar_failure_reason()
         if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
@@ -4141,13 +4204,16 @@ def _row_trade_leg_assets(row: pd.Series) -> list[str]:
 def _stale_price_trade_assets(row: pd.Series) -> list[str]:
     row_date = pd.Timestamp(row.get("date")).normalize()
     stale: list[str] = []
+    if _row_bool_value(row, "trade_blocked_by_stale_price", False):
+        stale = [code.strip() for code in _row_text_value(row, "stale_price_trade_assets").split(",")
+                 if code.strip() in ASSETS]
     for code in _row_trade_leg_assets(row):
         last_date = _row_asset_last_date(row, code)
         if _row_asset_price_is_ffilled(row, code) or (
             last_date is not None and last_date < row_date
         ):
             stale.append(code)
-    return stale
+    return list(dict.fromkeys(stale))
 
 
 def _fallback_previous_business_day(day: pd.Timestamp) -> pd.Timestamp:
@@ -4164,23 +4230,44 @@ def _status_calendar_sessions(ts: datetime, latest_market_date: pd.Timestamp | N
     if latest_market_date is not None:
         latest_market = pd.Timestamp(latest_market_date).normalize()
         required_start = min(required_start, latest_market)
-    if today.weekday() >= 5 and (latest_market is None or latest_market <= today):
-        required_end = latest_market if latest_market is not None else _fallback_previous_business_day(today)
-    else:
-        required_end = today
-        if latest_market is not None:
-            required_end = max(required_end, latest_market)
+    required_end = today
+    if latest_market is not None:
+        required_end = max(required_end, latest_market)
     calendar = _expected_cn_trading_days(required_start, required_end)
     if calendar is None or not len(calendar) or pd.Timestamp(calendar.max()).normalize() < required_end:
-        official_calendar = _load_official_cn_trading_calendar_2026(required_start, required_end)
+        # A recent-status query may span December/January. Limit the independent
+        # reference to its published coverage and retain earlier known sessions.
+        official_start = max(required_start, OFFICIAL_CN_CALENDAR_2026_START)
+        official_calendar = (
+            _load_official_cn_trading_calendar_2026(official_start, required_end)
+            if official_start <= required_end else None
+        )
         if official_calendar is not None:
             _set_calendar_failure("")
-            calendar = pd.DatetimeIndex(
+            prior = pd.DatetimeIndex([]) if calendar is None else calendar[calendar < official_start]
+            calendar = pd.DatetimeIndex(prior).union(pd.DatetimeIndex(
                 official_calendar[0][
-                    (official_calendar[0] >= required_start)
+                    (official_calendar[0] >= official_start)
                     & (official_calendar[0] <= required_end)
                 ]
+            )).sort_values()
+        elif calendar is not None and len(calendar):
+            # A requested range is not proof that an absent last bar is a holiday.
+            # A fully observed Friday suffices for a weekend; otherwise require
+            # actual calendar coverage beyond the query boundary.
+            known_weekend = (
+                required_end.weekday() >= 5
+                and pd.Timestamp(calendar.max()) == _fallback_previous_business_day(required_end)
             )
+            with _CN_TRADING_DAY_CACHE_LOCK:
+                known_coverage = (
+                    _CN_TRADING_DAY_CACHE is not None
+                    and len(_CN_TRADING_DAY_CACHE) > 0
+                    and pd.Timestamp(_CN_TRADING_DAY_CACHE.max()).normalize() >= required_end
+                )
+            if not known_weekend and not known_coverage:
+                _set_calendar_failure("交易日历覆盖不足，无法独立确认最近交易日，禁止生成实盘动作")
+                calendar = None
     if calendar is not None and len(calendar):
         sessions = pd.DatetimeIndex(calendar).normalize().unique().sort_values()
         if latest_market is not None and latest_market not in set(sessions):
@@ -4310,6 +4397,8 @@ def signal_data_status(
     expected_today_session = bool(sessions["expected_today_session"])
     live_data_available = bool(live and expected_today_session and latest >= expected_live)
     latest_row = daily.sort_values("date").iloc[-1]
+    trade_blocked_by_stale_price = _row_bool_value(latest_row, "trade_blocked_by_stale_price", False)
+    blocked_trade_target = _row_text_value(latest_row, "blocked_trade_target")
     stale_price_trade_assets = _stale_price_trade_assets(latest_row)
     all_trade_legs_have_current_prices = not stale_price_trade_assets
     source_bar_is_final = _row_bool_value(latest_row, "source_bar_is_final", False)
@@ -4346,6 +4435,12 @@ def signal_data_status(
     elif live and expected_today_session and latest < expected_live:
         label = "今日盘中快照尚不可用，最新为上一交易日收盘"
         live_data_available = False
+        signal_valid = False
+    elif trade_blocked_by_stale_price and purpose == "execution":
+        assets_text = ", ".join(stale_price_trade_assets) or "行情缺失资产"
+        target_text = _asset_name(blocked_trade_target) if blocked_trade_target else "待重新计算"
+        label = f"缺价阻止调仓：{assets_text}；原拟调仓目标 {target_text}，保留原持仓，待数据恢复重算"
+        data_usable = False
         signal_valid = False
     elif uses_unconfirmed:
         if ts.time() >= CONFIRMED_CLOSE_CUTOFF:
@@ -4585,6 +4680,8 @@ def signal_data_status(
         "source_ineligible_assets": live_snapshot["source_ineligible_assets"],
         "non_executable_quote_assets": live_snapshot["non_executable_quote_assets"],
         "stale_price_trade_assets": stale_price_trade_assets,
+        "trade_blocked_by_stale_price": trade_blocked_by_stale_price,
+        "blocked_trade_target": blocked_trade_target,
         "limit_blocked_trade_assets": limit_blocked_trade_assets,
         "sell_unavailable_trade_assets": sell_unavailable_trade_assets,
         "all_trade_legs_have_current_prices": all_trade_legs_have_current_prices,
@@ -5137,9 +5234,11 @@ def parse_date_range(text, now=None):
 
 
 def parse_all_date_ranges(text, now=None):
-    parts = re.split(r"以及|、|；|;\s*", text)
-    if len(parts) == 1:
-        parts = re.split(r"(?<=[年月日\d])\s*和\s*(?=[近最过今去前\d])", text)
+    parts = [
+        subpart
+        for part in re.split(r"以及|、|；|;\s*", text)
+        for subpart in re.split(r"(?<=[年月日\d])\s*和\s*(?=[近最过今去前\d])", part)
+    ]
     ranges: list[tuple[pd.Timestamp, pd.Timestamp]] = []
     seen: set[tuple] = set()
     for part in parts:
@@ -6357,14 +6456,20 @@ class SubDSixEtfV13Bot:
         daily = prepare_daily_for_performance(daily)
         earliest = pd.Timestamp(daily["date"].iloc[0])
         latest = pd.Timestamp(daily["date"].iloc[-1])
+        query_now = _bj_today_naive()
         ranges = resolve_performance_ranges_for_daily(
             query,
             daily,
+            now=query_now,
             latest_date=latest,
             earliest_date=earliest,
         )
         available_rows = int(pd.to_datetime(daily["date"]).dt.normalize().nunique())
         chart_range = ranges[0] if ranges else None
+        explicit_record_ranges = parse_all_date_ranges(query, now=query_now)
+        record_ranges = [(f"{s.date()}~{e.date()}", s, e) for s, e in explicit_record_ranges]
+        if not record_ranges and chart_range is not None:
+            record_ranges = [chart_range]
         with poe.start_message() as msg:
             if chart_range is not None:
                 label, start, end = chart_range
@@ -6417,10 +6522,11 @@ class SubDSixEtfV13Bot:
                 except Exception as exc:
                     msg.write("\n### 年度收益\n\n")
                     msg.write(f"N/A: {_exception_na_reason(exc)}\n\n")
-            if chart_range is not None:
-                # Records retain the requested bounds even when that window's
-                # metrics are N/A (a single session or a period without bars).
-                label, start, end = chart_range
+            for label, start, end in record_ranges:
+                # Explicit record windows are independent of the primary chart
+                # and of automatically appended mandatory performance windows.
+                if len(record_ranges) > 1:
+                    msg.write(f"\n### 请求区间调仓记录：{label}\n\n")
                 try:
                     trade_table = format_trade_records_table(daily, limit=20, start=start, end=end)
                     msg.write(trade_table)
@@ -6429,8 +6535,8 @@ class SubDSixEtfV13Bot:
                     msg.write(f"N/A: {_exception_na_reason(exc)}\n\n")
                 else:
                     record_window = daily[(daily["date"] >= start) & (daily["date"] <= end)]
-                    file_start = start if record_window.empty else record_window["date"].iloc[0]
-                    file_end = end if record_window.empty else record_window["date"].iloc[-1]
+                    file_start = start if record_window.empty or len(record_ranges) > 1 else record_window["date"].iloc[0]
+                    file_end = end if record_window.empty or len(record_ranges) > 1 else record_window["date"].iloc[-1]
                     csv_name = f"subd_v13_trade_records_{pd.Timestamp(file_start).date()}_{pd.Timestamp(file_end).date()}.csv"
                     try:
                         msg.attach_file(

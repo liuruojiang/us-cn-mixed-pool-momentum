@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="10" time="7.801" timestamp="2026-10-24T14:05:40.236149+08:00" hostname="DESKTOP-95I7VVU"><testcase classname="tests.test_v13_postfix_data_20261024" name="test_provider_to_alignment_recovers_under_persistent_fault[network]" time="2.706"><failure message="RuntimeError: 交易日历落后于行情数据或当前日期，禁止生成可执行信号；Diagnostic calendar network outage">bot = &lt;module 'independent_data_postfix' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000026845C1FBB0&gt;
+fault = 'network'
+
+    @pytest.mark.parametrize('fault', ['network', 'still_truncated'])
+    def test_provider_to_alignment_recovers_under_persistent_fault(bot, prices, monkeypatch, fault):
+        dates = prices.index
+        seed(bot, dates)
+        calls = []
+        def loader(start, end):
+            calls.append((start, end))
+            if fault == 'network':
+                raise RuntimeError('Diagnostic calendar network outage')
+            return dates[:-1], dates[-2], dates[0], dates[-1]
+        monkeypatch.setattr(bot, '_load_cnfin_trading_calendar', loader)
+        monkeypatch.setattr(bot, '_load_akshare_eastmoney_qfq_one_close', lambda code, end: prices[code].dropna())
+        monkeypatch.setattr(bot, '_load_tencent_qfq_one_close', lambda *a: pytest.fail('Unexpected price-provider fallback'))
+        loaded, _ = bot._load_public_close_with_per_code_fallback(list(bot.ASSETS), dates[-1])
+&gt;       aligned, end, _ = bot.align_prices_to_common_valid_date(loaded, list(bot.ASSETS))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_postfix_data_20261024.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+asset_cols = ['159915.SZ', '159941.SZ', '513030.SH', '513520.SH', '159985.SZ', '518880.SH']
+calendar_validation_mode = 'required'
+
+    def align_prices_to_common_valid_date(
+        prices: pd.DataFrame,
+        asset_cols: list[str] | tuple[str, ...],
+        calendar_validation_mode: Literal["required", "warning"] = "required",
+    ) -&gt; tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+        if calendar_validation_mode not in {"required", "warning"}:
+            raise ValueError(f"Unknown calendar validation mode: {calendar_validation_mode}")
+        asset_cols = list(asset_cols)
+        missing = [col for col in asset_cols if col not in prices.columns]
+        if missing:
+            raise ValueError(f"Missing asset columns: {missing}")
+        if not prices.index.is_unique:
+            duplicates = pd.Index(prices.index[prices.index.duplicated()]).unique()
+            first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+            raise ValueError(f"Price index must be unique; first duplicate={first}")
+        if not prices.index.is_monotonic_increasing:
+            raise ValueError("Price index must be strictly increasing")
+        aligned_prices = prices.copy()
+        rows_with_any_asset_price = prices[asset_cols].notna().any(axis=1)
+        last_by_asset: dict[str, pd.Timestamp] = {}
+        for col in asset_cols:
+            series = pd.to_numeric(aligned_prices[col], errors="coerce")
+            finite = np.isfinite(series.to_numpy(dtype=float))
+            invalid = prices[col].notna() &amp; (series.isna() | ~finite | (series &lt;= 0))
+            if invalid.any():
+                first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
+                raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
+            valid_dates = aligned_prices.index[series.notna()]
+            if len(valid_dates):
+                filled = series.ffill()
+                aligned_prices.loc[rows_with_any_asset_price, col] = filled.loc[rows_with_any_asset_price]
+            last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+        valid_all = aligned_prices[asset_cols].notna().all(axis=1)
+        if not valid_all.any():
+            raise ValueError("No date has valid close prices for all assets")
+        common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
+        # Full history starts before all six ETFs have data. Validate every date
+        # represented by any asset, preserving per-asset suspension/missing fills.
+        market_price_dates = pd.DatetimeIndex(
+            aligned_prices.index[rows_with_any_asset_price &amp; (aligned_prices.index &lt;= common_last)]
+        ).normalize().unique().sort_values()
+        first_observed = pd.Timestamp(market_price_dates.min())
+        expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+        expected_sessions = _recover_calendar_price_conflict(
+            first_observed, common_last, market_price_dates, expected_sessions,
+        )
+        if expected_sessions is None:
+            reason = _calendar_failure_reason()
+            if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
+&gt;               raise RuntimeError(reason)
+E               RuntimeError: 交易日历落后于行情数据或当前日期，禁止生成可执行信号；Diagnostic calendar network outage
+
+poe_subd_six_etf_v1_3_bot.py:2579: RuntimeError</failure></testcase><testcase classname="tests.test_v13_postfix_data_20261024" name="test_provider_to_alignment_recovers_under_persistent_fault[still_truncated]" time="0.286" /><testcase classname="tests.test_v13_postfix_data_20261024" name="test_recovery_retains_missing_session_rejection" time="0.301" /><testcase classname="tests.test_v13_postfix_data_20261024" name="test_bad_dates_are_not_repaired_with_valid_conflict[2026-01-01]" time="0.226" /><testcase classname="tests.test_v13_postfix_data_20261024" name="test_bad_dates_are_not_repaired_with_valid_conflict[2026-09-19]" time="0.304" /><testcase classname="tests.test_v13_postfix_data_20261024" name="test_preofficial_conflict_fails_closed" time="0.330" /><testcase classname="tests.test_v13_postfix_data_20261024" name="test_force_refresh_serializes_and_bypasses_both_caches" time="0.506" /><testcase classname="tests.test_v13_postfix_data_20261024" name="test_january_weekend_uses_official_recent_session_across_year" time="0.717"><failure message="AssertionError: assert '2026-01-08' == '2026-01-09'&#10;  &#10;  - 2026-01-09&#10;  ?          ^&#10;  + 2026-01-08&#10;  ?          ^">bot = &lt;module 'independent_data_postfix' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000026848BFF4D0&gt;
+
+    def test_january_weekend_uses_official_recent_session_across_year(bot, calendar, monkeypatch):
+        daily = pd.read_csv(ROOT / 'outputs/doublecheck_script_audit_20261007/final_network/confirmed_daily.csv.gz', parse_dates=['date'])
+        def truncated(start, end):
+            dates = calendar[(calendar &gt;= start) &amp; (calendar &lt;= pd.Timestamp('2026-01-08'))]
+            return dates, dates.max(), start, end
+        monkeypatch.setattr(bot, '_load_cnfin_trading_calendar', truncated)
+        status = bot.signal_data_status(daily[daily.date &lt;= '2026-01-08'], False, datetime(2026, 1, 10, 16, tzinfo=bot.CN_TZ))
+&gt;       assert status['expected_confirmed_session'] == '2026-01-09'
+E       AssertionError: assert '2026-01-08' == '2026-01-09'
+E         
+E         - 2026-01-09
+E         ?          ^
+E         + 2026-01-08
+E         ?          ^
+
+tests\test_v13_postfix_data_20261024.py:124: AssertionError</failure></testcase><testcase classname="tests.test_v13_postfix_data_20261024" name="test_status_beyond_official_coverage_does_not_trust_query_end" time="0.530"><failure message="assert not True">bot = &lt;module 'independent_data_postfix' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'&gt;
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002684A3645F0&gt;
+
+    def test_status_beyond_official_coverage_does_not_trust_query_end(bot, calendar, monkeypatch):
+        daily = pd.read_csv(ROOT / 'outputs/doublecheck_script_audit_20261007/final_network/confirmed_daily.csv.gz', parse_dates=['date'])
+        daily = daily[daily.date &lt;= '2026-09-24']
+        def truncated(start, end):
+            dates = calendar[(calendar &gt;= start) &amp; (calendar &lt;= pd.Timestamp('2026-09-24'))]
+            return dates, dates.max(), start, end
+        monkeypatch.setattr(bot, '_load_cnfin_trading_calendar', truncated)
+        try:
+            status = bot.signal_data_status(daily, False, datetime(2027, 1, 9, 16, tzinfo=bot.CN_TZ))
+        except RuntimeError:
+            return
+&gt;       assert not status['signal_valid']
+E       assert not True
+
+tests\test_v13_postfix_data_20261024.py:139: AssertionError</failure></testcase><testcase classname="tests.test_v13_postfix_data_20261024" name="test_january_holiday_preserves_previous_year_session" time="0.402" /></testsuite></testsuites>

@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "source_sha256": "8354e9c4b835c77f11809d5d0b727f54e75e7f7bc5a1fc5aa282ccb73bfd1f57",
+  "exported_files": 400,
+  "independent_directory": "D:\\Codex\\repository-sync\\20261024-us-cn-mixed-pool\\isolated",
+  "snapshot_restore": "four sources restored from tracked snapshots; no original workspace backup read",
+  "isolated_test_count": 50,
+  "isolated_test_failures": 0,
+  "full_suite_prior_same_source": {
+    "passed": 740,
+    "skipped": 1
+  },
+  "same_input_parity": {
+    "rows": 3597,
+    "columns": 105,
+    "exact": true
+  },
+  "math_prefix_checks": 7,
+  "math_cost_monotonicity": true,
+  "preserved_original_audit_files": 34,
+  "physical_cleanup": "blocked_by_policy; zero deletions; backup verified",
+  "hosted_deployment": false,
+  "orders": false
+}

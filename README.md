@@ -41,6 +41,8 @@ python .\analyze_abcde_combo_20260509.py
 
 V1.1/V1.3 的 2026-08-12 对抗修复、正式同输入回测和回滚信息见 `docs/subd_v11_v13_adversarial_repair_20260812.md` 与 `outputs/subd_v11_v13_repair_formal_comparison_20260812/report.md`。
 
-六 ETF 朴素版 V1.3 的最新脚本审计见 [2026-10-07 多智能体 Double-check 与补修](docs/subd_six_etf_v1_3_script_doublecheck_20261007.md)：独立核实第一轮 14 类问题的证据，并补修完整历史日历、异常源回退和倒序分页的三处遗漏；累计 690 个唯一测试通过（全仓 685 项及后追加的 5 项）。正式参数及正常同输入持仓／费用／净值保留，最终真实正式数据构建截止 2026-09-30；本地修复不代表 Poe 托管端发布。第一轮记录继续保留。
+六 ETF 朴素版 V1.3 的最新本地修复见 [2026-10-24 修复与修复后多智能体审计](docs/subd_six_etf_v1_3_repair_audit_20261024.md)：修复缺价阻单提示、周末数据新鲜度、日历故障恢复和多区间交易记录导出，并补修独立复审发现的跨年与网络失败边界。同一真实冻结输入的 3,597 行、105 列（含日期）保持完全一致；数据截止 2026-09-30，不是当前行情或 Poe 托管发布验收。
 
-两轮修订的 GitHub 同步目标、独立检出验证与源码快照恢复步骤见 [远端同步记录](docs/remote_sync_audit_20261007.md)。
+此前 [2026-10-07 多智能体 Double-check 与补修](docs/subd_six_etf_v1_3_script_doublecheck_20261007.md)及第一轮记录保留为历史证据。
+
+本轮修复的 `main` 同步、独立检出验证、源码快照恢复及清理阻塞见 [2026-10-24 交付记录](docs/remote_sync_audit_20261024.md)；前次两轮修订的同步记录保留在 [2026-10-07 归档](docs/remote_sync_audit_20261007.md)。

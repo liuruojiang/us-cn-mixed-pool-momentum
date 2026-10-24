@@ -1,0 +1,97 @@
+{
+  "entry_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "input_sha256": {
+    "confirmed_daily.csv.gz": "9907b425ec3b1c8c816e6bc3e73c72af315a7cd5e738e702d92d7709f99f6456",
+    "raw_prices_qfq.csv.gz": "de8938507d2b978bcc0e05e097d10bc6e2fc38c27d2eb4745aa01463178f3560",
+    "calendar_cache_for_replay.csv": "a357c2cd14fd9f95f53c394d4ff9527e998d658fe5c8e31563804a2a22e398f6"
+  },
+  "input_basis": "preserved actual qfq 2011-12-09..2026-09-30; no current-market claim",
+  "fault_injection": [
+    {
+      "case": "unchanged_baseline",
+      "intervention": "none",
+      "production_fields": {
+        "position_before": "CASH",
+        "position": "159941.SZ",
+        "best_candidate": "159941.SZ",
+        "trade_blocked_by_stale_price": "False",
+        "blocked_trade_target": null,
+        "stale_price_trade_assets": "",
+        "turnover": 1.0,
+        "price_ffill_159941.SZ": false
+      },
+      "status_fields": {
+        "signal_valid": true,
+        "raw_signal_has_trade": true,
+        "stale_price_trade_assets": [],
+        "execution_note": "实时估算信号，仅供监控；全部ETF实时行情快照未通过新鲜度校验。",
+        "strategy_actionable_now": false
+      },
+      "report_claims_valid_no_trade": false,
+      "report_warns_stale_block": false
+    },
+    {
+      "case": "missing_quote",
+      "intervention": "159941.SZ 2026-09-24 close -> NaN",
+      "production_fields": {
+        "position_before": "CASH",
+        "position": "CASH",
+        "best_candidate": "159941.SZ",
+        "trade_blocked_by_stale_price": "True",
+        "blocked_trade_target": "159941.SZ",
+        "stale_price_trade_assets": "159941.SZ",
+        "turnover": 0.0,
+        "price_ffill_159941.SZ": true
+      },
+      "status_fields": {
+        "signal_valid": true,
+        "raw_signal_has_trade": false,
+        "stale_price_trade_assets": [],
+        "execution_note": "信号有效，无需下单。",
+        "strategy_actionable_now": false
+      },
+      "report_claims_valid_no_trade": true,
+      "report_warns_stale_block": false
+    }
+  ],
+  "multi_window": {
+    "query": "交易记录 2024年、2025年",
+    "parsed": [
+      [
+        "2025-01-01 00:00:00",
+        "2025-12-31 00:00:00"
+      ],
+      [
+        "2024-01-01 00:00:00",
+        "2024-12-31 00:00:00"
+      ]
+    ],
+    "expected_records": 65,
+    "actual_records": 35,
+    "expected_by_year": {
+      "2024": 30,
+      "2025": 35
+    },
+    "actual_years": [
+      2025
+    ],
+    "attachments": [
+      "subd_v13_trade_records_2025-01-02_2025-12-31.csv"
+    ]
+  },
+  "unchanged_baseline_parity": {
+    "passed": true,
+    "rows": 3594,
+    "columns": [
+      "date",
+      "position_before",
+      "position",
+      "holding_fraction",
+      "turnover",
+      "cost",
+      "return",
+      "nav"
+    ],
+    "reference": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\doublecheck_script_audit_20261007\\final_network\\confirmed_daily.csv.gz"
+  }
+}

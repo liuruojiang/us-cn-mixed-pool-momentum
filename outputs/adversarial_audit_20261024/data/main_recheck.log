@@ -1,0 +1,31 @@
+{
+  "basis": "diagnostic fault injection; archived true dates with last CNFin bar removed; no actual network/source failure asserted",
+  "source_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "prices_path": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l1_20260926\\prices_raw_qfq_through_20260924.csv.gz",
+  "prices_sha256": "1e14b2c2eddfaeb42b0b802ab61650229c702a0657d3f4dd80cbd6b7dcbe3fc0",
+  "calendar_path": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l1_20260926\\calendar_cache_for_audit.csv",
+  "calendar_sha256": "8f28e0c7c315b2750f6da49b81ce90ce4e3d59d0bd113f3721bd4656cd16586f",
+  "real_sessions": 3594,
+  "required_end": "2026-09-24",
+  "truncated_calendar_end": "2026-09-23",
+  "initial_http_calls": 2,
+  "after_provider_recovers": "ValueError: Prices contain unexpected non-trading dates: 2026-09-24",
+  "http_calls_after_recovery": 2,
+  "cached_is_usable": true,
+  "after_cache_invalidation": {
+    "status": "accepted",
+    "rows": 3594,
+    "common_last": "2026-09-24",
+    "http_calls": 4
+  },
+  "non_session_negative_controls": [
+    {
+      "inserted_date": "2026-09-19",
+      "outcome": "ValueError: Prices contain unexpected non-trading dates: 2026-09-19"
+    },
+    {
+      "inserted_date": "2026-01-01",
+      "outcome": "ValueError: Prices contain unexpected non-trading dates: 2026-01-01"
+    }
+  ]
+}

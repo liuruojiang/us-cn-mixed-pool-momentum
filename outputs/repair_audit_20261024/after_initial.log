@@ -1,0 +1,45 @@
+.F..................                                                     [100%]
+================================== FAILURES ===================================
+_ test_missing_price_block_survives_real_build_and_report[2026-09-18-159985.SZ] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001B2EBC93E10>
+day = Timestamp('2026-09-18 00:00:00'), asset = '159985.SZ'
+
+    @pytest.mark.parametrize('day,asset', [
+        ('2026-09-24', '159941.SZ'),  # CASH -> ETF
+        ('2026-09-18', '159985.SZ'),  # ETF -> CASH
+        ('2026-09-01', '518880.SH'),  # ETF -> ETF
+    ])
+    def test_missing_price_block_survives_real_build_and_report(bot, raw, calendar, monkeypatch, day, asset):
+        day = pd.Timestamp(day)
+        prices = raw.loc[:day].copy()
+        prices.loc[day, asset] = float('nan')
+        sources = pd.read_csv(SAVED / 'sources.csv')
+        use_calendar(bot, monkeypatch, calendar)
+        monkeypatch.setattr(bot, 'load_close', lambda config: (prices.copy(), sources.copy()))
+        monkeypatch.setattr(bot, '_load_live_quotes_for_prices', lambda *a, **k: pd.DataFrame())
+        now = datetime(day.year, day.month, day.day, 14, 55, tzinfo=bot.CN_TZ)
+        frame, source = bot._build_v13_daily(end_date=day, data_state='live', now=now)
+>       assert frame.iloc[-1].trade_blocked_by_stale_price
+E       assert np.False_
+E        +  where np.False_ = date                   2026-09-18 00:00:00\nversion                                1.3\nentry_case                      ...date_159985.SZ             2026-09-17\nlast_date_518880.SH             2026-09-18\nName: 3589, Length: 105, dtype: object.trade_blocked_by_stale_price
+
+tests\test_v13_repair_20261024.py:62: AssertionError
+============================== warnings summary ===============================
+tests/test_v13_repair_20261024.py::test_missing_price_block_survives_real_build_and_report[2026-09-24-159941.SZ]
+  C:\Python314\Lib\site-packages\fastapi_poe\types.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RequestContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_v13_repair_20261024.py::test_missing_price_block_survives_real_build_and_report[2026-09-18-159985.SZ]
+1 failed, 19 passed, 1 warning in 46.54s

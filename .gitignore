@@ -8,3 +8,8 @@ __pycache__/
 outputs/tmp/
 outputs/cn_trading_days_cache*.csv
 quant_param_scan_runs/**/daily_outputs/
+# Disposable pytest working directories; retained audit evidence stays tracked.
+outputs/adversarial_audit_20261024/pytest_tmp/
+outputs/repair_audit_20261024/full_tmp/
+outputs/repair_audit_20261024/final_tmp/
+outputs/repair_audit_20261024/verified_tmp/

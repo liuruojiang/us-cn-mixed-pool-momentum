@@ -1,0 +1,713 @@
+FFF.FF..FFFF..FFFFFF                                                     [100%]
+================================== FAILURES ===================================
+_ test_missing_price_block_survives_real_build_and_report[2026-09-24-159941.SZ] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026991FBC180>
+day = Timestamp('2026-09-24 00:00:00'), asset = '159941.SZ'
+
+    @pytest.mark.parametrize('day,asset', [
+        ('2026-09-24', '159941.SZ'),  # CASH -> ETF
+        ('2026-09-18', '159985.SZ'),  # ETF -> CASH
+        ('2026-09-01', '518880.SH'),  # ETF -> ETF
+    ])
+    def test_missing_price_block_survives_real_build_and_report(bot, raw, calendar, monkeypatch, day, asset):
+        day = pd.Timestamp(day)
+        prices = raw.loc[:day].copy()
+        prices.loc[day, asset] = float('nan')
+        sources = pd.read_csv(SAVED / 'sources.csv')
+        use_calendar(bot, monkeypatch, calendar)
+        monkeypatch.setattr(bot, 'load_close', lambda config: (prices.copy(), sources.copy()))
+        monkeypatch.setattr(bot, '_load_live_quotes_for_prices', lambda *a, **k: pd.DataFrame())
+        now = datetime(day.year, day.month, day.day, 14, 55, tzinfo=bot.CN_TZ)
+        frame, source = bot._build_v13_daily(end_date=day, data_state='live', now=now)
+        assert frame.iloc[-1].trade_blocked_by_stale_price
+        assert frame.iloc[-1].turnover == 0
+        status = bot.signal_data_status(frame, live=True, now=now)
+>       assert not status['signal_valid']
+E       assert not True
+
+tests\test_v13_repair_20261024.py:65: AssertionError
+_ test_missing_price_block_survives_real_build_and_report[2026-09-18-159985.SZ] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026991E07E10>
+day = Timestamp('2026-09-18 00:00:00'), asset = '159985.SZ'
+
+    @pytest.mark.parametrize('day,asset', [
+        ('2026-09-24', '159941.SZ'),  # CASH -> ETF
+        ('2026-09-18', '159985.SZ'),  # ETF -> CASH
+        ('2026-09-01', '518880.SH'),  # ETF -> ETF
+    ])
+    def test_missing_price_block_survives_real_build_and_report(bot, raw, calendar, monkeypatch, day, asset):
+        day = pd.Timestamp(day)
+        prices = raw.loc[:day].copy()
+        prices.loc[day, asset] = float('nan')
+        sources = pd.read_csv(SAVED / 'sources.csv')
+        use_calendar(bot, monkeypatch, calendar)
+        monkeypatch.setattr(bot, 'load_close', lambda config: (prices.copy(), sources.copy()))
+        monkeypatch.setattr(bot, '_load_live_quotes_for_prices', lambda *a, **k: pd.DataFrame())
+        now = datetime(day.year, day.month, day.day, 14, 55, tzinfo=bot.CN_TZ)
+        frame, source = bot._build_v13_daily(end_date=day, data_state='live', now=now)
+>       assert frame.iloc[-1].trade_blocked_by_stale_price
+E       assert np.False_
+E        +  where np.False_ = date                   2026-09-18 00:00:00\nversion                                1.3\nentry_case                      ...date_159985.SZ             2026-09-17\nlast_date_518880.SH             2026-09-18\nName: 3589, Length: 105, dtype: object.trade_blocked_by_stale_price
+
+tests\test_v13_repair_20261024.py:62: AssertionError
+_ test_missing_price_block_survives_real_build_and_report[2026-09-01-518880.SH] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026995038170>
+day = Timestamp('2026-09-01 00:00:00'), asset = '518880.SH'
+
+    @pytest.mark.parametrize('day,asset', [
+        ('2026-09-24', '159941.SZ'),  # CASH -> ETF
+        ('2026-09-18', '159985.SZ'),  # ETF -> CASH
+        ('2026-09-01', '518880.SH'),  # ETF -> ETF
+    ])
+    def test_missing_price_block_survives_real_build_and_report(bot, raw, calendar, monkeypatch, day, asset):
+        day = pd.Timestamp(day)
+        prices = raw.loc[:day].copy()
+        prices.loc[day, asset] = float('nan')
+        sources = pd.read_csv(SAVED / 'sources.csv')
+        use_calendar(bot, monkeypatch, calendar)
+        monkeypatch.setattr(bot, 'load_close', lambda config: (prices.copy(), sources.copy()))
+        monkeypatch.setattr(bot, '_load_live_quotes_for_prices', lambda *a, **k: pd.DataFrame())
+        now = datetime(day.year, day.month, day.day, 14, 55, tzinfo=bot.CN_TZ)
+        frame, source = bot._build_v13_daily(end_date=day, data_state='live', now=now)
+        assert frame.iloc[-1].trade_blocked_by_stale_price
+        assert frame.iloc[-1].turnover == 0
+        status = bot.signal_data_status(frame, live=True, now=now)
+>       assert not status['signal_valid']
+E       assert not True
+
+tests\test_v13_repair_20261024.py:65: AssertionError
+_ test_status_uses_calendar_independent_of_price_cutoff[2026-09-19-2026-09-17-False-2026-09-18] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000269955AF790>
+when = '2026-09-19', cutoff = '2026-09-17', valid = False
+expected = '2026-09-18'
+
+    @pytest.mark.parametrize('when,cutoff,valid,expected', [
+        ('2026-09-19', '2026-09-18', True, '2026-09-18'),
+        ('2026-09-19', '2026-09-17', False, '2026-09-18'),
+        ('2026-09-20', '2026-09-17', False, '2026-09-18'),
+        ('2026-09-28', '2026-09-24', False, '2026-09-28'),
+        ('2026-10-03', '2026-09-30', True, '2026-09-30'),
+        ('2026-10-24', '2026-09-30', False, '2026-10-23'),
+    ])
+    def test_status_uses_calendar_independent_of_price_cutoff(bot, daily, calendar, monkeypatch, when, cutoff, valid, expected):
+        use_calendar(bot, monkeypatch, calendar)
+        now = datetime.fromisoformat(when + 'T16:00:00').replace(tzinfo=bot.CN_TZ)
+        frame = daily.loc[daily.date <= cutoff]
+        status = bot.signal_data_status(frame, live=False, now=now)
+>       assert status['expected_confirmed_session'] == expected
+E       AssertionError: assert '2026-09-17' == '2026-09-18'
+E         
+E         - 2026-09-18
+E         ?          ^
+E         + 2026-09-17
+E         ?          ^
+
+tests\test_v13_repair_20261024.py:88: AssertionError
+_ test_status_uses_calendar_independent_of_price_cutoff[2026-09-20-2026-09-17-False-2026-09-18] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000269954FDE50>
+when = '2026-09-20', cutoff = '2026-09-17', valid = False
+expected = '2026-09-18'
+
+    @pytest.mark.parametrize('when,cutoff,valid,expected', [
+        ('2026-09-19', '2026-09-18', True, '2026-09-18'),
+        ('2026-09-19', '2026-09-17', False, '2026-09-18'),
+        ('2026-09-20', '2026-09-17', False, '2026-09-18'),
+        ('2026-09-28', '2026-09-24', False, '2026-09-28'),
+        ('2026-10-03', '2026-09-30', True, '2026-09-30'),
+        ('2026-10-24', '2026-09-30', False, '2026-10-23'),
+    ])
+    def test_status_uses_calendar_independent_of_price_cutoff(bot, daily, calendar, monkeypatch, when, cutoff, valid, expected):
+        use_calendar(bot, monkeypatch, calendar)
+        now = datetime.fromisoformat(when + 'T16:00:00').replace(tzinfo=bot.CN_TZ)
+        frame = daily.loc[daily.date <= cutoff]
+        status = bot.signal_data_status(frame, live=False, now=now)
+>       assert status['expected_confirmed_session'] == expected
+E       AssertionError: assert '2026-09-17' == '2026-09-18'
+E         
+E         - 2026-09-18
+E         ?          ^
+E         + 2026-09-17
+E         ?          ^
+
+tests\test_v13_repair_20261024.py:88: AssertionError
+_ test_status_uses_calendar_independent_of_price_cutoff[2026-10-24-2026-09-30-False-2026-10-23] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026996B7C8C0>
+when = '2026-10-24', cutoff = '2026-09-30', valid = False
+expected = '2026-10-23'
+
+    @pytest.mark.parametrize('when,cutoff,valid,expected', [
+        ('2026-09-19', '2026-09-18', True, '2026-09-18'),
+        ('2026-09-19', '2026-09-17', False, '2026-09-18'),
+        ('2026-09-20', '2026-09-17', False, '2026-09-18'),
+        ('2026-09-28', '2026-09-24', False, '2026-09-28'),
+        ('2026-10-03', '2026-09-30', True, '2026-09-30'),
+        ('2026-10-24', '2026-09-30', False, '2026-10-23'),
+    ])
+    def test_status_uses_calendar_independent_of_price_cutoff(bot, daily, calendar, monkeypatch, when, cutoff, valid, expected):
+        use_calendar(bot, monkeypatch, calendar)
+        now = datetime.fromisoformat(when + 'T16:00:00').replace(tzinfo=bot.CN_TZ)
+        frame = daily.loc[daily.date <= cutoff]
+        status = bot.signal_data_status(frame, live=False, now=now)
+>       assert status['expected_confirmed_session'] == expected
+E       AssertionError: assert '2026-09-30' == '2026-10-23'
+E         
+E         - 2026-10-23
+E         ?      -  -
+E         + 2026-09-30
+E         ?       +  +
+
+tests\test_v13_repair_20261024.py:88: AssertionError
+__ test_truncated_calendar_recovers_before_rejecting_valid_prices[alignment] __
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026996A59630>
+path = 'alignment'
+
+    @pytest.mark.parametrize('path', ['alignment', 'provider'])
+    def test_truncated_calendar_recovers_before_rejecting_valid_prices(bot, raw, calendar, monkeypatch, path):
+        state, dates = install_truncated_calendar(bot, raw, calendar, monkeypatch)
+        first_calls = state['calls']
+        state['truncated'] = False
+        prices = raw.loc[:dates.max()]
+        if path == 'alignment':
+>           aligned, end, _ = bot.align_prices_to_common_valid_date(prices, list(bot.ASSETS))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_repair_20261024.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+asset_cols = ['159915.SZ', '159941.SZ', '513030.SH', '513520.SH', '159985.SZ', '518880.SH']
+calendar_validation_mode = 'required'
+
+    def align_prices_to_common_valid_date(
+        prices: pd.DataFrame,
+        asset_cols: list[str] | tuple[str, ...],
+        calendar_validation_mode: Literal["required", "warning"] = "required",
+    ) -> tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+        if calendar_validation_mode not in {"required", "warning"}:
+            raise ValueError(f"Unknown calendar validation mode: {calendar_validation_mode}")
+        asset_cols = list(asset_cols)
+        missing = [col for col in asset_cols if col not in prices.columns]
+        if missing:
+            raise ValueError(f"Missing asset columns: {missing}")
+        if not prices.index.is_unique:
+            duplicates = pd.Index(prices.index[prices.index.duplicated()]).unique()
+            first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+            raise ValueError(f"Price index must be unique; first duplicate={first}")
+        if not prices.index.is_monotonic_increasing:
+            raise ValueError("Price index must be strictly increasing")
+        aligned_prices = prices.copy()
+        rows_with_any_asset_price = prices[asset_cols].notna().any(axis=1)
+        last_by_asset: dict[str, pd.Timestamp] = {}
+        for col in asset_cols:
+            series = pd.to_numeric(aligned_prices[col], errors="coerce")
+            finite = np.isfinite(series.to_numpy(dtype=float))
+            invalid = prices[col].notna() & (series.isna() | ~finite | (series <= 0))
+            if invalid.any():
+                first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
+                raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
+            valid_dates = aligned_prices.index[series.notna()]
+            if len(valid_dates):
+                filled = series.ffill()
+                aligned_prices.loc[rows_with_any_asset_price, col] = filled.loc[rows_with_any_asset_price]
+            last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+        valid_all = aligned_prices[asset_cols].notna().all(axis=1)
+        if not valid_all.any():
+            raise ValueError("No date has valid close prices for all assets")
+        common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
+        # Full history starts before all six ETFs have data. Validate every date
+        # represented by any asset, preserving per-asset suspension/missing fills.
+        market_price_dates = pd.DatetimeIndex(
+            aligned_prices.index[rows_with_any_asset_price & (aligned_prices.index <= common_last)]
+        ).normalize().unique().sort_values()
+        first_observed = pd.Timestamp(market_price_dates.min())
+        expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+        if expected_sessions is None:
+            reason = _calendar_failure_reason()
+            if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
+                raise RuntimeError(reason)
+            if calendar_validation_mode == "required":
+                raise RuntimeError(reason or "交易日历不可用，无法校验历史行情完整性")
+            warnings.warn(
+                reason or "交易日历不可用，未校验历史行情完整性",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        else:
+            expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
+            missing_common = pd.DatetimeIndex(expected_sessions).difference(market_price_dates)
+            if len(missing_common):
+                sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
+                more = "..." if len(missing_common) > 5 else ""
+                raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
+            unexpected_common = market_price_dates.difference(expected_sessions)
+            if len(unexpected_common):
+                sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in unexpected_common[:5])
+                more = "..." if len(unexpected_common) > 5 else ""
+>               raise ValueError(f"Prices contain unexpected non-trading dates: {sample}{more}")
+E               ValueError: Prices contain unexpected non-trading dates: 2026-09-24
+
+poe_subd_six_etf_v1_3_bot.py:2546: ValueError
+__ test_truncated_calendar_recovers_before_rejecting_valid_prices[provider] ___
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026991EDACF0>
+path = 'provider'
+
+    @pytest.mark.parametrize('path', ['alignment', 'provider'])
+    def test_truncated_calendar_recovers_before_rejecting_valid_prices(bot, raw, calendar, monkeypatch, path):
+        state, dates = install_truncated_calendar(bot, raw, calendar, monkeypatch)
+        first_calls = state['calls']
+        state['truncated'] = False
+        prices = raw.loc[:dates.max()]
+        if path == 'alignment':
+            aligned, end, _ = bot.align_prices_to_common_valid_date(prices, list(bot.ASSETS))
+            assert end == dates.max() and len(aligned) == len(prices)
+        else:
+            monkeypatch.setattr(bot, '_load_akshare_eastmoney_qfq_one_close', lambda code, end: prices[code].dropna())
+            monkeypatch.setattr(bot, '_load_tencent_qfq_one_close', lambda *a: pytest.fail('Unnecessary provider fallback'))
+>           loaded, _ = bot._load_public_close_with_per_code_fallback(list(bot.ASSETS), dates.max())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_repair_20261024.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+poe_subd_six_etf_v1_3_bot.py:1338: in _load_public_close_with_per_code_fallback
+    close = loader(code, end_date)
+            ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('159915.SZ', Timestamp('2026-09-24 00:00:00'))
+
+>   monkeypatch.setattr(bot, '_load_tencent_qfq_one_close', lambda *a: pytest.fail('Unnecessary provider fallback'))
+                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Unnecessary provider fallback
+
+tests\test_v13_repair_20261024.py:125: Failed
+________________ test_disk_calendar_cannot_mask_forced_refresh ________________
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+raw =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.262      8.519
+2026-09-30      3.154      1.735      1.803      2.352      2.267      8.633
+
+[3597 rows x 6 columns]
+calendar = DatetimeIndex(['1990-12-19', '1990-12-20', '1990-12-21', '1990-12-24',
+               '1990-12-25', '1990-12-26', '199...          '2026-12-30', '2026-12-31'],
+              dtype='datetime64[ns]', name='trade_date', length=8797, freq=None)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000269955C2EA0>
+
+    def test_disk_calendar_cannot_mask_forced_refresh(bot, raw, calendar, monkeypatch):
+        state, dates = install_truncated_calendar(bot, raw, calendar, monkeypatch)
+        stale = (dates[:-1], dates[-2], dates[0], dates[-1])
+        monkeypatch.setattr(bot, '_load_cached_cn_trading_days', lambda: stale)
+        first_calls = state['calls']
+        state['truncated'] = False
+>       aligned, end, _ = bot.align_prices_to_common_valid_date(raw.loc[:dates[-1]], list(bot.ASSETS))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v13_repair_20261024.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+prices =             159915.SZ  159941.SZ  513030.SH  513520.SH  159985.SZ  518880.SH
+date                                     ... 2.304      8.897
+2026-09-24      3.312      1.707      1.796      2.269      2.319      8.788
+
+[3594 rows x 6 columns]
+asset_cols = ['159915.SZ', '159941.SZ', '513030.SH', '513520.SH', '159985.SZ', '518880.SH']
+calendar_validation_mode = 'required'
+
+    def align_prices_to_common_valid_date(
+        prices: pd.DataFrame,
+        asset_cols: list[str] | tuple[str, ...],
+        calendar_validation_mode: Literal["required", "warning"] = "required",
+    ) -> tuple[pd.DataFrame, pd.Timestamp, dict[str, pd.Timestamp]]:
+        if calendar_validation_mode not in {"required", "warning"}:
+            raise ValueError(f"Unknown calendar validation mode: {calendar_validation_mode}")
+        asset_cols = list(asset_cols)
+        missing = [col for col in asset_cols if col not in prices.columns]
+        if missing:
+            raise ValueError(f"Missing asset columns: {missing}")
+        if not prices.index.is_unique:
+            duplicates = pd.Index(prices.index[prices.index.duplicated()]).unique()
+            first = pd.Timestamp(duplicates[0]).date().isoformat() if len(duplicates) else "unknown"
+            raise ValueError(f"Price index must be unique; first duplicate={first}")
+        if not prices.index.is_monotonic_increasing:
+            raise ValueError("Price index must be strictly increasing")
+        aligned_prices = prices.copy()
+        rows_with_any_asset_price = prices[asset_cols].notna().any(axis=1)
+        last_by_asset: dict[str, pd.Timestamp] = {}
+        for col in asset_cols:
+            series = pd.to_numeric(aligned_prices[col], errors="coerce")
+            finite = np.isfinite(series.to_numpy(dtype=float))
+            invalid = prices[col].notna() & (series.isna() | ~finite | (series <= 0))
+            if invalid.any():
+                first_bad = pd.Timestamp(series.index[invalid][0]).date().isoformat()
+                raise ValueError(f"{col} has non-finite or non-positive close at {first_bad}")
+            valid_dates = aligned_prices.index[series.notna()]
+            if len(valid_dates):
+                filled = series.ffill()
+                aligned_prices.loc[rows_with_any_asset_price, col] = filled.loc[rows_with_any_asset_price]
+            last_by_asset[col] = pd.Timestamp(valid_dates.max()) if len(valid_dates) else pd.NaT
+        valid_all = aligned_prices[asset_cols].notna().all(axis=1)
+        if not valid_all.any():
+            raise ValueError("No date has valid close prices for all assets")
+        common_last = pd.Timestamp(aligned_prices.index[valid_all].max())
+        # Full history starts before all six ETFs have data. Validate every date
+        # represented by any asset, preserving per-asset suspension/missing fills.
+        market_price_dates = pd.DatetimeIndex(
+            aligned_prices.index[rows_with_any_asset_price & (aligned_prices.index <= common_last)]
+        ).normalize().unique().sort_values()
+        first_observed = pd.Timestamp(market_price_dates.min())
+        expected_sessions = _expected_cn_trading_days(first_observed, common_last)
+        if expected_sessions is None:
+            reason = _calendar_failure_reason()
+            if "交易日历落后于行情数据" in reason or "覆盖不足" in reason:
+                raise RuntimeError(reason)
+            if calendar_validation_mode == "required":
+                raise RuntimeError(reason or "交易日历不可用，无法校验历史行情完整性")
+            warnings.warn(
+                reason or "交易日历不可用，未校验历史行情完整性",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        else:
+            expected_sessions = pd.DatetimeIndex(expected_sessions).normalize().unique().sort_values()
+            missing_common = pd.DatetimeIndex(expected_sessions).difference(market_price_dates)
+            if len(missing_common):
+                sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in missing_common[:5])
+                more = "..." if len(missing_common) > 5 else ""
+                raise ValueError(f"Prices are missing common trading dates: {sample}{more}")
+            unexpected_common = market_price_dates.difference(expected_sessions)
+            if len(unexpected_common):
+                sample = ", ".join(pd.Timestamp(day).date().isoformat() for day in unexpected_common[:5])
+                more = "..." if len(unexpected_common) > 5 else ""
+>               raise ValueError(f"Prices contain unexpected non-trading dates: {sample}{more}")
+E               ValueError: Prices contain unexpected non-trading dates: 2026-09-24
+
+poe_subd_six_etf_v1_3_bot.py:2546: ValueError
+_ test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2024\u5e74\u30012025\u5e74-2] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000269953485D0>
+query = '交易记录 2024年、2025年', count = 2
+
+    @pytest.mark.parametrize('query,count', [
+        ('交易记录 2024年、2025年', 2),
+        ('交易记录 2025年、2025年', 1),
+        ('交易记录 2025年、2025年1月', 2),
+        ('交易记录 2026-10-07、2025年', 2),
+        ('交易记录 2025年', 1),
+        ('表现', 1),
+    ])
+    def test_each_explicit_record_window_is_exported(bot, daily, monkeypatch, query, count):
+        now = datetime(2026, 10, 24, 16, 0, tzinfo=bot.CN_TZ)
+        monkeypatch.setattr(bot, '_now_bj', lambda: now)
+        capture = Capture(query)
+        monkeypatch.setattr(bot, 'poe', capture)
+        monkeypatch.setattr(bot, '_get_daily_for_today', lambda **kwargs: (daily.copy(), 'archived real qfq'))
+        monkeypatch.setattr(bot, '_write_nav_curve', lambda *a, **k: None)
+        bot.SubDSixEtfV13Bot().run()
+        exports = [x for x in capture.attachments if 'trade_records' in x['name']]
+>       assert len(exports) == count
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'content_type': 'text/csv; charset=utf-8', 'contents': b'\xef\xbb\xbfdate,strategy,operation,base_position_before,ba...26-09-30,2026-09-30,2026-09-30,2026-09-30,2026-09-30\r\n', 'name': 'subd_v13_trade_records_2025-01-02_2025-12-31.csv'}])
+
+tests\test_v13_repair_20261024.py:183: AssertionError
+_ test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74\u30012025\u5e74-1] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026995021650>
+query = '交易记录 2025年、2025年', count = 1
+
+    @pytest.mark.parametrize('query,count', [
+        ('交易记录 2024年、2025年', 2),
+        ('交易记录 2025年、2025年', 1),
+        ('交易记录 2025年、2025年1月', 2),
+        ('交易记录 2026-10-07、2025年', 2),
+        ('交易记录 2025年', 1),
+        ('表现', 1),
+    ])
+    def test_each_explicit_record_window_is_exported(bot, daily, monkeypatch, query, count):
+        now = datetime(2026, 10, 24, 16, 0, tzinfo=bot.CN_TZ)
+        monkeypatch.setattr(bot, '_now_bj', lambda: now)
+        capture = Capture(query)
+        monkeypatch.setattr(bot, 'poe', capture)
+        monkeypatch.setattr(bot, '_get_daily_for_today', lambda **kwargs: (daily.copy(), 'archived real qfq'))
+        monkeypatch.setattr(bot, '_write_nav_curve', lambda *a, **k: None)
+        bot.SubDSixEtfV13Bot().run()
+        exports = [x for x in capture.attachments if 'trade_records' in x['name']]
+        assert len(exports) == count
+        parsed = bot.parse_all_date_ranges(query, now=now)
+        ranges = parsed or [(daily.date.min(), daily.date.max())]
+        for item, (start, end) in zip(exports, ranges):
+            expected = daily.loc[daily.date.between(start, end) & daily.turnover.gt(1e-12), 'date']
+            actual = pd.read_csv(io.BytesIO(item['contents']))
+>           assert list(pd.to_datetime(actual['date'])) == list(expected)
+E           AssertionError: assert [Timestamp('2...:00:00'), ...] == [Timestamp('2...:00:00'), ...]
+E             
+E             At index 0 diff: Timestamp('2025-12-22 00:00:00') != Timestamp('2025-01-08 00:00:00')
+E             Use -v to get more diff
+
+tests\test_v13_repair_20261024.py:189: AssertionError
+_ test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74\u30012025\u5e741\u6708-2] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026996B14190>
+query = '交易记录 2025年、2025年1月', count = 2
+
+    @pytest.mark.parametrize('query,count', [
+        ('交易记录 2024年、2025年', 2),
+        ('交易记录 2025年、2025年', 1),
+        ('交易记录 2025年、2025年1月', 2),
+        ('交易记录 2026-10-07、2025年', 2),
+        ('交易记录 2025年', 1),
+        ('表现', 1),
+    ])
+    def test_each_explicit_record_window_is_exported(bot, daily, monkeypatch, query, count):
+        now = datetime(2026, 10, 24, 16, 0, tzinfo=bot.CN_TZ)
+        monkeypatch.setattr(bot, '_now_bj', lambda: now)
+        capture = Capture(query)
+        monkeypatch.setattr(bot, 'poe', capture)
+        monkeypatch.setattr(bot, '_get_daily_for_today', lambda **kwargs: (daily.copy(), 'archived real qfq'))
+        monkeypatch.setattr(bot, '_write_nav_curve', lambda *a, **k: None)
+        bot.SubDSixEtfV13Bot().run()
+        exports = [x for x in capture.attachments if 'trade_records' in x['name']]
+>       assert len(exports) == count
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'content_type': 'text/csv; charset=utf-8', 'contents': b'\xef\xbb\xbfdate,strategy,operation,base_position_before,ba...26-09-30,2026-09-30,2026-09-30,2026-09-30,2026-09-30\r\n', 'name': 'subd_v13_trade_records_2025-01-02_2025-01-27.csv'}])
+
+tests\test_v13_repair_20261024.py:183: AssertionError
+_ test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2026-10-07\u30012025\u5e74-2] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000269985E5BD0>
+query = '交易记录 2026-10-07、2025年', count = 2
+
+    @pytest.mark.parametrize('query,count', [
+        ('交易记录 2024年、2025年', 2),
+        ('交易记录 2025年、2025年', 1),
+        ('交易记录 2025年、2025年1月', 2),
+        ('交易记录 2026-10-07、2025年', 2),
+        ('交易记录 2025年', 1),
+        ('表现', 1),
+    ])
+    def test_each_explicit_record_window_is_exported(bot, daily, monkeypatch, query, count):
+        now = datetime(2026, 10, 24, 16, 0, tzinfo=bot.CN_TZ)
+        monkeypatch.setattr(bot, '_now_bj', lambda: now)
+        capture = Capture(query)
+        monkeypatch.setattr(bot, 'poe', capture)
+        monkeypatch.setattr(bot, '_get_daily_for_today', lambda **kwargs: (daily.copy(), 'archived real qfq'))
+        monkeypatch.setattr(bot, '_write_nav_curve', lambda *a, **k: None)
+        bot.SubDSixEtfV13Bot().run()
+        exports = [x for x in capture.attachments if 'trade_records' in x['name']]
+>       assert len(exports) == count
+E       AssertionError: assert 1 == 2
+E        +  where 1 = len([{'content_type': 'text/csv; charset=utf-8', 'contents': b'\xef\xbb\xbfdate,strategy,operation,base_position_before,ba...alance_delta,buy_delta,sell_delta,turnover,cost,note\r\n', 'name': 'subd_v13_trade_records_2026-10-07_2026-10-07.csv'}])
+
+tests\test_v13_repair_20261024.py:183: AssertionError
+_ test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74-1] _
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026991F8FE30>
+query = '交易记录 2025年', count = 1
+
+    @pytest.mark.parametrize('query,count', [
+        ('交易记录 2024年、2025年', 2),
+        ('交易记录 2025年、2025年', 1),
+        ('交易记录 2025年、2025年1月', 2),
+        ('交易记录 2026-10-07、2025年', 2),
+        ('交易记录 2025年', 1),
+        ('表现', 1),
+    ])
+    def test_each_explicit_record_window_is_exported(bot, daily, monkeypatch, query, count):
+        now = datetime(2026, 10, 24, 16, 0, tzinfo=bot.CN_TZ)
+        monkeypatch.setattr(bot, '_now_bj', lambda: now)
+        capture = Capture(query)
+        monkeypatch.setattr(bot, 'poe', capture)
+        monkeypatch.setattr(bot, '_get_daily_for_today', lambda **kwargs: (daily.copy(), 'archived real qfq'))
+        monkeypatch.setattr(bot, '_write_nav_curve', lambda *a, **k: None)
+        bot.SubDSixEtfV13Bot().run()
+        exports = [x for x in capture.attachments if 'trade_records' in x['name']]
+        assert len(exports) == count
+        parsed = bot.parse_all_date_ranges(query, now=now)
+        ranges = parsed or [(daily.date.min(), daily.date.max())]
+        for item, (start, end) in zip(exports, ranges):
+            expected = daily.loc[daily.date.between(start, end) & daily.turnover.gt(1e-12), 'date']
+            actual = pd.read_csv(io.BytesIO(item['contents']))
+>           assert list(pd.to_datetime(actual['date'])) == list(expected)
+E           AssertionError: assert [Timestamp('2...:00:00'), ...] == [Timestamp('2...:00:00'), ...]
+E             
+E             At index 0 diff: Timestamp('2025-12-22 00:00:00') != Timestamp('2025-01-08 00:00:00')
+E             Use -v to get more diff
+
+tests\test_v13_repair_20261024.py:189: AssertionError
+________ test_each_explicit_record_window_is_exported[\u8868\u73b0-1] _________
+
+bot = <module 'v13_repair' from 'D:\\动量策略\\美股A股混合池子动量策略\\poe_subd_six_etf_v1_3_bot.py'>
+daily =            date  version  ... last_date_159985.SZ last_date_518880.SH
+0    2011-12-09      1.3  ...          2026-09-3...30          2026-09-30
+3596 2026-09-30      1.3  ...          2026-09-30          2026-09-30
+
+[3597 rows x 105 columns]
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000026995625050>
+query = '表现', count = 1
+
+    @pytest.mark.parametrize('query,count', [
+        ('交易记录 2024年、2025年', 2),
+        ('交易记录 2025年、2025年', 1),
+        ('交易记录 2025年、2025年1月', 2),
+        ('交易记录 2026-10-07、2025年', 2),
+        ('交易记录 2025年', 1),
+        ('表现', 1),
+    ])
+    def test_each_explicit_record_window_is_exported(bot, daily, monkeypatch, query, count):
+        now = datetime(2026, 10, 24, 16, 0, tzinfo=bot.CN_TZ)
+        monkeypatch.setattr(bot, '_now_bj', lambda: now)
+        capture = Capture(query)
+        monkeypatch.setattr(bot, 'poe', capture)
+        monkeypatch.setattr(bot, '_get_daily_for_today', lambda **kwargs: (daily.copy(), 'archived real qfq'))
+        monkeypatch.setattr(bot, '_write_nav_curve', lambda *a, **k: None)
+        bot.SubDSixEtfV13Bot().run()
+        exports = [x for x in capture.attachments if 'trade_records' in x['name']]
+        assert len(exports) == count
+        parsed = bot.parse_all_date_ranges(query, now=now)
+        ranges = parsed or [(daily.date.min(), daily.date.max())]
+        for item, (start, end) in zip(exports, ranges):
+            expected = daily.loc[daily.date.between(start, end) & daily.turnover.gt(1e-12), 'date']
+            actual = pd.read_csv(io.BytesIO(item['contents']))
+>           assert list(pd.to_datetime(actual['date'])) == list(expected)
+E           AssertionError: assert [Timestamp('2...:00:00'), ...] == [Timestamp('2...:00:00'), ...]
+E             
+E             At index 0 diff: Timestamp('2026-09-24 00:00:00') != Timestamp('2012-02-14 00:00:00')
+E             Use -v to get more diff
+
+tests\test_v13_repair_20261024.py:189: AssertionError
+============================== warnings summary ===============================
+tests/test_v13_repair_20261024.py::test_missing_price_block_survives_real_build_and_report[2026-09-24-159941.SZ]
+  C:\Python314\Lib\site-packages\fastapi_poe\types.py:171: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RequestContext(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_v13_repair_20261024.py::test_missing_price_block_survives_real_build_and_report[2026-09-24-159941.SZ]
+FAILED tests/test_v13_repair_20261024.py::test_missing_price_block_survives_real_build_and_report[2026-09-18-159985.SZ]
+FAILED tests/test_v13_repair_20261024.py::test_missing_price_block_survives_real_build_and_report[2026-09-01-518880.SH]
+FAILED tests/test_v13_repair_20261024.py::test_status_uses_calendar_independent_of_price_cutoff[2026-09-19-2026-09-17-False-2026-09-18]
+FAILED tests/test_v13_repair_20261024.py::test_status_uses_calendar_independent_of_price_cutoff[2026-09-20-2026-09-17-False-2026-09-18]
+FAILED tests/test_v13_repair_20261024.py::test_status_uses_calendar_independent_of_price_cutoff[2026-10-24-2026-09-30-False-2026-10-23]
+FAILED tests/test_v13_repair_20261024.py::test_truncated_calendar_recovers_before_rejecting_valid_prices[alignment]
+FAILED tests/test_v13_repair_20261024.py::test_truncated_calendar_recovers_before_rejecting_valid_prices[provider]
+FAILED tests/test_v13_repair_20261024.py::test_disk_calendar_cannot_mask_forced_refresh
+FAILED tests/test_v13_repair_20261024.py::test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2024\u5e74\u30012025\u5e74-2]
+FAILED tests/test_v13_repair_20261024.py::test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74\u30012025\u5e74-1]
+FAILED tests/test_v13_repair_20261024.py::test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74\u30012025\u5e741\u6708-2]
+FAILED tests/test_v13_repair_20261024.py::test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2026-10-07\u30012025\u5e74-2]
+FAILED tests/test_v13_repair_20261024.py::test_each_explicit_record_window_is_exported[\u4ea4\u6613\u8bb0\u5f55 2025\u5e74-1]
+FAILED tests/test_v13_repair_20261024.py::test_each_explicit_record_window_is_exported[\u8868\u73b0-1]
+15 failed, 5 passed, 1 warning in 52.11s

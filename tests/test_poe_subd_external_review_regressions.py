@@ -2299,17 +2299,18 @@ def test_execution_signal_fails_closed_without_calendar_even_when_not_live(monke
 
 def test_weekend_signal_is_valid_but_not_actionable_now(monkeypatch):
     module = load_bot_module()
-    daily = minimal_daily(module, dates=("2026-06-19",))
+    # June 19 is the 2026 Dragon Boat Festival closure; use a real Friday.
+    daily = minimal_daily(module, dates=("2026-06-26",))
 
     def expected_sessions(start, end):
-        return pd.DatetimeIndex(pd.to_datetime(["2026-06-19"]))
+        return pd.DatetimeIndex(pd.to_datetime(["2026-06-26"]))
 
     monkeypatch.setattr(module, "_expected_cn_trading_days", expected_sessions)
 
     status = module.signal_data_status(
         daily,
         live=False,
-        now=datetime(2026, 6, 20, 10, 0),
+        now=datetime(2026, 6, 27, 10, 0),
         purpose="execution",
     )
 
@@ -2317,7 +2318,7 @@ def test_weekend_signal_is_valid_but_not_actionable_now(monkeypatch):
     assert status["signal_valid"] is True
     assert status["actionable_now"] is False
     assert status["tradable"] is False
-    assert status["expected_confirmed_session"] == "2026-06-19"
+    assert status["expected_confirmed_session"] == "2026-06-26"
     assert "休市" in status["execution_note"]
 
 

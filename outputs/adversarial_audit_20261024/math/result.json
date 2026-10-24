@@ -1,0 +1,128 @@
+{
+  "status": "PASS",
+  "new_confirmed_math_bugs": [],
+  "code_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "input": "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\doublecheck_script_audit_20261007\\final_network",
+  "raw_sha256": "de8938507d2b978bcc0e05e097d10bc6e2fc38c27d2eb4745aa01463178f3560",
+  "rows": 3597,
+  "start": "2011-12-09",
+  "end": "2026-09-30",
+  "source": "Tencent fqkline [qfq/front-adjusted; qfqday], Tencent fqkline [qfq/front-adjusted; qfq request; day verified vs Eastmoney fqt=1 (513030.SH:2895, 513520.SH:1729, 159985.SZ:1618 rows; through 2026-08-07; max close diff 0.001)]",
+  "oracle": "closed-form centered WLS and independent shares/cash ledger; same documented multiplicative cost convention",
+  "oracle_max_diff": {
+    "position_before": 0,
+    "position": 0,
+    "best_candidate": 0,
+    "trade_blocked_by_stale_price": 0,
+    "turnover": 0.0,
+    "cost": 0.0,
+    "nav": 8.526512829121202e-14,
+    "return": 3.3306690738754696e-16
+  },
+  "score_max_abs_diff": {
+    "159915.SZ": 1.3642420526593924e-12,
+    "159941.SZ": 2.1316282072803006e-14,
+    "513030.SH": 1.7763568394002505e-14,
+    "513520.SH": 8.881784197001252e-15,
+    "159985.SZ": 1.2434497875801753e-14,
+    "518880.SH": 1.5987211554602254e-14
+  },
+  "saved_official_parity": {
+    "nav": 7.105427357601002e-15,
+    "return": 9.952975943416931e-17,
+    "cost": 0.0,
+    "turnover": 0.0
+  },
+  "prefix_checks": [
+    {
+      "date": "2012-01-13",
+      "rows": 24,
+      "passed": true
+    },
+    {
+      "date": "2012-01-16",
+      "rows": 25,
+      "passed": true
+    },
+    {
+      "date": "2012-01-17",
+      "rows": 26,
+      "passed": true
+    },
+    {
+      "date": "2014-01-07",
+      "rows": 501,
+      "passed": true
+    },
+    {
+      "date": "2019-05-10",
+      "rows": 1801,
+      "passed": true
+    },
+    {
+      "date": "2024-04-18",
+      "rows": 3001,
+      "passed": true
+    },
+    {
+      "date": "2026-09-29",
+      "rows": 3596,
+      "passed": true
+    }
+  ],
+  "cost_monotonicity": true,
+  "diagnostic_stale_leg_injection": {
+    "date": "2026-09-24",
+    "asset": "159941.SZ",
+    "blocked": true,
+    "not_actual_market_fault": true
+  },
+  "metrics": [
+    {
+      "window": "full_sample",
+      "start": "2011-12-09",
+      "end": "2026-09-30",
+      "rows": 3597,
+      "annual": 0.30555503427153385,
+      "maxdd": -0.22006724591954296
+    },
+    {
+      "window": "10Y",
+      "start": "2016-05-19",
+      "end": "2026-09-30",
+      "rows": 2520,
+      "annual": 0.36232071444787395,
+      "maxdd": -0.16309804295217378
+    },
+    {
+      "window": "5Y",
+      "start": "2021-07-22",
+      "end": "2026-09-30",
+      "rows": 1260,
+      "annual": 0.5557802792367783,
+      "maxdd": -0.15962238350856583
+    },
+    {
+      "window": "3Y",
+      "start": "2023-08-18",
+      "end": "2026-09-30",
+      "rows": 756,
+      "annual": 0.6536225559888997,
+      "maxdd": -0.1433795586170049
+    },
+    {
+      "window": "1Y",
+      "start": "2025-09-16",
+      "end": "2026-09-30",
+      "rows": 252,
+      "annual": 0.6368381432082895,
+      "maxdd": -0.1386963298049111
+    }
+  ],
+  "limitations": [
+    "frozen historical replay through 2026-09-30, not current quotes",
+    "same-close paper convention retained",
+    "No point-in-time corporate-action or actual fill certification",
+    "Network download replaced only with hash-verified real archive; archived calendar used"
+  ]
+}

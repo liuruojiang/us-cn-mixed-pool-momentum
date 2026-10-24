@@ -8,3 +8,14 @@ quant_param_scan_runs/20260926_six_etf_v1_3_l6_parameter_basis_20260924/freeze_p
 outputs/script_audit_20261007/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
 outputs/doublecheck_script_audit_20261007/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
 outputs/audit_sync_20261007/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+# Byte-exact source, tests, and manifests from the October 24 repair audit.
+outputs/adversarial_audit_20261024/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+outputs/repair_audit_20261024/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+outputs/audit_sync_20261024/** -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+README.md -text
+docs/subd_six_etf_v1_3_20260904.md -text
+docs/subd_six_etf_v1_3_repair_audit_20261024.md -text
+tests/test_poe_subd_external_review_regressions.py -text
+tests/test_v13_repair_20261024.py -text
+tests/test_v13_postfix_data_20261024.py -text
+tests/test_v13_postfix_reporting_20261024.py -text

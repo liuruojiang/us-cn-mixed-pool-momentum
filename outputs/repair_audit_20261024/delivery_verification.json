@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "final_source_sha256": "8354e9c4b835c77f11809d5d0b727f54e75e7f7bc5a1fc5aa282ccb73bfd1f57",
+  "original_source_sha256": "e6934e11f76fb5b35a0b7ec61401189735710d96735d3431d9f7be1dd30af881",
+  "full_suite": {
+    "tests": 741,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "unique_tests_passed": 740,
+  "repair_before": {
+    "tests": 21,
+    "failed": 13,
+    "errors": 0,
+    "skipped": 0
+  },
+  "independent_data": {
+    "tests": 10,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "independent_reporting": {
+    "tests": 19,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "all_column_parity": {
+    "rows": 3597,
+    "columns": 105,
+    "exact": true
+  },
+  "old_audit_files_unchanged": 34,
+  "mixed_three_year_trade_records": 100,
+  "deployment": "source and evidence synchronization recorded separately; no hosted deployment or orders",
+  "data_cutoff": "2026-09-30; frozen replay, not current market performance"
+}
