@@ -27,3 +27,4 @@ tests/test_v13_takeover*_20261024.py -text whitespace=cr-at-eol
 docs/subd_six_etf_v1_3_takeover*_20261024.md -text whitespace=cr-at-eol
 cleanup_takeover_tests_20261024.bat -text whitespace=cr-at-eol
 cleanup_after_fix_20261024.bat -text whitespace=cr-at-eol
+TASK_STATE.md -text whitespace=cr-at-eol
