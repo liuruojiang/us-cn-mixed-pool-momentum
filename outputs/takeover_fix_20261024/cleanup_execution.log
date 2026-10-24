@@ -1,0 +1,13 @@
+READY: outputs/takeover_audit_20261024/scratch
+READY: outputs/takeover_audit_20261024/data/scratch
+READY: outputs/takeover_fix_20261024/scratch
+READY: outputs/takeover_fix_20261024/data/scratch
+Previously blocked targets excluded: 23
+Manifest file count: 83
+Verified internal directory links: 34
+Verified recovery archive: D:\动量策略\美股A股混合池子动量策略\.codex_backups\manual_takeover_cleanup_20261024_151218_57ef8fb1a70e45de9625995fae6a23d5.zip
+REMOVED: outputs/takeover_audit_20261024/scratch
+REMOVED: outputs/takeover_audit_20261024/data/scratch
+REMOVED: outputs/takeover_fix_20261024/scratch
+REMOVED: outputs/takeover_fix_20261024/data/scratch
+Cleanup complete. Regression tests, audit evidence and old blocked targets were retained.

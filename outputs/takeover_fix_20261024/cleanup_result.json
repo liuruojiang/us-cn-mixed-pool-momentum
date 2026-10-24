@@ -1,0 +1,20 @@
+{
+  "status": "NEW_SCRATCH_CLEANED_OLD_BLOCKED_TARGETS_MANUAL",
+  "deleted_directories": [
+    "outputs/takeover_audit_20261024/scratch",
+    "outputs/takeover_audit_20261024/data/scratch",
+    "outputs/takeover_fix_20261024/scratch",
+    "outputs/takeover_fix_20261024/data/scratch"
+  ],
+  "deleted_regular_files": 83,
+  "deleted_directory_links": 34,
+  "deleted_regular_file_bytes": 3610212,
+  "backup_path": "D:\\动量策略\\美股A股混合池子动量策略\\.codex_backups\\manual_takeover_cleanup_20261024_151218_57ef8fb1a70e45de9625995fae6a23d5.zip",
+  "backup_sha256": "4853e7eb90faf4f4b4bb9540c20fbbcce67d8cf123cf013333ad6fa6de4d0e7d",
+  "backup_all_file_hashes_verified": true,
+  "old_blocked_targets_count": 23,
+  "old_blocked_targets_still_present": true,
+  "old_blocked_targets_retried": false,
+  "new_policy_rejections": 0,
+  "tracked_files_unchanged_by_cleanup": true
+}

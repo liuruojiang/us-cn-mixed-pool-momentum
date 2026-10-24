@@ -27,5 +27,5 @@
   "data_cutoff": "2026-09-30",
   "hosted_deployment": false,
   "orders": false,
-  "cleanup_status": "See cleanup_result.json when created; Git cleanliness is separate."
+  "cleanup_status": "NEW_SCRATCH_CLEANED_OLD_BLOCKED_TARGETS_MANUAL"
 }

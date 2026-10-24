@@ -1,0 +1,29 @@
+{
+  "targets": [
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\full_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\final_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\repair_audit_20261024\\verified_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\tests\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20260926_six_etf_v1_3_l6_parameter_basis_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261001_lookback_5_99_step2_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261001_pure_momentum_lookback_5_99_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_formal_lookback_5_100_step5_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_formal_weight_power_0_5_step0p5_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\quant_param_scan_runs\\20261003_r2_threshold_0_2_step0p05_20260924\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l2_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l3_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l5_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l6_20260926\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l7_20260927\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\recert_l8_20260927\\__pycache__",
+    "D:\\动量策略\\美股A股混合池子动量策略\\.pytest_cache",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\pytest_tmp",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-26_2026-09-24_signal.txt",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-26_2026-09-25_signal.txt",
+    "D:\\动量策略\\美股A股混合池子动量策略\\outputs\\adversarial_audit_20261024\\2026-09-27_2026-09-24_signal.txt"
+  ],
+  "handoff": "D:\\Codex\\repository-sync\\20261024-takeover-fix-handoff\\旧目标手动清理清单.txt",
+  "reason": "previous blocked by policy; no retry; no platform-provided unblock channel"
+}

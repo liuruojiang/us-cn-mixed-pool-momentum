@@ -1,0 +1,11 @@
+{
+  "old_blocked_excluded": 23,
+  "other_obvious_disposable_directories": [],
+  "preserved": [
+    "tracked regression tests",
+    "frozen data",
+    "audit evidence",
+    "rollback archives",
+    "live data caches"
+  ]
+}

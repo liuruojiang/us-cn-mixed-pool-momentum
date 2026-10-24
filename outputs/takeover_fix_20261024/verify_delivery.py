@@ -75,7 +75,7 @@ result = {'status':'PASS', 'source_sha256':SOURCE_SHA, 'before_sha256':BEFORE_SH
           'isolated_math_exact_parity':{'rows':3597,'columns':105},
           'old_evidence_entries_verified':len(archive['retained_evidence_files']),
           'data_cutoff':'2026-09-30', 'hosted_deployment':False, 'orders':False,
-          'cleanup_status':'See cleanup_result.json when created; Git cleanliness is separate.'}
+          'cleanup_status':read(OUT/'cleanup_result.json')['status'] if (OUT/'cleanup_result.json').exists() else 'pending'}
 (OUT/'delivery_verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
 files = [p for p in OUT.rglob('*') if p.is_file() and 'scratch' not in p.relative_to(OUT).parts
          and p.name != 'evidence_manifest.json']

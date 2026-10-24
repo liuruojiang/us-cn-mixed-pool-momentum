@@ -60,10 +60,12 @@ python -X utf8 -B -m pytest tests -q -p no:cacheprovider --basetemp=outputs/take
 
 同名 basetemp 会被 pytest 管理，复现时选择新的临时子目录，不指向归档证据。独立数学审计器位于 `outputs/takeover_fix_20261024/math/independent_math_audit.py`，会写本目录数学产物；需要重算时使用独立验证副本，避免重写归档。原始输入、修前快照、测试源码及审计证据均保留。
 
-用户已授权向 `liuruojiang/us-cn-mixed-pool-momentum` 的 `main` 普通提交及非强制推送。同步前已 fetch，确认本地与远端均在 f1fe6ac，现有分支没有必须合入的新增提交。README 与 TASK_STATE 的最新指针已更新。交付验证、远端核对及最后清理状态在本记录完成验收后补齐；没有 Poe 托管部署或下单。
+修复已按用户授权提交并推送到 `liuruojiang/us-cn-mixed-pool-momentum` 的 `main`：[5a217bf](https://github.com/liuruojiang/us-cn-mixed-pool-momentum/commit/5a217bf5836caab32a7923870ae77b34f5ea8234)。推送后再次 fetch 并核对远端 ref、本地 HEAD、origin/main 三者完全一致；远端源码字节 hash 与受测源码一致。见 [推送验收](../outputs/takeover_fix_20261024/repair_remote_verification.json)。现有分支没有必须合入的新增提交，没有重复合并、强推、Poe 托管部署或下单。README 与 TASK_STATE 已更新；清理结果与本段验收作为后续文档提交同步，正式源码不变。
 
 ## 清理边界
 
-依照用户顺序，物理清理在修复验证和提交推送之后进行。仍有回归价值的测试源码、真实行情、失败/通过证据和恢复点不属于无用测试文件。新产生的 scratch 目录将先备份校验再清理。
+依照用户顺序，在修复验证、提交推送和远端核对完成后，已物理删除两轮审计的 **4 个新 scratch 目录、83 个普通文件（3,610,212 字节）及 34 个内部目录链接**。删除前创建 ZIP 恢复包并逐文件核验；删除后再验证恢复包 hash 和目录确实不存在，所有跟踪文件未受清理影响。恢复包位于本项目 `.codex_backups/`，完整路径和 SHA256 见 [清理验收](../outputs/takeover_fix_20261024/cleanup_result.json)，执行日志见 [cleanup_execution.log](../outputs/takeover_fix_20261024/cleanup_execution.log)。本轮新增 policy 拒绝数为 **0**。
 
-旧 23 个目标已经在另一个对话中被自动审批以 `blocked by policy` 拒绝，未给出解除渠道。本轮不重试这些删除，也不换删除脚本；最终提供路径与已有恢复包，供用户在本机文件管理器处理。旧记录见 `outputs/audit_sync_20261024/cleanup_record.json`。Git 工作区干净与物理删除是两项独立验收。
+仍有回归价值的测试源码、真实行情、失败/通过证据和恢复点保留。清理脚本 `cleanup_after_fix_20261024.bat` 已完成本轮用途，无需再次运行；其固定清单仅覆盖上述新临时目录，未包含旧受阻目标。
+
+旧 23 个目标已经在另一个对话中被自动审批以 `blocked by policy` 拒绝，未给出解除渠道。本轮未重试这些删除，也未换删除脚本。已核验这 23 个旧目标仍存在，完整路径见 [剩余手动清理清单](../outputs/takeover_fix_20261024/manual_cleanup_remaining.json)；本机便于打开的文字清单为 `D:/Codex/repository-sync/20261024-takeover-fix-handoff/旧目标手动清理清单.txt`，供用户使用文件管理器处理。原 19 目录的恢复 ZIP 已在旧记录中核验，不能将另 4 项默认说成包含在该包内。旧记录见 `outputs/audit_sync_20261024/cleanup_record.json`。最终 Git 工作区干净与旧目标物理清理未完成分别记录。
